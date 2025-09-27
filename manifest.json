@@ -1,0 +1,52 @@
+{
+  "name": "Asset Tracker",
+  "short_name": "AssetTracker",
+  "start_url": "My_Asset.html",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://placehold.co/72x72/3b82f6/FFFFFF?text=AT",
+      "type": "image/png",
+      "sizes": "72x72"
+    },
+    {
+      "src": "https://placehold.co/96x96/3b82f6/FFFFFF?text=AT",
+      "type": "image/png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "https://placehold.co/128x128/3b82f6/FFFFFF?text=AT",
+      "type": "image/png",
+      "sizes": "128x128"
+    },
+    {
+      "src": "https://placehold.co/144x144/3b82f6/FFFFFF?text=AT",
+      "type": "image/png",
+      "sizes": "144x144"
+    },
+    {
+      "src": "https://placehold.co/152x152/3b82f6/FFFFFF?text=AT",
+      "type": "image/png",
+      "sizes": "152x152"
+    },
+    {
+      "src": "https://placehold.co/192x192/3b82f6/FFFFFF?text=AT",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://placehold.co/384x384/3b82f6/FFFFFF?text=AT",
+      "type": "image/png",
+      "sizes": "384x384"
+    },
+    {
+      "src": "https://placehold.co/512x512/3b82f6/FFFFFF?text=AT",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
+

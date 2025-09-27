@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Tracker (Offline)</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6"/>
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/3b82f6/FFFFFF?text=AT">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': {
+                            '50': '#eff6ff', '100': '#dbeafe', '200': '#bfdbfe', '300': '#93c5fd', '400': '#60a5fa', '500': '#3b82f6', '600': '#2563eb', '700': '#1d4ed8', '800': '#1e40af', '900': '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        .modal-content {
+            transition: transform 0.25s ease;
+        }
+        .tab-button.active {
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+        .dark .tab-button.active {
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+        .toggle-icon {
+            transition: transform 0.2s ease-in-out;
+        }
+        .rotate-90 {
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+
+    <div id="app" class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+
+        <header class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Asset Tracker</h1>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Your personal multi-currency portfolio.</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                 <button id="settings-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Open settings">
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-1.007 1.11-1.226l.28-.08c.568-.168 1.17.22 1.338.79l.08.28c.168.568-.22 1.17-.79 1.338l-.28.08c-.542.09-1.007.56-1.226 1.11l-.08.28c-.168.568-.79 1.008-1.338.84l-.28-.08c-.568-.168-.96-.79-.79-1.338l.08-.28zM14.25 5.16c.324-.972 1.26-1.63 2.28-1.63.02 0 .04 0 .06 0a2.25 2.25 0 012.25 2.25c0 .02 0 .04 0 .06 0 1.02-.658 1.956-1.63 2.28l-.28.08c-.568.168-1.17-.22-1.338-.79l-.08-.28c-.168-.568.22-1.17.79-1.338l.28-.08zm-5.25-.16a2.25 2.25 0 10-3.182-3.182 2.25 2.25 0 003.182 3.182zM12 15a3 3 0 100-6 3 3 0 000 6z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-3.314-2.686-6-6-6s-6 2.686-6 6s2.686 6 6 6s6-2.686 6-6zM8.25 20.25a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182zM12 21a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 20.25a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182zM12 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" /></svg>
+                </button>
+                <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle theme">
+                    <svg id="theme-toggle-dark-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-3.536a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.464-3.536a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zm1.414-7.071a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM3 10a1 1 0 01-1-1 1 1 0 011-1h1a1 1 0 110 2H3z"></path></svg>
+                </button>
+            </div>
+        </header>
+
+
+        <!-- Tabs -->
+        <div class="mb-8">
+            <div class="border-b border-gray-200 dark:border-gray-700">
+                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                    <button id="tracker-tab-button" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent">
+                        Tracker
+                    </button>
+                    <button id="dashboard-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
+                        Dashboard
+                    </button>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Tracker Content -->
+        <div id="tracker-content">
+            <!-- Total Value Summary -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+                 <div class="flex justify-between items-start">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
+                         <div class="lg:col-span-2">
+                            <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Asset Value</h2>
+                            <p id="total-value" class="text-4xl font-bold text-gray-900 dark:text-white">$0.00</p>
+                        </div>
+                        <div class="text-left md:text-right">
+                            <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Gain/Loss</h2>
+                            <p id="total-gain-loss-amount" class="text-2xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                            <div id="total-gain-loss-percentage" class="text-md font-medium text-gray-500 dark:text-gray-400">-</div>
+                        </div>
+                         <div class="text-left md:text-right">
+                               <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Gain/Loss</h2>
+                               <p id="monthly-gain-loss-amount" class="text-2xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                               <div id="monthly-gain-loss-percentage" class="text-md font-medium text-gray-500 dark:text-gray-400">-</div>
+                           </div>
+                    </div>
+                     <div id="rates-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
+                        <div class="flex items-center justify-end">
+                            <span id="online-indicator" class="h-2 w-2 rounded-full bg-gray-400 mr-1.5"></span>
+                            <span id="rates-last-updated">Rates unavailable</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Add Asset Form -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Add Transaction</h2>
+                <form id="add-asset-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+                    <div class="lg:col-span-3">
+                        <label for="asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                        <input type="text" id="asset-name" list="asset-datalist" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="Type or select an asset">
+                        <datalist id="asset-datalist"></datalist>
+                    </div>
+                    <div id="asset-type-category-wrapper" class="hidden">
+                        <label for="asset-type-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
+                        <input type="text" id="asset-type-category" list="asset-type-datalist" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Stocks, Crypto">
+                        <datalist id="asset-type-datalist"></datalist>
+                    </div>
+                     <div>
+                        <label for="asset-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
+                        <input type="text" id="asset-category" list="category-datalist" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Market Value Update, Deposit">
+                        <datalist id="category-datalist"></datalist>
+                    </div>
+                     <div id="transfer-to-wrapper" class="lg:col-span-3 hidden">
+                        <label for="transfer-to-asset" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transfer To</label>
+                        <select id="transfer-to-asset" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </select>
+                    </div>
+                     <div>
+                        <label for="purchase-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                        <input type="date" id="purchase-date" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label id="asset-value-label" for="asset-value" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value</label>
+                         <div class="relative mt-1">
+                            <input type="number" id="asset-value" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                             <div class="absolute inset-y-0 right-0 flex items-center">
+                                <input type="text" id="asset-currency" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16" placeholder="USD">
+                                <datalist id="currency-datalist"></datalist>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-3">
+                        <label for="asset-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                        <textarea id="asset-description" rows="2" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"></textarea>
+                    </div>
+                    <div class="lg:col-span-3 text-right">
+                        <button type="submit" class="inline-flex justify-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
+                            Add Transaction
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Import/Export Section -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Data Management</h2>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button id="import-csv-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
+                        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Import from CSV
+                    </button>
+                    <input type="file" id="import-csv-input" class="hidden" accept=".csv">
+                    <button id="export-csv-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
+                        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Export to CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Asset List -->
+            <div>
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Transaction History</h2>
+                <div id="asset-list" class="space-y-6">
+                </div>
+                 <div id="no-assets-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No transactions</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a new asset transaction.</p>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard-content" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column -->
+                <div class="lg:col-span-1 space-y-8">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Asset Allocation</h2>
+                        <div class="h-64 flex items-center justify-center">
+                            <canvas id="allocationChart"></canvas>
+                        </div>
+                         <div id="allocation-legend" class="mt-4 space-y-2"></div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Cash Flow</h2>
+                        <div id="cash-flow-summary" class="space-y-4"></div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Asset Performance</h2>
+                        <div id="asset-breakdown" class="space-y-2">
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column -->
+                <div class="lg:col-span-2 space-y-8">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Portfolio Value Trend</h2>
+                            <div id="trend-timeline-buttons" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                                <button data-timeline="1M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1M</button>
+                                <button data-timeline="3M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">3M</button>
+                                <button data-timeline="1Y" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1Y</button>
+                                <button data-timeline="ALL" class="timeline-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">ALL</button>
+                            </div>
+                        </div>
+                        <div class="h-96">
+                             <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monthly Cash Flow</h2>
+                        <div class="h-96">
+                             <canvas id="cashFlowChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Edit Transaction</h3>
+            <form id="edit-asset-form">
+                <input type="hidden" id="edit-asset-id">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label for="edit-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                        <input type="text" id="edit-asset-name" required class="mt-1 block w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm" disabled>
+                    </div>
+                     <div class="md:col-span-2">
+                        <label for="edit-asset-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
+                        <input type="text" id="edit-asset-category" list="category-datalist" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="edit-purchase-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                        <input type="date" id="edit-purchase-date" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="edit-asset-value" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value</label>
+                        <div class="relative mt-1">
+                            <input type="number" id="edit-asset-value" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                             <div class="absolute inset-y-0 right-0 flex items-center">
+                                <input type="text" id="edit-asset-currency" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16" placeholder="USD">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="edit-asset-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                        <textarea id="edit-asset-description" rows="3" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button type="button" id="cancel-edit-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="submit" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Settings</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="main-currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Main Portfolio Currency</label>
+                    <select id="main-currency" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </select>
+                </div>
+                 <div id="rates-status-modal" class="text-sm text-gray-500 dark:text-gray-400">
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-2">
+                <button type="button" id="cancel-settings-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Close</button>
+                <button type="button" id="save-settings-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Storage and Settings ---
+            const DATA_STORAGE_KEY = 'assetTrackerOfflineData';
+            const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
+            
+            let allAssets = [];
+            let appSettings = {};
+            const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
+
+            const commonCurrencies = { "USD": "United States Dollar", "EUR": "Euro", "JPY": "Japanese Yen", "GBP": "British Pound Sterling", "AUD": "Australian Dollar", "CAD": "Canadian Dollar", "CHF": "Swiss Franc", "CNY": "Chinese Yuan", "HKD": "Hong Kong Dollar", "NZD": "New Zealand Dollar", "SEK": "Swedish Krona", "KRW": "South Korean Won", "SGD": "Singapore Dollar", "NOK": "Norwegian Krone", "MXN": "Mexican Peso", "INR": "Indian Rupee", "RUB": "Russian Ruble", "ZAR": "South African Rand", "BRL": "Brazilian Real", "PHP": "Philippine Peso" };
+
+            // --- Theme Switcher ---
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+            const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+            const docElement = document.documentElement;
+            
+            const applyTheme = (theme) => {
+                if (theme === 'dark') {
+                    docElement.classList.add('dark');
+                    themeToggleLightIcon.classList.add('hidden');
+                    themeToggleDarkIcon.classList.remove('hidden');
+                } else {
+                    docElement.classList.remove('dark');
+                    themeToggleDarkIcon.classList.add('hidden');
+                    themeToggleLightIcon.classList.remove('hidden');
+                }
+            };
+
+            const toggleTheme = () => {
+                const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+                if(!dashboardContent.classList.contains('hidden')){
+                    renderDashboard(allAssets, appSettings);
+                }
+            };
+            
+            themeToggleBtn.addEventListener('click', toggleTheme);
+            const initialTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(initialTheme);
+
+
+            // --- DOM Elements ---
+            const trackerTabButton = document.getElementById('tracker-tab-button');
+            const dashboardTabButton = document.getElementById('dashboard-tab-button');
+            const trackerContent = document.getElementById('tracker-content');
+            const dashboardContent = document.getElementById('dashboard-content');
+            
+            const addAssetForm = document.getElementById('add-asset-form');
+            const assetNameInput = document.getElementById('asset-name');
+            const assetCurrencyInput = document.getElementById('asset-currency');
+            const purchaseDateInput = document.getElementById('purchase-date');
+            const assetCategoryInput = document.getElementById('asset-category');
+            const assetValueLabel = document.getElementById('asset-value-label');
+            const transferToWrapper = document.getElementById('transfer-to-wrapper');
+            const transferToAssetSelect = document.getElementById('transfer-to-asset');
+            const assetTypeCategoryWrapper = document.getElementById('asset-type-category-wrapper');
+            const assetTypeCategoryInput = document.getElementById('asset-type-category');
+            const assetTypeDatalist = document.getElementById('asset-type-datalist');
+            const assetList = document.getElementById('asset-list');
+            const noAssetsMessage = document.getElementById('no-assets-message');
+            
+            const editModal = document.getElementById('edit-modal');
+            const editAssetForm = document.getElementById('edit-asset-form');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
+            
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const saveSettingsBtn = document.getElementById('save-settings-btn');
+            const cancelSettingsBtn = document.getElementById('cancel-settings-btn');
+            const mainCurrencySelect = document.getElementById('main-currency');
+            
+            const assetDatalist = document.getElementById('asset-datalist');
+            const currencyDatalist = document.getElementById('currency-datalist');
+            const categoryDatalist = document.getElementById('category-datalist');
+            
+            const totalValueEl = document.getElementById('total-value');
+            const totalGainLossAmountEl = document.getElementById('total-gain-loss-amount');
+            const totalGainLossPercentageEl = document.getElementById('total-gain-loss-percentage');
+            const monthlyGainLossAmountEl = document.getElementById('monthly-gain-loss-amount');
+            const monthlyGainLossPercentageEl = document.getElementById('monthly-gain-loss-percentage');
+            const assetBreakdownContainer = document.getElementById('asset-breakdown');
+            
+            const importCsvBtn = document.getElementById('import-csv-btn');
+            const importCsvInput = document.getElementById('import-csv-input');
+            const exportCsvBtn = document.getElementById('export-csv-btn');
+            
+            // --- Chart variables ---
+            let allocationChart, trendChart, cashFlowChart;
+
+            // --- Storage Functions ---
+            const getFromStorage = (key, isJson = true) => {
+                 try {
+                    const data = localStorage.getItem(key);
+                    if (!data) return isJson ? {} : null;
+                    return isJson ? JSON.parse(data) : data;
+                } catch (e) {
+                    console.error(`Error reading ${key} from local storage`, e);
+                    return isJson ? {} : null;
+                }
+            };
+            
+            const saveToStorage = (key, data, isJson = true) => {
+                try {
+                    localStorage.setItem(key, isJson ? JSON.stringify(data) : data);
+                } catch(e) {
+                    console.error(`Error saving ${key} to local storage`, e);
+                    alert("Could not save data. Your browser's storage might be full.");
+                }
+            };
+
+            // --- Core App Logic ---
+            async function initializeApp() {
+                loadSettings();
+                loadData();
+                renderAll();
+                
+                populateCurrencyDatalists();
+                
+                if (navigator.onLine) {
+                    await updateExchangeRates();
+                    renderAll(); 
+                }
+                
+                window.addEventListener('online', updateExchangeRates);
+                window.addEventListener('offline', updateRatesStatus);
+            }
+
+            function loadSettings() {
+                const storedSettings = getFromStorage(SETTINGS_STORAGE_KEY);
+                appSettings = {
+                    mainCurrency: 'USD',
+                    rates: {},
+                    lastUpdated: null,
+                    ...storedSettings
+                };
+                updateRatesStatus();
+            }
+            
+            function loadData() {
+                 allAssets = getFromStorage(DATA_STORAGE_KEY, true) || [];
+                 if (allAssets.length === 0) {
+                    seedInitialData();
+                    allAssets = getFromStorage(DATA_STORAGE_KEY) || [];
+                }
+            }
+            
+            function renderAll() {
+                renderGroupedAssets(allAssets, appSettings);
+                updateDatalists(allAssets);
+                updateTotalValue(allAssets, appSettings);
+                
+                if(!dashboardContent.classList.contains('hidden')){
+                    renderDashboard(allAssets, appSettings);
+                }
+            }
+            
+            // --- Tab Switching ---
+            trackerTabButton.addEventListener('click', () => {
+                trackerContent.classList.remove('hidden');
+                dashboardContent.classList.add('hidden');
+                trackerTabButton.classList.add('active');
+                dashboardTabButton.classList.remove('active');
+            });
+
+            dashboardTabButton.addEventListener('click', () => {
+                dashboardContent.classList.remove('hidden');
+                trackerContent.classList.add('hidden');
+                dashboardTabButton.classList.add('active');
+                trackerTabButton.classList.remove('active');
+                renderDashboard(allAssets, appSettings);
+            });
+
+             // --- Currency and Conversion ---
+            async function updateExchangeRates() {
+                const onlineIndicator = document.getElementById('online-indicator');
+                onlineIndicator.classList.remove('bg-gray-400', 'bg-red-500');
+                onlineIndicator.classList.add('bg-yellow-500');
+
+                try {
+                    const response = await fetch(CURRENCY_API_URL);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    
+                    if (data.result === 'success') {
+                        appSettings.rates = data.rates;
+                        appSettings.lastUpdated = new Date().toISOString();
+                        saveToStorage(SETTINGS_STORAGE_KEY, appSettings);
+                        onlineIndicator.classList.remove('bg-yellow-500');
+                        onlineIndicator.classList.add('bg-green-500');
+                        console.log('Exchange rates updated successfully.');
+                    } else {
+                         throw new Error('API returned an error');
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch exchange rates:', error);
+                     onlineIndicator.classList.remove('bg-yellow-500');
+                     onlineIndicator.classList.add('bg-red-500');
+                } finally {
+                    updateRatesStatus();
+                    renderAll();
+                }
+            }
+            
+            function convertCurrency(amount, from, to, rates) {
+                from = from.toUpperCase();
+                to = to.toUpperCase();
+                
+                if (!rates || Object.keys(rates).length === 0 || !rates[from] || !rates[to]) {
+                    return null; // Indicate conversion is not possible
+                }
+                if (from === to) {
+                    return amount;
+                }
+                
+                // Convert from 'from' currency to USD (base), then from USD to 'to' currency.
+                const amountInUSD = amount / rates[from];
+                return amountInUSD * rates[to];
+            }
+
+            function formatCurrency(amount, currencyCode) {
+                 if (typeof amount !== 'number') return '-';
+                 return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode }).format(amount);
+            }
+            
+             function updateRatesStatus() {
+                 const onlineIndicator = document.getElementById('online-indicator');
+                 const ratesLastUpdated = document.getElementById('rates-last-updated');
+                 const ratesStatusModal = document.getElementById('rates-status-modal');
+                 
+                 if (navigator.onLine) {
+                     onlineIndicator.classList.remove('bg-gray-400', 'bg-red-500');
+                     onlineIndicator.classList.add('bg-green-500');
+                 } else {
+                     onlineIndicator.classList.remove('bg-green-500', 'bg-yellow-500');
+                     onlineIndicator.classList.add('bg-red-500');
+                 }
+
+                 if (appSettings.lastUpdated) {
+                    const lastUpdatedDate = new Date(appSettings.lastUpdated);
+                    const statusText = `Rates updated: ${lastUpdatedDate.toLocaleString()}`;
+                    ratesLastUpdated.textContent = statusText;
+                    ratesStatusModal.textContent = statusText;
+                 } else {
+                     const statusText = 'Rates unavailable, connect to internet.';
+                     ratesLastUpdated.textContent = statusText;
+                     ratesStatusModal.textContent = statusText;
+                 }
+             }
+             
+            // --- Render Functions ---
+            const renderGroupedAssets = (assets, settings) => {
+                assetList.innerHTML = '';
+                 if (assets.length === 0) {
+                    noAssetsMessage.classList.remove('hidden');
+                    return;
+                }
+                noAssetsMessage.classList.add('hidden');
+
+                const groupedByMonth = assets.reduce((acc, asset) => {
+                    const date = new Date(asset.purchaseDate + 'T00:00:00');
+                    const monthKey = new Date(date.getFullYear(), date.getMonth()).toISOString();
+                    acc[monthKey] = acc[monthKey] || [];
+                    acc[monthKey].push(asset);
+                    return acc;
+                }, {});
+
+                const sortedMonths = Object.keys(groupedByMonth).sort((a, b) => new Date(b) - new Date(a));
+
+                for (const monthKey of sortedMonths) {
+                    const monthName = new Date(monthKey).toLocaleString('default', { month: 'long', year: 'numeric' });
+                    const group = groupedByMonth[monthKey];
+                    group.sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate));
+
+                    const monthContainer = document.createElement('div');
+                    monthContainer.className = 'bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md';
+                    monthContainer.innerHTML = `<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">${monthName}</h3>`;
+
+                    let transactionsHtml = '<div class="space-y-1">';
+
+                    for (const transaction of group) {
+                        const assetCategory = transaction.assetCategory || 'Other';
+                        const assetCategoryColors = { 'Cash': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', 'Bond': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300', 'Stocks': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300', 'Fixed Income': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300', 'Crypto': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300', };
+                        const assetCategoryColorClass = assetCategoryColors[assetCategory] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+                        const assetCategoryBadge = `<span class="text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full ${assetCategoryColorClass}">${assetCategory}</span>`;
+                        
+                        const txCategory = transaction.category || 'Uncategorized';
+                        const txCategoryColors = { 'Market Value Update': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300', 'Deposit': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', 'Withdrawal': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300', 'Transfer': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' };
+                        const txCategoryColorClass = txCategoryColors[txCategory] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+                        const txCategoryBadge = `<span class="text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full ${txCategoryColorClass}">${txCategory}</span>`;
+                        
+                        const valueFormatted = formatCurrency(transaction.value, transaction.currency || settings.mainCurrency);
+                        const dateFormatted = new Date(transaction.purchaseDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                        transactionsHtml += `
+                            <div data-id="${transaction.id}" class="py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold text-gray-800 dark:text-gray-100">${transaction.name}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">${dateFormatted}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-semibold text-gray-800 dark:text-gray-100 flex items-center justify-end">${valueFormatted}</p>
+                                    </div>
+                                </div>
+                                <div class="mt-2 flex justify-between items-end">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        ${assetCategoryBadge}
+                                        ${txCategoryBadge}
+                                        ${transaction.description ? `<p class="text-xs text-gray-600 dark:text-gray-300 italic">"${transaction.description}"</p>` : ''}
+                                    </div>
+                                    <div class="flex space-x-2 flex-shrink-0">
+                                        <button class="edit-btn text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-medium py-1 px-2 rounded text-sm">Edit</button>
+                                        <button class="delete-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium py-1 px-2 rounded text-sm">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    transactionsHtml += '</div>';
+                    monthContainer.innerHTML += transactionsHtml;
+                    assetList.appendChild(monthContainer);
+                }
+            };
+            
+            const updateDatalists = (assets) => {
+                const uniqueNames = [...new Set(assets.map(asset => asset.name))];
+                assetDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
+
+                const defaultTxCategories = ['Market Value Update', 'Deposit', 'Withdrawal', 'Transfer'];
+                const customTxCategories = assets.map(asset => asset.category).filter(Boolean);
+                const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])];
+                categoryDatalist.innerHTML = allTxCategories.map(cat => `<option value="${cat}"></option>`).join('');
+
+                const defaultAssetCategories = ['Cash', 'Bond', 'Stocks', 'Fixed Income', 'Crypto'];
+                const customAssetCategories = assets.map(asset => asset.assetCategory).filter(Boolean);
+                const allAssetCategories = [...new Set([...defaultAssetCategories, ...customAssetCategories])];
+                assetTypeDatalist.innerHTML = allAssetCategories.map(cat => `<option value="${cat}"></option>`).join('');
+
+                const currentSourceAsset = assetNameInput.value.trim();
+                transferToAssetSelect.innerHTML = uniqueNames
+                    .filter(name => name !== currentSourceAsset)
+                    .map(name => `<option value="${name}">${name}</option>`)
+                    .join('');
+            };
+            
+            const updateTotalValue = (assets, settings) => {
+                 const mainCurrency = settings.mainCurrency;
+                if(assets.length === 0 || !settings.rates) {
+                    totalValueEl.textContent = formatCurrency(0, mainCurrency);
+                    totalGainLossAmountEl.textContent = '-';
+                    totalGainLossPercentageEl.textContent = '-';
+                    monthlyGainLossAmountEl.textContent = '-';
+                    monthlyGainLossPercentageEl.textContent = '-';
+                    return;
+                }
+
+                const latestAssets = {};
+                assets.forEach(asset => {
+                    if (!latestAssets[asset.name] || new Date(asset.purchaseDate) >= new Date(latestAssets[asset.name].purchaseDate)) {
+                        latestAssets[asset.name] = asset;
+                    }
+                });
+                
+                const currentTotalValue = Object.values(latestAssets).reduce((sum, asset) => {
+                    const convertedValue = convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates);
+                    return sum + (convertedValue || 0);
+                }, 0);
+                totalValueEl.textContent = formatCurrency(currentTotalValue, mainCurrency);
+                
+                const groupedAssets = assets.reduce((acc, asset) => {
+                    acc[asset.name] = acc[asset.name] || [];
+                    acc[asset.name].push(asset);
+                    return acc;
+                }, {});
+                for (const name in groupedAssets) {
+                    groupedAssets[name].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                }
+
+                let totalDeposits = 0;
+                let totalWithdrawals = 0;
+                for (const name in groupedAssets) {
+                    const group = groupedAssets[name];
+                    for (let i = 0; i < group.length; i++) {
+                        const currentTx = group[i];
+                        const prevTx = i > 0 ? group[i - 1] : null;
+                        if (currentTx.category === 'Deposit') {
+                            const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value;
+                            const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, settings.rates);
+                            if(convertedDeposit > 0) totalDeposits += convertedDeposit;
+                        } else if (currentTx.category === 'Withdrawal' && prevTx) {
+                            const withdrawalAmount = prevTx.value - currentTx.value;
+                             const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, settings.rates);
+                            if (convertedWithdrawal > 0) totalWithdrawals += convertedWithdrawal;
+                        }
+                    }
+                }
+
+                const netCapital = totalDeposits - totalWithdrawals;
+                const gainLoss = currentTotalValue - netCapital;
+                
+                if (netCapital > 0) {
+                    const percentage = (gainLoss / netCapital) * 100;
+                    renderGainLossDisplay(totalGainLossAmountEl, totalGainLossPercentageEl, gainLoss, percentage, mainCurrency, false);
+                } else {
+                     totalGainLossAmountEl.textContent = '-';
+                     totalGainLossPercentageEl.textContent = '-';
+                }
+                
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+                const txBeforeMonth = assets.filter(tx => new Date(tx.purchaseDate) < startOfMonth);
+                const latestAssetsBeforeMonth = {};
+                txBeforeMonth.forEach(asset => {
+                    if (!latestAssetsBeforeMonth[asset.name] || new Date(asset.purchaseDate) >= new Date(latestAssetsBeforeMonth[asset.name].purchaseDate)) {
+                        latestAssetsBeforeMonth[asset.name] = asset;
+                    }
+                });
+                
+                const valueAtStartOfMonth = Object.values(latestAssetsBeforeMonth).reduce((sum, asset) => {
+                    const converted = convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates);
+                    return sum + (converted || 0);
+                }, 0);
+
+                let depositsThisMonth = 0;
+                let withdrawalsThisMonth = 0;
+
+                for (const name in groupedAssets) {
+                     const group = groupedAssets[name];
+                     for (let i = 0; i < group.length; i++) {
+                        const currentTx = group[i];
+                        if (new Date(currentTx.purchaseDate) >= startOfMonth) {
+                             const prevTxInMonth = group.slice(0, i).filter(tx => new Date(tx.purchaseDate) >= startOfMonth).pop();
+                             const prevTx = prevTxInMonth || latestAssetsBeforeMonth[name];
+                             if (currentTx.category === 'Deposit') {
+                                const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value;
+                                const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, settings.rates);
+                                if(convertedDeposit > 0) depositsThisMonth += convertedDeposit;
+                            } else if (currentTx.category === 'Withdrawal' && prevTx) {
+                                const withdrawalAmount = prevTx.value - currentTx.value;
+                                const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, settings.rates);
+                                if(convertedWithdrawal > 0) withdrawalsThisMonth += convertedWithdrawal;
+                            }
+                        }
+                     }
+                }
+                
+                const monthlyGainLoss = currentTotalValue - valueAtStartOfMonth - (depositsThisMonth - withdrawalsThisMonth);
+                const monthlyBasis = valueAtStartOfMonth + depositsThisMonth;
+
+                if (monthlyBasis > 0) {
+                    const monthlyPercentage = (monthlyGainLoss / monthlyBasis) * 100;
+                    renderGainLossDisplay(monthlyGainLossAmountEl, monthlyGainLossPercentageEl, monthlyGainLoss, monthlyPercentage, mainCurrency, false);
+                } else {
+                     monthlyGainLossAmountEl.textContent = '-';
+                     monthlyGainLossPercentageEl.textContent = '-';
+                }
+            }
+
+            function renderGainLossDisplay(amountEl, percentEl, amount, percentage, currency, isSmall) {
+                const isGain = amount >= 0;
+                const colorClass = isGain ? 'text-green-500' : 'text-red-500';
+                
+                amountEl.textContent = formatCurrency(amount, currency);
+                percentEl.innerHTML = `(${percentage.toFixed(2)}%)`;
+
+                const sizeClass = isSmall ? 'text-xs' : 'text-md';
+                const amountSizeClass = isSmall ? 'font-semibold' : 'text-2xl font-bold';
+                amountEl.className = `${amountSizeClass} ${colorClass}`;
+                percentEl.className = `${sizeClass} font-medium ${colorClass}`;
+            }
+
+
+            // --- Event Listeners for CRUD operations ---
+            assetNameInput.addEventListener('input', () => {
+                const currentName = assetNameInput.value.trim();
+                const existingAsset = allAssets.find(a => a.name === currentName);
+                if (existingAsset) {
+                    assetTypeCategoryWrapper.classList.add('hidden');
+                    assetTypeCategoryInput.required = false;
+                    assetCurrencyInput.value = existingAsset.currency;
+                    assetCurrencyInput.disabled = true;
+                } else {
+                    assetTypeCategoryWrapper.classList.remove('hidden');
+                    assetTypeCategoryInput.required = true;
+                    assetCurrencyInput.disabled = false;
+                }
+                updateDatalists(allAssets);
+            });
+            
+            assetCategoryInput.addEventListener('input', () => {
+                const isTransfer = assetCategoryInput.value.trim() === 'Transfer';
+                transferToWrapper.classList.toggle('hidden', !isTransfer);
+                transferToAssetSelect.required = isTransfer;
+                assetValueLabel.textContent = isTransfer ? 'Transfer Amount' : 'Value';
+            });
+
+
+            addAssetForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const category = assetCategoryInput.value.trim();
+                const date = purchaseDateInput.value;
+                const description = document.getElementById('asset-description').value;
+
+                if (category === 'Transfer') {
+                    // Transfer logic needs careful review with multi-currency
+                    alert("Transfer functionality is temporarily disabled for multi-currency. Please add a withdrawal and a deposit manually.");
+                    return;
+
+                } else {
+                    const name = assetNameInput.value.trim();
+                    const currency = document.getElementById('asset-currency').value.toUpperCase().trim();
+                    if (!currency || currency.length !== 3) {
+                        alert("Please enter a valid 3-letter currency code (e.g., USD, EUR).");
+                        return;
+                    }
+                    
+                    let assetCategoryValue = '';
+                    const existingAsset = allAssets.find(a => a.name === name);
+
+                    if (existingAsset) {
+                        assetCategoryValue = existingAsset.assetCategory;
+                        if(currency !== existingAsset.currency) {
+                            alert(`You cannot change the currency of an existing asset. '${name}' uses ${existingAsset.currency}.`);
+                            return;
+                        }
+                    } else {
+                        assetCategoryValue = assetTypeCategoryInput.value.trim();
+                        if(!assetCategoryValue) {
+                            alert('Asset Category is required for new assets.');
+                            return;
+                        }
+                    }
+
+                    const newTransaction = {
+                        id: crypto.randomUUID(), name, assetCategory: assetCategoryValue, category,
+                        purchaseDate: date, value: parseFloat(document.getElementById('asset-value').value),
+                        currency, description, createdAt: new Date().toISOString()
+                    };
+                    
+                    allAssets.push(newTransaction);
+                }
+                
+                saveToStorage(DATA_STORAGE_KEY, allAssets);
+                renderAll();
+
+                addAssetForm.reset();
+                purchaseDateInput.value = new Date().toISOString().split('T')[0];
+                assetTypeCategoryWrapper.classList.add('hidden');
+                assetTypeCategoryInput.required = false;
+                transferToWrapper.classList.add('hidden');
+                transferToAssetSelect.required = false;
+                assetValueLabel.textContent = 'Value';
+                assetCurrencyInput.disabled = false;
+                assetNameInput.focus();
+            });
+
+
+            assetList.addEventListener('click', (e) => {
+                const target = e.target;
+                const transactionElement = target.closest('[data-id]');
+                if (!transactionElement) return;
+
+                const assetId = transactionElement.getAttribute('data-id');
+                
+                if (target.classList.contains('delete-btn')) deleteAsset(assetId);
+                if (target.classList.contains('edit-btn')) {
+                    const asset = allAssets.find(a => a.id === assetId);
+                    if(asset) openEditModal(asset);
+                }
+            });
+
+            editAssetForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const assetId = document.getElementById('edit-asset-id').value;
+                if(!assetId) return;
+
+                const assetIndex = allAssets.findIndex(a => a.id === assetId);
+                if(assetIndex === -1) return;
+                
+                const newCurrency = document.getElementById('edit-asset-currency').value.toUpperCase().trim();
+                 if (newCurrency !== allAssets[assetIndex].currency) {
+                     alert("You cannot change the currency of a transaction during an edit.");
+                     return;
+                 }
+
+                allAssets[assetIndex] = {
+                    ...allAssets[assetIndex],
+                    purchaseDate: document.getElementById('edit-purchase-date').value,
+                    value: parseFloat(document.getElementById('edit-asset-value').value),
+                    description: document.getElementById('edit-asset-description').value,
+                    category: document.getElementById('edit-asset-category').value.trim()
+                };
+                
+                saveToStorage(DATA_STORAGE_KEY, allAssets);
+                renderAll();
+                closeEditModal();
+            });
+
+
+            // --- Modal Handling ---
+            function openEditModal(asset) {
+                document.getElementById('edit-asset-id').value = asset.id;
+                document.getElementById('edit-asset-name').value = asset.name;
+                document.getElementById('edit-asset-category').value = asset.category || '';
+                document.getElementById('edit-purchase-date').value = asset.purchaseDate;
+                document.getElementById('edit-asset-value').value = asset.value;
+                document.getElementById('edit-asset-currency').value = asset.currency;
+                document.getElementById('edit-asset-currency').disabled = true; // Cannot edit currency of existing transaction
+                document.getElementById('edit-asset-description').value = asset.description || '';
+                editModal.classList.remove('hidden');
+            }
+
+            function closeEditModal() {
+                editModal.classList.add('hidden');
+                editAssetForm.reset();
+            }
+
+            cancelEditBtn.addEventListener('click', closeEditModal);
+            editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+
+            function deleteAsset(id) {
+                if(confirm('Are you sure you want to delete this transaction? This action cannot be undone.')){
+                    allAssets = allAssets.filter(a => a.id !== id);
+                    saveToStorage(DATA_STORAGE_KEY, allAssets);
+                    renderAll();
+                }
+            }
+            
+            // --- Settings Modal ---
+            function populateCurrencyDatalists() {
+                const optionsHtml = Object.keys(commonCurrencies)
+                    .map(code => `<option value="${code}">${code} - ${commonCurrencies[code]}</option>`).join('');
+                mainCurrencySelect.innerHTML = optionsHtml;
+                currencyDatalist.innerHTML = Object.keys(commonCurrencies).map(code => `<option value="${code}"></option>`).join('');
+            }
+            
+            settingsBtn.addEventListener('click', () => {
+                mainCurrencySelect.value = appSettings.mainCurrency;
+                settingsModal.classList.remove('hidden');
+            });
+
+            cancelSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
+            settingsModal.addEventListener('click', (e) => { if(e.target === settingsModal) settingsModal.classList.add('hidden'); });
+
+            saveSettingsBtn.addEventListener('click', () => {
+                appSettings.mainCurrency = mainCurrencySelect.value;
+                saveToStorage(SETTINGS_STORAGE_KEY, appSettings);
+                settingsModal.classList.add('hidden');
+                renderAll();
+            });
+            
+
+            // --- Import / Export ---
+            importCsvBtn.addEventListener('click', () => importCsvInput.click());
+
+            importCsvInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    try {
+                        const importedAssets = csvToArray(text);
+                        if(confirm('Do you want to REPLACE your current data with the imported file? Choose "Cancel" to MERGE instead.')) {
+                            allAssets = importedAssets;
+                        } else {
+                            allAssets = [...allAssets, ...importedAssets];
+                        }
+                        saveToStorage(DATA_STORAGE_KEY, allAssets);
+                        renderAll();
+                        alert('Data imported successfully!');
+                    } catch (err) {
+                        alert('Failed to import CSV. Please check the file format.');
+                        console.error(err);
+                    }
+                };
+                reader.readAsText(file);
+                importCsvInput.value = '';
+            });
+
+            function exportToCSV() {
+                if (allAssets.length === 0) {
+                    alert('No data to export.');
+                    return;
+                }
+                const headers = ['id','name','assetCategory','category','purchaseDate','value', 'currency', 'description','createdAt'];
+                const rows = allAssets.map(asset => 
+                    headers.map(header => {
+                        let cell = asset[header] === null || asset[header] === undefined ? '' : String(asset[header]);
+                        if (cell.includes(',')) cell = `"${cell.replace(/"/g, '""')}"`;
+                        return cell;
+                    }).join(',')
+                );
+                const csvContent = [headers.join(','), ...rows].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `asset_tracker_export_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            exportCsvBtn.addEventListener('click', exportToCSV);
+
+            function csvToArray(csv) {
+                const lines = csv.split('\n');
+                const headers = lines[0].trim().split(',').map(h => h.trim());
+                return lines.slice(1).map(line => {
+                    if (!line.trim()) return null;
+                    const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+                    return headers.reduce((obj, header, i) => {
+                        let value = (values[i] || '').trim();
+                        if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1).replace(/""/g, '"');
+                        
+                        if(header === 'value') obj[header] = parseFloat(value);
+                        else obj[header] = value;
+                        return obj;
+                    }, {});
+                }).filter(Boolean);
+            }
+
+
+            // --- Dashboard Rendering ---
+            function renderDashboard(assets, settings){
+                if(assets.length === 0 || !settings.rates) return;
+                const isDark = docElement.classList.contains('dark');
+                const mainCurrency = settings.mainCurrency;
+                const currentTimeline = document.querySelector('#trend-timeline-buttons .active')?.dataset.timeline || 'ALL';
+                renderAllocationChart(assets, settings, isDark, mainCurrency);
+                renderCashFlowSummary(assets, settings, mainCurrency);
+                renderAssetBreakdown(assets, settings, mainCurrency);
+                renderTrendChart(assets, settings, isDark, mainCurrency, currentTimeline);
+                renderCashFlowChart(assets, settings, isDark, mainCurrency, currentTimeline);
+            }
+
+            function getChartColors(isDark) { return { grid: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)', ticks: isDark ? '#9ca3af' : '#6b7280', labels: isDark ? '#d1d5db' : '#374151', pie: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#6b7280', '#ec4899'] }; }
+
+            function renderAllocationChart(assets, settings, isDark, mainCurrency) {
+                const colors = getChartColors(isDark);
+                const latestAssets = {};
+                assets.forEach(asset => {
+                    if (!latestAssets[asset.name] || new Date(asset.purchaseDate) >= new Date(latestAssets[asset.name].purchaseDate)) {
+                        latestAssets[asset.name] = asset;
+                    }
+                });
+
+                const allocation = Object.values(latestAssets).reduce((acc, asset) => {
+                    const category = asset.assetCategory || 'Other';
+                    const convertedValue = convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0;
+                    acc[category] = (acc[category] || 0) + convertedValue;
+                    return acc;
+                }, {});
+
+                const labels = Object.keys(allocation);
+                const data = Object.values(allocation);
+                const total = data.reduce((a, b) => a + b, 0);
+
+                const ctx = document.getElementById('allocationChart').getContext('2d');
+                if (allocationChart) allocationChart.destroy();
+                
+                allocationChart = new Chart(ctx, {
+                    type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors.pie, borderWidth: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.label}: ${formatCurrency(c.raw, mainCurrency)} (${total > 0 ? ((c.raw / total) * 100).toFixed(2) : 0}%)` } } } }
+                });
+
+                document.getElementById('allocation-legend').innerHTML = labels.map((label, i) => `
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors.pie[i % colors.pie.length]}"></span>
+                            <span class="text-gray-700 dark:text-gray-300">${label}</span>
+                        </div>
+                        <span class="font-medium text-gray-900 dark:text-white">${formatCurrency(data[i], mainCurrency)}</span>
+                    </div>`).join('');
+            }
+
+            function renderCashFlowSummary(assets, settings, mainCurrency) {
+                const groupedAssets = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {});
+                for (const name in groupedAssets) groupedAssets[name].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+
+                let totalDeposits = 0, totalWithdrawals = 0;
+
+                for (const name in groupedAssets) {
+                    const group = groupedAssets[name];
+                    for (let i = 0; i < group.length; i++) {
+                        const currentTx = group[i]; const prevTx = i > 0 ? group[i - 1] : null;
+                        if (currentTx.category === 'Deposit') {
+                            const depositAmount = convertCurrency(prevTx ? (currentTx.value - prevTx.value) : currentTx.value, currentTx.currency, mainCurrency, settings.rates);
+                            if(depositAmount > 0) totalDeposits += depositAmount;
+                        } else if (currentTx.category === 'Withdrawal' && prevTx) {
+                            const withdrawalAmount = convertCurrency(prevTx.value - currentTx.value, currentTx.currency, mainCurrency, settings.rates);
+                            if (withdrawalAmount > 0) totalWithdrawals += withdrawalAmount;
+                        }
+                    }
+                }
+                
+                document.getElementById('cash-flow-summary').innerHTML = `
+                    <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Deposited</p><p class="text-xl font-semibold text-green-600">${formatCurrency(totalDeposits, mainCurrency)}</p></div>
+                    <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Withdrawn</p><p class="text-xl font-semibold text-red-500">${formatCurrency(totalWithdrawals, mainCurrency)}</p></div>`;
+            }
+
+            function calculateAssetPerformance(transactions, settings, mainCurrency) {
+                let totalDeposits = 0, totalWithdrawals = 0;
+                const sortedTx = [...transactions].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                if (sortedTx.length === 0) return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0 };
+
+                const currentValue = convertCurrency(sortedTx[sortedTx.length - 1].value, sortedTx[sortedTx.length - 1].currency, mainCurrency, settings.rates) || 0;
+
+                for (let i = 0; i < sortedTx.length; i++) {
+                    const currentTx = sortedTx[i]; const prevTx = i > 0 ? sortedTx[i - 1] : null;
+                    if (currentTx.category === 'Deposit') {
+                        const depositAmount = convertCurrency(prevTx ? (currentTx.value - prevTx.value) : currentTx.value, currentTx.currency, mainCurrency, settings.rates);
+                        if(depositAmount > 0) totalDeposits += depositAmount;
+                    } else if (currentTx.category === 'Withdrawal' && prevTx) {
+                        const withdrawalAmount = convertCurrency(prevTx.value - currentTx.value, currentTx.currency, mainCurrency, settings.rates);
+                        if (withdrawalAmount > 0) totalWithdrawals += withdrawalAmount;
+                    }
+                }
+                
+                const netCapital = totalDeposits - totalWithdrawals;
+                const gainLossAmount = currentValue - netCapital;
+                const gainLossPercentage = netCapital > 0 ? (gainLossAmount / netCapital) * 100 : 0;
+                return { currentValue, gainLossAmount, gainLossPercentage };
+            }
+
+            function renderPerformanceGainLossHtml(amount, percentage, currency) {
+                if(isNaN(amount) || isNaN(percentage)) return '<div>-</div>';
+                const isGain = amount >= 0, colorClass = isGain ? 'text-green-500' : 'text-red-500';
+                return `<div class="text-right"><p class="font-semibold ${colorClass}">${formatCurrency(amount, currency)}</p><p class="text-xs ${colorClass}">(${percentage.toFixed(2)}%)</p></div>`;
+            }
+
+            function renderAssetBreakdown(assets, settings, mainCurrency) {
+                assetBreakdownContainer.innerHTML = ''; if(assets.length === 0) return;
+                const groupedByName = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {});
+                
+                const performanceByCategory = Object.values(groupedByName).reduce((acc, txs) => {
+                    const category = txs[0].assetCategory || 'Other';
+                    const performance = calculateAssetPerformance(txs, settings, mainCurrency);
+                    acc[category] = acc[category] || { assets: [], totalValue: 0, totalGain: 0, totalCapital: 0 };
+                    acc[category].assets.push({ name: txs[0].name, ...performance });
+                    return acc;
+                }, {});
+
+                for (const category in performanceByCategory) {
+                    const categoryAssets = assets.filter(a => a.assetCategory === category);
+                    const categoryPerformance = calculateAssetPerformance(categoryAssets, settings, mainCurrency);
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'border-t border-gray-200 dark:border-gray-700 py-2';
+                    categoryDiv.innerHTML = `
+                        <div class="asset-category-row flex justify-between items-center cursor-pointer p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                            <div class="flex items-center">
+                                <svg class="toggle-icon w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                <span class="font-semibold text-gray-800 dark:text-gray-100">${category}</span>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-gray-900 dark:text-white">${formatCurrency(categoryPerformance.currentValue, mainCurrency)}</p>
+                                ${renderPerformanceGainLossHtml(categoryPerformance.gainLossAmount, categoryPerformance.gainLossPercentage, mainCurrency)}
+                            </div>
+                        </div>
+                        <div class="asset-list-nested hidden pl-6 pt-2 space-y-2">
+                            ${performanceByCategory[category].assets.map(asset => `
+                                <div class="flex justify-between items-center text-sm">
+                                    <p class="text-gray-600 dark:text-gray-300">${asset.name}</p>
+                                    <div class="text-right">
+                                        <p class="font-medium text-gray-800 dark:text-gray-100">${formatCurrency(asset.currentValue, mainCurrency)}</p>
+                                        ${renderPerformanceGainLossHtml(asset.gainLossAmount, asset.gainLossPercentage, mainCurrency)}
+                                    </div>
+                                </div>`).join('')}
+                        </div>`;
+                    assetBreakdownContainer.appendChild(categoryDiv);
+                }
+            }
+            
+            assetBreakdownContainer.addEventListener('click', (e) => {
+                const categoryRow = e.target.closest('.asset-category-row');
+                if (categoryRow) {
+                    categoryRow.nextElementSibling.classList.toggle('hidden');
+                    categoryRow.querySelector('.toggle-icon').classList.toggle('rotate-90');
+                }
+            });
+
+
+            document.getElementById('trend-timeline-buttons').addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const btnContainer = e.target.parentElement;
+                    btnContainer.querySelector('.active')?.classList.remove('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white');
+                    e.target.classList.add('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white');
+                    renderDashboard(allAssets, appSettings);
+                }
+            });
+
+            function renderTrendChart(assets, settings, isDark, mainCurrency, timeline) {
+                const colors = getChartColors(isDark);
+                const sortedAssets = [...assets].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                if (sortedAssets.length === 0) return;
+
+                let startDate;
+                const now = new Date();
+                switch (timeline) {
+                    case '1M': startDate = new Date(new Date().setMonth(now.getMonth() - 1)); break;
+                    case '3M': startDate = new Date(new Date().setMonth(now.getMonth() - 3)); break;
+                    case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break;
+                    default: startDate = new Date(sortedAssets[0].purchaseDate); break;
+                }
+                
+                const dataPoints = {};
+                const assetValues = {};
+
+                sortedAssets.filter(tx => new Date(tx.purchaseDate) < startDate).forEach(tx => assetValues[tx.name] = tx);
+                
+                const initialTotal = Object.values(assetValues).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0);
+                if (Object.keys(assetValues).length > 0) {
+                     dataPoints[new Date(startDate.getTime() - 86400000).toISOString().split('T')[0]] = initialTotal;
+                }
+               
+                sortedAssets.filter(tx => new Date(tx.purchaseDate) >= startDate).forEach(tx => {
+                    assetValues[tx.name] = tx;
+                    const totalValue = Object.values(assetValues).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0);
+                    dataPoints[tx.purchaseDate] = totalValue;
+                });
+                
+                const labels = Object.keys(dataPoints).sort((a, b) => new Date(a) - new Date(b));
+                const data = labels.map(label => dataPoints[label]);
+                
+                const ctx = document.getElementById('trendChart').getContext('2d');
+                if (trendChart) trendChart.destroy();
+                trendChart = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: 'Portfolio Value', data, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', tension: 0.1, pointRadius: 0, pointHoverRadius: 5, pointHitRadius: 10 }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false, grid: { color: colors.grid }, ticks: { color: colors.ticks, callback: (v) => formatCurrency(v, mainCurrency).replace(/(\.00|,[0-9]*)/, '') } }, x: { grid: { color: colors.grid }, ticks: { color: colors.ticks } } },
+                        plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `${c.dataset.label || ''}: ${formatCurrency(c.parsed.y, mainCurrency)}` } } } }
+                });
+            }
+
+             function renderCashFlowChart(assets, settings, isDark, mainCurrency, timeline) {
+                const colors = getChartColors(isDark);
+                const sortedAssets = [...assets].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                if (sortedAssets.length === 0) return;
+
+                let startDate;
+                const now = new Date();
+                switch (timeline) { case '1M': startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); break; case '3M': startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1); break; case '1Y': startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1); break; default: startDate = new Date(sortedAssets[0].purchaseDate); break; }
+
+                const monthlyData = {};
+                const groupedAssets = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {});
+                for (const name in groupedAssets) groupedAssets[name].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+
+                for (const name in groupedAssets) {
+                    for (let i = 0; i < groupedAssets[name].length; i++) {
+                        const currentTx = groupedAssets[name][i];
+                        if (new Date(currentTx.purchaseDate) < startDate) continue;
+                        const prevTx = i > 0 ? groupedAssets[name][i - 1] : null;
+                        
+                        let deposit = 0, withdrawal = 0;
+                        if (currentTx.category === 'Deposit') deposit = convertCurrency(prevTx ? (currentTx.value - prevTx.value) : currentTx.value, currentTx.currency, mainCurrency, settings.rates);
+                        else if (currentTx.category === 'Withdrawal' && prevTx) withdrawal = convertCurrency(prevTx.value - currentTx.value, currentTx.currency, mainCurrency, settings.rates);
+
+                        if(deposit > 0 || withdrawal > 0){
+                            const txDate = new Date(currentTx.purchaseDate);
+                            const monthKey = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`;
+                            if(!monthlyData[monthKey]) monthlyData[monthKey] = { deposits: 0, withdrawals: 0 };
+                            if(deposit > 0) monthlyData[monthKey].deposits += deposit;
+                            if(withdrawal > 0) monthlyData[monthKey].withdrawals += withdrawal;
+                        }
+                    }
+                }
+
+                const sortedMonths = Object.keys(monthlyData).sort();
+                const labels = sortedMonths.map(key => new Date(`${key}-02`).toLocaleString('default', { month: 'short', year: 'numeric' }));
+                const depositData = sortedMonths.map(key => monthlyData[key].deposits);
+                const withdrawalData = sortedMonths.map(key => monthlyData[key].withdrawals);
+                
+                const ctx = document.getElementById('cashFlowChart').getContext('2d');
+                if (cashFlowChart) cashFlowChart.destroy();
+                cashFlowChart = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: 'Deposited', data: depositData, backgroundColor: '#10b981' }, { label: 'Withdrawn', data: withdrawalData, backgroundColor: '#ef4444' }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { color: colors.grid }, ticks: { color: colors.ticks } }, y: { stacked: true, grid: { color: colors.grid }, ticks: { color: colors.ticks, callback: (v) => formatCurrency(v, mainCurrency).replace(/(\.00|,[0-9]*)/, '') } } },
+                        plugins: { legend: { display: true, position: 'top', labels: { color: colors.labels } }, tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `${c.dataset.label || ''}: ${formatCurrency(c.parsed.y, mainCurrency)}` } } } }
+                });
+            }
+
+
+            function seedInitialData() {
+                const sampleTransactions = [
+                    { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Deposit', purchaseDate: '2023-01-15', value: 2500, currency: 'USD', description: 'Initial investment' },
+                    { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Market Value Update', purchaseDate: '2023-03-20', value: 3500, currency: 'USD', description: 'Price increase' },
+                    { id: crypto.randomUUID(), name: 'Jollibee Food Corp.', assetCategory: 'Stocks', category: 'Deposit', purchaseDate: '2023-03-01', value: 100000, currency: 'PHP', description: 'Buy JFC shares' },
+                    { id: crypto.randomUUID(), name: 'Euro Bank Account', assetCategory: 'Cash', category: 'Deposit', purchaseDate: '2023-02-10', value: 5000, currency: 'EUR', description: 'Savings' },
+                ];
+                saveToStorage(DATA_STORAGE_KEY, sampleTransactions);
+            }
+
+            // --- App Startup ---
+            purchaseDateInput.value = new Date().toISOString().split('T')[0];
+            initializeApp();
+
+            // PWA Service Worker Registration
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js').then(registration => {
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                  console.log('ServiceWorker registration failed: ', err);
+                });
+              });
+            }
+        });
+    </script>
+</body>
+</html>
