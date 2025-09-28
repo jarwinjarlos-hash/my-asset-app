@@ -48,14 +48,6 @@
         .rotate-90 {
             transform: rotate(90deg);
         }
-        .dragging {
-            opacity: 0.5;
-            cursor: grabbing;
-        }
-        .drag-over {
-           border-top: 2px dashed #3b82f6;
-        }
-
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
@@ -89,24 +81,8 @@
                     <button id="tracker-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
                         Tracker
                     </button>
-                    <button id="buckets-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
-                        Buckets
-                    </button>
                 </nav>
             </div>
-        </div>
-
-        <!-- Buckets Content -->
-        <div id="buckets-content" class="hidden">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Goal Buckets</h2>
-            <div id="buckets-list" class="space-y-6">
-                <!-- Bucket items will be rendered here -->
-            </div>
-            <div id="no-buckets-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-                <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" /></svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No buckets created</h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Go to Settings > Manage Buckets to create your first goal.</p>
-             </div>
         </div>
         
         <!-- Tracker Content -->
@@ -269,17 +245,6 @@
                     <select id="main-currency" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                     </select>
                 </div>
-                <div>
-                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manage Buckets</h4>
-                    <div id="buckets-settings-list" class="space-y-2"></div>
-                    <form id="add-bucket-form" class="mt-2 flex gap-2">
-                        <input type="text" id="new-bucket-name" class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="New Bucket Name" required>
-                        <input type="number" id="new-bucket-target" class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="Target Amount" min="0" step="0.01">
-                        <button type="submit" class="p-2 bg-primary-600 text-white rounded-md hover:bg-primary-700">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        </button>
-                    </form>
-                </div>
                  <div>
                      <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Management</h4>
                      <div class="flex flex-col sm:flex-row gap-4">
@@ -302,34 +267,6 @@
             </div>
         </div>
     </div>
-
-     <!-- Asset Assignment Modal -->
-    <div id="assign-asset-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
-            <h3 id="assign-asset-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Assign Assets</h3>
-            <div id="unassigned-assets-list" class="space-y-2 max-h-60 overflow-y-auto">
-                <!-- Unassigned assets will be rendered here -->
-            </div>
-             <div class="mt-6 flex justify-end space-x-2">
-                <button type="button" id="cancel-assign-asset-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
-                <button type="button" id="save-assign-asset-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Add Selected</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- View Assets Modal -->
-    <div id="view-assets-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
-            <h3 id="view-assets-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Assigned Assets</h3>
-            <div id="assigned-assets-list" class="space-y-2 max-h-60 overflow-y-auto">
-                <!-- Assigned assets will be rendered here -->
-            </div>
-             <div class="mt-6 flex justify-end">
-                <button type="button" id="close-view-assets-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Close</button>
-            </div>
-        </div>
-    </div>
-
 
     <!-- Alert Modal -->
     <div id="alert-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
@@ -365,7 +302,6 @@
             let appSettings = {};
             let isEditMode = false;
             let currentEditId = null;
-            let currentlyEditingBucketId = null;
 
             const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
 
@@ -405,10 +341,8 @@
 
 
             // --- DOM Elements ---
-            const bucketsTabButton = document.getElementById('buckets-tab-button');
             const trackerTabButton = document.getElementById('tracker-tab-button');
             const dashboardTabButton = document.getElementById('dashboard-tab-button');
-            const bucketsContent = document.getElementById('buckets-content');
             const trackerContent = document.getElementById('tracker-content');
             const dashboardContent = document.getElementById('dashboard-content');
             
@@ -455,20 +389,6 @@
             const importCsvBtn = document.getElementById('import-csv-btn');
             const importCsvInput = document.getElementById('import-csv-input');
             const exportCsvBtn = document.getElementById('export-csv-btn');
-
-            const bucketsList = document.getElementById('buckets-list');
-            const noBucketsMessage = document.getElementById('no-buckets-message');
-            const bucketsSettingsList = document.getElementById('buckets-settings-list');
-            const addBucketForm = document.getElementById('add-bucket-form');
-
-            const assignAssetModal = document.getElementById('assign-asset-modal');
-            const unassignedAssetsList = document.getElementById('unassigned-assets-list');
-            const cancelAssignAssetBtn = document.getElementById('cancel-assign-asset-btn');
-            const saveAssignAssetBtn = document.getElementById('save-assign-asset-btn');
-
-            const viewAssetsModal = document.getElementById('view-assets-modal');
-            const assignedAssetsList = document.getElementById('assigned-assets-list');
-            const closeViewAssetsBtn = document.getElementById('close-view-assets-btn');
             
             // --- Chart variables ---
             let allocationChart, trendChart, cashFlowChart;
@@ -554,16 +474,8 @@
                     mainCurrency: 'USD',
                     rates: {},
                     lastUpdated: null,
-                    buckets: [],
                     ...(Array.isArray(storedSettings) ? {} : storedSettings) // handle case where old data is an array
                 };
-                if(appSettings.buckets.length === 0){ // Seed default buckets
-                    appSettings.buckets = [
-                        {id: crypto.randomUUID(), name: 'Retirement', target: 500000},
-                        {id: crypto.randomUUID(), name: 'House', target: 100000}
-                    ];
-                    saveToStorage(SETTINGS_STORAGE_KEY, appSettings);
-                }
                 updateRatesStatus();
             }
             
@@ -581,31 +493,23 @@
                 
                 if (dashboardTabButton.classList.contains('active')) {
                      renderDashboard(allAssets, appSettings);
-                } else if (bucketsTabButton.classList.contains('active')) {
-                    renderBuckets();
                 } else {
                     renderGroupedAssets(allAssets, appSettings);
                 }
-                renderBucketSettings();
             }
             
             // --- Tab Switching ---
-            bucketsTabButton.addEventListener('click', () => switchTab('buckets'));
             dashboardTabButton.addEventListener('click', () => switchTab('dashboard'));
             trackerTabButton.addEventListener('click', () => switchTab('tracker'));
 
             function switchTab(tabName) {
-                [bucketsContent, dashboardContent, trackerContent].forEach(el => el.classList.add('hidden'));
-                [bucketsTabButton, dashboardTabButton, trackerTabButton].forEach(el => el.classList.remove('active'));
+                [dashboardContent, trackerContent].forEach(el => el.classList.add('hidden'));
+                [dashboardTabButton, trackerTabButton].forEach(el => el.classList.remove('active'));
 
                 if (tabName === 'dashboard') {
                     dashboardContent.classList.remove('hidden');
                     dashboardTabButton.classList.add('active');
                     renderDashboard(allAssets, appSettings);
-                } else if (tabName === 'buckets') {
-                    bucketsContent.classList.remove('hidden');
-                    bucketsTabButton.classList.add('active');
-                    renderBuckets();
                 } else if (tabName === 'tracker') {
                     trackerContent.classList.remove('hidden');
                     trackerTabButton.classList.add('active');
@@ -668,12 +572,23 @@
 
             function formatCurrency(amount, currencyCode, compact = false) {
                  if (typeof amount !== 'number') return '-';
-                 const options = { style: 'currency', currency: currencyCode || 'USD' };
+                 
+                 const finalCurrencyCode = (currencyCode && typeof currencyCode === 'string' && currencyCode.length === 3) ? currencyCode : appSettings.mainCurrency;
+
+                 const options = { style: 'currency', currency: finalCurrencyCode };
+                 
                  if (compact) {
                      options.notation = 'compact';
                      options.compactDisplay = 'short';
                  }
-                 return new Intl.NumberFormat('en-US', options).format(amount);
+
+                 try {
+                    return new Intl.NumberFormat('en-US', options).format(amount);
+                 } catch (e) {
+                    console.error(`Error formatting currency with code: ${finalCurrencyCode}. Falling back to USD.`, e);
+                    options.currency = 'USD';
+                    return new Intl.NumberFormat('en-US', options).format(amount);
+                 }
             }
             
              function updateRatesStatus() {
@@ -715,6 +630,10 @@
 
                 const groupedByMonth = assets.reduce((acc, asset) => {
                     const date = new Date(asset.purchaseDate + 'T00:00:00');
+                    if(isNaN(date.getTime())) {
+                        console.error("Invalid date found in asset, skipping:", asset);
+                        return acc;
+                    }
                     const monthKey = new Date(date.getFullYear(), date.getMonth()).toISOString();
                     acc[monthKey] = acc[monthKey] || [];
                     acc[monthKey].push(asset);
@@ -752,7 +671,7 @@
                             <div data-id="${transaction.id}" class="py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
                                 <div class="flex justify-between items-center">
                                     <div>
-                                        <p class="font-semibold text-gray-800 dark:text-gray-100">${transaction.name} ${transaction.tag ? `<span class="text-xs font-medium text-gray-500 dark:text-gray-400">(${transaction.tag})</span>` : ''}</p>
+                                        <p class="font-semibold text-gray-800 dark:text-gray-100">${transaction.name}</p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">${dateFormatted}</p>
                                     </div>
                                     <div class="text-right">
@@ -1017,11 +936,9 @@
                     }
 
                     let assetCategoryValue = '';
-                    let tagValue = '';
 
                     if(latestAsset) {
                         assetCategoryValue = latestAsset.assetCategory;
-                        tagValue = latestAsset.tag;
                     } else {
                         assetCategoryValue = assetTypeCategoryModalInput.value.trim();
                         if (!assetCategoryValue) {
@@ -1048,8 +965,7 @@
                     const newTransaction = {
                         id: crypto.randomUUID(), name: name, assetCategory: assetCategoryValue, category: category,
                         purchaseDate: purchaseDateModalInput.value, value: newAssetValue, currency: currency,
-                        description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString(),
-                        tag: tagValue,
+                        description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString()
                     };
                     allAssets.push(newTransaction);
                 }
@@ -1083,9 +999,18 @@
                 for (let i = editIndex + 1; i < assetTransactions.length; i++) {
                     const currentTx = assetTransactions[i];
                     const previousTxInLoop = assetTransactions[i - 1];
-                    const diff = currentTx.value - previousTxInLoop.value; // Old difference
-                    
-                    // The new value is the updated previous value plus the old difference
+                    let diff;
+
+                    if (currentTx.category === 'Deposit' || currentTx.category === 'Withdrawal') {
+                       const amount = (i > 1 ? currentTx.value - assetTransactions[i-2].value : currentTx.value);
+                       diff = amount * (currentTx.category === 'Deposit' ? 1 : -1);
+                    } else {
+                        // For market value, it sets an absolute value, so there's no "diff" to maintain.
+                        // We will just let future market value updates set their own new totals.
+                        // This part might need more complex logic if we want edits to propagate through market updates.
+                        // For now, we assume subsequent market updates are independent absolute values.
+                        continue;
+                    }
                     currentTx.value = assetTransactions[i - 1].value + diff;
                 }
 
@@ -1172,7 +1097,7 @@
                 }
             }
             
-            // --- Settings Modal & Buckets ---
+            // --- Settings Modal ---
             function populateCurrencyDatalists() {
                 const optionsHtml = Object.keys(commonCurrencies)
                     .sort()
@@ -1195,66 +1120,7 @@
                 settingsModal.classList.add('hidden');
                 renderAll();
             });
-
-            addBucketForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const nameInput = document.getElementById('new-bucket-name');
-                const targetInput = document.getElementById('new-bucket-target');
-                const name = nameInput.value.trim();
-                const target = parseFloat(targetInput.value) || 0;
-
-                if (name && !appSettings.buckets.find(b => b.name === name)) {
-                    appSettings.buckets.push({ id: crypto.randomUUID(), name, target });
-                    saveToStorage(SETTINGS_STORAGE_KEY, appSettings);
-                    renderBucketSettings();
-                    updateDatalists(allAssets);
-                    nameInput.value = '';
-                    targetInput.value = '';
-                } else {
-                    showAlert('Bucket name must be unique and not empty.', 'Invalid Name');
-                }
-            });
-
-            bucketsSettingsList.addEventListener('click', e => {
-                const bucketId = e.target.closest('[data-bucket-id]')?.dataset.bucketId;
-                if (!bucketId) return;
-
-                if (e.target.classList.contains('delete-bucket-btn')) {
-                    appSettings.buckets = appSettings.buckets.filter(b => b.id !== bucketId);
-                    saveToStorage(SETTINGS_STORAGE_KEY, appSettings);
-                    renderBucketSettings();
-                    updateDatalists(allAssets);
-                }
-            });
-
-            bucketsSettingsList.addEventListener('change', e => {
-                const bucketElement = e.target.closest('[data-bucket-id]');
-                const bucketId = bucketElement?.dataset.bucketId;
-                if (!bucketId) return;
-                
-                const bucket = appSettings.buckets.find(b => b.id === bucketId);
-                if (!bucket) return;
-
-                const oldName = bucketElement.querySelector('.bucket-name-input').dataset.oldName;
-
-                if (e.target.classList.contains('bucket-name-input')) {
-                    bucket.name = e.target.value.trim();
-                     // Update existing assets with the new tag
-                    allAssets.forEach(asset => {
-                        if (asset.tag === oldName) {
-                            asset.tag = bucket.name;
-                        }
-                    });
-                    saveToStorage(DATA_STORAGE_KEY, allAssets);
-                }
-                if (e.target.classList.contains('bucket-target-input')) {
-                    bucket.target = parseFloat(e.target.value) || 0;
-                }
-                saveToStorage(SETTINGS_STORAGE_KEY, appSettings);
-                updateDatalists(allAssets);
-            });
             
-
             // --- Import / Export ---
             importCsvBtn.addEventListener('click', () => importCsvInput.click());
 
@@ -1291,11 +1157,13 @@
                     showAlert('No data to export.');
                     return;
                 }
-                const headers = ['id','name','assetCategory', 'tag', 'category','purchaseDate','value', 'currency', 'description','createdAt'];
+                const headers = ['id','name','assetCategory','category','purchaseDate','value', 'currency', 'description','createdAt'];
                 const rows = allAssets.map(asset => 
                     headers.map(header => {
                         let cell = asset[header] === null || asset[header] === undefined ? '' : String(asset[header]);
-                        if (cell.includes(',')) cell = `"${cell.replace(/"/g, '""')}"`;
+                        if (/[",\n]/.test(cell)) {
+                           cell = `"${cell.replace(/"/g, '""')}"`;
+                        }
                         return cell;
                     }).join(',')
                 );
@@ -1314,99 +1182,68 @@
             exportCsvBtn.addEventListener('click', exportToCSV);
 
             function csvToArray(csv) {
-                const lines = csv.split('\n');
-                const headers = lines[0].trim().split(',').map(h => h.trim());
-                return lines.slice(1).map(line => {
+                const lines = csv.trim().replace(/\r\n/g, '\n').split('\n');
+                const headers = lines[0].trim().split(',').map(h => h.trim().toLowerCase().replace(/\s/g, ''));
+                const hasCurrency = headers.includes('currency');
+
+                return lines.slice(1).map((line, rowIndex) => {
                     if (!line.trim()) return null;
-                    const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
-                    return headers.reduce((obj, header, i) => {
-                        let value = (values[i] || '').trim();
-                        if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1).replace(/""/g, '"');
-                        
-                        if(header === 'value') obj[header] = parseFloat(value);
-                        else obj[header] = value;
-                        return obj;
-                    }, {});
+                    
+                    const values = [];
+                    let current = '';
+                    let inQuotes = false;
+                    for (let i = 0; i < line.length; i++) {
+                        const char = line[i];
+                        if (char === '"') {
+                            if (inQuotes && line[i+1] === '"') {
+                                current += '"'; // This is an escaped quote
+                                i++; 
+                            } else {
+                                inQuotes = !inQuotes;
+                            }
+                        } else if (char === ',' && !inQuotes) {
+                            values.push(current);
+                            current = '';
+                        } else {
+                            current += char;
+                        }
+                    }
+                    values.push(current); // Add the last value
+
+                    if (values.length > headers.length) {
+                        console.warn(`Row ${rowIndex + 2} has more columns than headers. Truncating.`);
+                        values.length = headers.length;
+                    }
+                    
+                    const obj = {};
+                    headers.forEach((header, i) => {
+                       obj[header] = (values[i] || '').trim();
+                    });
+                    
+                    const purchaseDateStr = obj.purchasedate;
+                    const date = new Date(purchaseDateStr);
+                    if (!purchaseDateStr || isNaN(date.getTime())) {
+                        console.error(`Invalid or missing purchaseDate on row ${rowIndex + 2}, skipping:`, line);
+                        return null; 
+                    }
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    obj.purchaseDate = `${year}-${month}-${day}`;
+
+                    obj.value = parseFloat(obj.value);
+                    if (typeof obj.value !== 'number' || isNaN(obj.value)) obj.value = 0;
+
+                    if (!hasCurrency || !obj.currency || obj.currency.length !== 3) {
+                        obj.currency = appSettings.mainCurrency; 
+                    }
+                    if (!obj.id) obj.id = crypto.randomUUID();
+                    if (!obj.createdAt) obj.createdAt = new Date().toISOString();
+                    obj.assetCategory = obj.assetcategory || 'Other';
+                    
+                    return obj;
                 }).filter(Boolean);
             }
-
-            // --- Bucket Rendering ---
-            function renderBuckets() {
-                bucketsList.innerHTML = '';
-                if (!appSettings.buckets || appSettings.buckets.length === 0) {
-                    noBucketsMessage.classList.remove('hidden');
-                    return;
-                }
-                noBucketsMessage.classList.add('hidden');
-
-                appSettings.buckets.forEach(bucket => {
-                    const assetsInBucket = allAssets.filter(a => a.tag === bucket.name);
-                    
-                    const latestAssets = {};
-                    assetsInBucket.forEach(asset => {
-                        if (!latestAssets[asset.name] || new Date(asset.purchaseDate) >= new Date(latestAssets[asset.name].purchaseDate)) {
-                            latestAssets[asset.name] = asset;
-                        }
-                    });
-                    const currentValue = Object.values(latestAssets).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, appSettings.mainCurrency, appSettings.rates) || 0), 0);
-
-                    const totalDeposited = Object.values(latestAssets).reduce((sum, asset) => {
-                         const assetHistory = allAssets.filter(a => a.name === asset.name);
-                         let assetDeposits = 0;
-                         assetHistory.forEach((tx, i) => {
-                            const prevTx = i > 0 ? assetHistory[i - 1] : null;
-                            if (tx.category === 'Deposit') {
-                                const depositAmount = prevTx ? tx.value - prevTx.value : tx.value;
-                                assetDeposits += convertCurrency(depositAmount, tx.currency, appSettings.mainCurrency, appSettings.rates) || 0;
-                            }
-                         });
-                         return sum + assetDeposits;
-                    }, 0);
-                    
-                    const progress = bucket.target > 0 ? (currentValue / bucket.target) * 100 : 0;
-                    
-                    const bucketEl = document.createElement('div');
-                    bucketEl.className = 'bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md cursor-grab';
-                    bucketEl.setAttribute('draggable', true);
-                    bucketEl.dataset.bucketId = bucket.id;
-
-                    bucketEl.innerHTML = `
-                        <div class="flex justify-between items-center mb-2">
-                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">${bucket.name}</h3>
-                            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Target: ${formatCurrency(bucket.target, appSettings.mainCurrency)}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-2">
-                            <div class="bg-primary-600 h-2.5 rounded-full" style="width: ${Math.min(progress, 100)}%"></div>
-                        </div>
-                        <div class="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-300">
-                            <span>${formatCurrency(currentValue, appSettings.mainCurrency)}</span>
-                            <span>${progress.toFixed(1)}%</span>
-                        </div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Deposited: ${formatCurrency(totalDeposited, appSettings.mainCurrency)}
-                        </div>
-                         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
-                            <button class="view-assets-btn text-sm py-1 px-3 bg-gray-200 dark:bg-gray-600 rounded-md">View Assets</button>
-                            <button class="assign-asset-btn text-sm py-1 px-3 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-md">Assign Asset</button>
-                        </div>
-                    `;
-                    bucketsList.appendChild(bucketEl);
-                });
-            }
-
-            function renderBucketSettings() {
-                if (!bucketsSettingsList) return;
-                bucketsSettingsList.innerHTML = appSettings.buckets.map(bucket => `
-                    <div data-bucket-id="${bucket.id}" class="flex items-center gap-2">
-                        <input type="text" value="${bucket.name}" class="bucket-name-input block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm sm:text-sm" placeholder="Bucket Name" data-old-name="${bucket.name}">
-                        <input type="number" value="${bucket.target || ''}" class="bucket-target-input block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm sm:text-sm" placeholder="Target Amount">
-                        <button class="delete-bucket-btn p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900 rounded-md">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>
-                `).join('');
-            }
-
 
             // --- Dashboard Rendering ---
             function renderDashboard(assets, settings){
@@ -1495,56 +1332,37 @@
 
             function calculateAssetPerformance(transactions, settings, mainCurrency, nativeCurrencyValue = false) {
                 if (transactions.length === 0) {
-                    return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0 };
+                    return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0, netCapital: 0 };
                 }
 
-                const latestTxPerAsset = {};
-                transactions.forEach(tx => {
-                    if (!latestTxPerAsset[tx.name] || new Date(tx.purchaseDate) >= new Date(latestTxPerAsset[tx.name].purchaseDate)) {
-                        latestTxPerAsset[tx.name] = tx;
-                    }
-                });
-                
-                const currentValue = Object.values(latestTxPerAsset).reduce((sum, tx) => {
-                    const value = nativeCurrencyValue ? tx.value : (convertCurrency(tx.value, tx.currency, mainCurrency, settings.rates) || 0);
-                    return sum + value;
-                }, 0);
+                const sortedTxs = [...transactions].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                const latestTx = sortedTxs[sortedTxs.length - 1];
+
+                const currentValue = nativeCurrencyValue ? latestTx.value : (convertCurrency(latestTx.value, latestTx.currency, mainCurrency, settings.rates) || 0);
 
                 let totalDeposits = 0;
                 let totalWithdrawals = 0;
 
-                const groupedByName = transactions.reduce((acc, tx) => {
-                    (acc[tx.name] = acc[tx.name] || []).push(tx);
-                    return acc;
-                }, {});
+                for (let i = 0; i < sortedTxs.length; i++) {
+                    const currentTx = sortedTxs[i];
+                    const prevTx = i > 0 ? sortedTxs[i - 1] : null;
 
-                for (const assetName in groupedByName) {
-                    const assetTransactions = groupedByName[assetName].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
-                    
-                    for (let i = 0; i < assetTransactions.length; i++) {
-                        const currentTx = assetTransactions[i];
-                        const prevTx = i > 0 ? assetTransactions[i - 1] : null;
-
-                        if (currentTx.category === 'Deposit') {
-                            const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value;
-                            const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, settings.rates);
-                            if(convertedDeposit > 0) totalDeposits += convertedDeposit;
-                        } else if (currentTx.category === 'Withdrawal' && prevTx) {
-                            const withdrawalAmount = prevTx.value - currentTx.value;
-                            const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, settings.rates);
-                            if (convertedWithdrawal > 0) totalWithdrawals += convertedWithdrawal;
-                        }
+                    if (currentTx.category === 'Deposit') {
+                        const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value;
+                        const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, settings.rates);
+                        if(convertedDeposit > 0) totalDeposits += convertedDeposit;
+                    } else if (currentTx.category === 'Withdrawal' && prevTx) {
+                        const withdrawalAmount = prevTx.value - currentTx.value;
+                        const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, settings.rates);
+                        if (convertedWithdrawal > 0) totalWithdrawals += convertedWithdrawal;
                     }
                 }
                 
-                const latestTx = Object.values(latestTxPerAsset)[0];
-                const currentConvertedValue = convertCurrency(latestTx.value, latestTx.currency, mainCurrency, settings.rates) || 0;
-
                 const netCapital = totalDeposits - totalWithdrawals;
-                const gainLossAmount = currentConvertedValue - netCapital;
+                const gainLossAmount = currentValue - netCapital;
                 const gainLossPercentage = netCapital !== 0 ? (gainLossAmount / netCapital) * 100 : 0;
                 
-                return { currentValue, gainLossAmount, gainLossPercentage };
+                return { currentValue, gainLossAmount, gainLossPercentage, netCapital };
             }
 
             function renderPerformanceGainLossHtml(amount, percentage, currency) {
@@ -1565,25 +1383,32 @@
                 const assetPerformances = Object.values(groupedByName).map(txs => {
                     const latestTx = txs.sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))[0];
                     const performance = calculateAssetPerformance(txs, settings, mainCurrency);
+                    const nativePerformance = calculateAssetPerformance(txs, settings, mainCurrency, true);
                     return {
                         name: latestTx.name,
                         currency: latestTx.currency,
                         assetCategory: latestTx.assetCategory,
-                        nativeValue: latestTx.value,
+                        nativeValue: nativePerformance.currentValue,
                         ...performance
                     };
                 });
 
-                const performanceByCategory = assetPerformances.reduce((acc, asset) => {
-                    const category = asset.assetCategory || 'Other';
-                    acc[category] = acc[category] || { assets: [] };
-                    acc[category].assets.push(asset);
+                const performanceByCategory = assetPerformances.reduce((acc, assetPerf) => {
+                    const category = assetPerf.assetCategory || 'Other';
+                    if(!acc[category]){
+                        acc[category] = { assets: [], totalValue: 0, totalGainLoss: 0, totalNetCapital: 0 };
+                    }
+                    acc[category].assets.push(assetPerf);
+                    acc[category].totalValue += assetPerf.currentValue;
+                    acc[category].totalGainLoss += assetPerf.gainLossAmount;
+                    acc[category].totalNetCapital += assetPerf.netCapital;
                     return acc;
                 }, {});
 
                 for (const category in performanceByCategory) {
-                    const categoryAssets = assets.filter(a => a.assetCategory === category);
-                    const categoryPerformance = calculateAssetPerformance(categoryAssets, settings, mainCurrency);
+                    const categoryData = performanceByCategory[category];
+                    const categoryPercentage = categoryData.totalNetCapital !== 0 ? (categoryData.totalGainLoss / categoryData.totalNetCapital) * 100 : 0;
+                    
                     const categoryDiv = document.createElement('div');
                     categoryDiv.className = 'border-t border-gray-200 dark:border-gray-700 py-2';
                     categoryDiv.innerHTML = `
@@ -1593,12 +1418,12 @@
                                 <span class="font-semibold text-gray-800 dark:text-gray-100">${category}</span>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold text-gray-900 dark:text-white">${formatCurrency(categoryPerformance.currentValue, mainCurrency)}</p>
-                                ${renderPerformanceGainLossHtml(categoryPerformance.gainLossAmount, categoryPerformance.gainLossPercentage, mainCurrency)}
+                                <p class="font-bold text-gray-900 dark:text-white">${formatCurrency(categoryData.totalValue, mainCurrency)}</p>
+                                ${renderPerformanceGainLossHtml(categoryData.totalGainLoss, categoryPercentage, mainCurrency)}
                             </div>
                         </div>
                         <div class="asset-list-nested hidden pl-6 pt-2 space-y-2">
-                            ${performanceByCategory[category].assets.map(asset => `
+                            ${categoryData.assets.map(asset => `
                                 <div class="flex justify-between items-center text-sm">
                                     <div class="flex items-center">
                                         <p class="text-gray-600 dark:text-gray-300">${asset.name} <span class="text-xs text-gray-400 dark:text-gray-500">${asset.currency}</span></p>
@@ -1702,10 +1527,11 @@
                 for (const name in groupedAssets) groupedAssets[name].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
 
                 for (const name in groupedAssets) {
-                    for (let i = 0; i < groupedAssets[name].length; i++) {
-                        const currentTx = groupedAssets[name][i];
+                    const group = groupedAssets[name];
+                    for (let i = 0; i < group.length; i++) {
+                        const currentTx = group[i];
                         if (new Date(currentTx.purchaseDate) < startDate) continue;
-                        const prevTx = i > 0 ? groupedAssets[name][i - 1] : null;
+                        const prevTx = i > 0 ? group[i - 1] : null;
                         
                         let deposit = 0, withdrawal = 0;
                         if (currentTx.category === 'Deposit') deposit = convertCurrency(prevTx ? (currentTx.value - prevTx.value) : currentTx.value, currentTx.currency, mainCurrency, settings.rates);
@@ -1738,17 +1564,12 @@
             function seedInitialData() {
                 // Current date is mocked as Sep 27, 2025 for this sample data
                 const sampleTransactions = [
-                    // Pre-August data to establish a baseline
-                    { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Deposit', purchaseDate: '2025-07-15', value: 3000, currency: 'USD', description: 'Initial investment', tag: 'Retirement' },
-                    
-                    // August Transactions
-                    { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Deposit', purchaseDate: '2025-08-05', value: 3200, currency: 'USD', description: 'Added $200', tag: 'Retirement' }, // Deposit of 200
-                    { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Market Value Update', purchaseDate: '2025-08-28', value: 3500, currency: 'USD', description: 'Price increase', tag: 'Retirement' }, // Gain of 300
-
-                    // September Transactions
-                    { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Withdrawal', purchaseDate: '2025-09-10', value: 3300, currency: 'USD', description: 'Took $200 profit', tag: 'Retirement' }, // Withdrawal of 200
-                    { id: crypto.randomUUID(), name: 'Jollibee Food Corp.', assetCategory: 'Stocks', category: 'Deposit', purchaseDate: '2025-09-15', value: 100000, currency: 'PHP', description: 'New investment', tag: 'Retirement' },
-                    { id: crypto.randomUUID(), name: 'House Fund', assetCategory: 'Cash', category: 'Deposit', purchaseDate: '2025-09-01', value: 5000, currency: 'SAR', description: 'Monthly Savings', tag: 'House' }
+                    { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Deposit', purchaseDate: '2025-07-15', value: 3000, currency: 'USD', description: 'Initial investment'},
+                    { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Deposit', purchaseDate: '2025-08-05', value: 3200, currency: 'USD', description: 'Added $200'},
+                    { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Market Value Update', purchaseDate: '2025-08-28', value: 3500, currency: 'USD', description: 'Price increase'},
+                    { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Withdrawal', purchaseDate: '2025-09-10', value: 3300, currency: 'USD', description: 'Took $200 profit'},
+                    { id: crypto.randomUUID(), name: 'Jollibee Food Corp.', assetCategory: 'Stocks', category: 'Deposit', purchaseDate: '2025-09-15', value: 100000, currency: 'PHP', description: 'New investment'},
+                    { id: crypto.randomUUID(), name: 'House Fund', assetCategory: 'Cash', category: 'Deposit', purchaseDate: '2025-09-01', value: 5000, currency: 'SAR', description: 'Monthly Savings' }
                 ];
                 saveToStorage(DATA_STORAGE_KEY, sampleTransactions);
             }
