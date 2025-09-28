@@ -138,7 +138,13 @@
                 <!-- Left Column -->
                 <div class="lg:col-span-1 space-y-8">
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Asset Allocation</h2>
+                         <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Asset Allocation</h2>
+                            <div id="allocation-display-toggle" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                                <button data-mode="amount" class="allocation-toggle-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">$</button>
+                                <button data-mode="percent" class="allocation-toggle-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">%</button>
+                            </div>
+                        </div>
                         <div class="h-64 flex items-center justify-center relative">
                             <canvas id="allocationChart"></canvas>
                         </div>
@@ -281,7 +287,7 @@
 
     <!-- Confirmation Modal -->
     <div id="confirm-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-white dark:bg-gray-800">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
             <h3 id="confirm-modal-title" class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Confirmation</h3>
             <p id="confirm-modal-message" class="text-gray-600 dark:text-gray-300 mb-6"></p>
             <div class="flex justify-end space-x-2">
@@ -302,6 +308,7 @@
             let appSettings = {};
             let isEditMode = false;
             let currentEditId = null;
+            let allocationDisplayMode = 'amount'; // 'amount' or 'percent'
 
             const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
 
@@ -389,6 +396,7 @@
             const importCsvBtn = document.getElementById('import-csv-btn');
             const importCsvInput = document.getElementById('import-csv-input');
             const exportCsvBtn = document.getElementById('export-csv-btn');
+            const allocationDisplayToggle = document.getElementById('allocation-display-toggle');
             
             // --- Chart variables ---
             let allocationChart, trendChart, cashFlowChart;
@@ -1290,20 +1298,56 @@
                         responsive: true, maintainAspectRatio: false, cutout: '70%', 
                         plugins: { 
                             legend: { display: false }, 
-                            tooltip: { callbacks: { label: (c) => `${c.label}: ${formatCurrency(c.raw, mainCurrency)} (${total > 0 ? ((c.raw / total) * 100).toFixed(2) : 0}%)` } }
+                            tooltip: { 
+                                callbacks: { 
+                                    label: (c) => {
+                                        const value = c.raw;
+                                        if (allocationDisplayMode === 'percent') {
+                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
+                                            return `${c.label}: ${percentage}%`;
+                                        }
+                                        return `${c.label}: ${formatCurrency(value, mainCurrency)}`;
+                                    } 
+                                } 
+                            }
                         } 
                     }
                 });
 
-                document.getElementById('allocation-legend').innerHTML = labels.map((label, i) => `
+                document.getElementById('allocation-legend').innerHTML = labels.map((label, i) => {
+                    const value = data[i];
+                    let displayValue;
+                    if(allocationDisplayMode === 'percent'){
+                        const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
+                        displayValue = `${percentage}%`;
+                    } else {
+                        displayValue = formatCurrency(value, mainCurrency);
+                    }
+                    return `
                     <div class="flex items-center justify-between text-sm">
                         <div class="flex items-center">
                             <span class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors.pie[i % colors.pie.length]}"></span>
                             <span class="text-gray-700 dark:text-gray-300">${label}</span>
                         </div>
-                        <span class="font-medium text-gray-900 dark:text-white">${formatCurrency(data[i], mainCurrency)}</span>
-                    </div>`).join('');
+                        <span class="font-medium text-gray-900 dark:text-white">${displayValue}</span>
+                    </div>`
+                }).join('');
             }
+            
+            allocationDisplayToggle.addEventListener('click', (e) => {
+                 if (e.target.tagName === 'BUTTON') {
+                    const newMode = e.target.dataset.mode;
+                    if(newMode === allocationDisplayMode) return;
+
+                    allocationDisplayMode = newMode;
+                    
+                    const btnContainer = e.target.parentElement;
+                    btnContainer.querySelector('.active')?.classList.remove('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white');
+                    e.target.classList.add('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white');
+                    
+                    renderAllocationChart(allAssets, appSettings, docElement.classList.contains('dark'), appSettings.mainCurrency);
+                }
+            });
 
             function renderCashFlowSummary(assets, settings, mainCurrency) {
                 const groupedAssets = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {});
