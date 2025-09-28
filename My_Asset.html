@@ -90,6 +90,36 @@
             <!-- Asset List -->
             <div>
                 <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Transaction History</h2>
+                <!-- Filter Section -->
+                <div id="filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label for="filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                            <select id="filter-asset-name" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
+                            <select id="filter-category" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                            <input type="date" id="filter-start-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                            <input type="date" id="filter-end-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button id="reset-filters-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Reset</button>
+                        <button id="apply-filters-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Apply Filters</button>
+                    </div>
+                </div>
+
                 <div id="asset-list" class="space-y-6">
                 </div>
                  <div id="no-assets-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
@@ -397,6 +427,13 @@
             const importCsvInput = document.getElementById('import-csv-input');
             const exportCsvBtn = document.getElementById('export-csv-btn');
             const allocationDisplayToggle = document.getElementById('allocation-display-toggle');
+
+            const filterAssetName = document.getElementById('filter-asset-name');
+            const filterCategory = document.getElementById('filter-category');
+            const filterStartDate = document.getElementById('filter-start-date');
+            const filterEndDate = document.getElementById('filter-end-date');
+            const applyFiltersBtn = document.getElementById('apply-filters-btn');
+            const resetFiltersBtn = document.getElementById('reset-filters-btn');
             
             // --- Chart variables ---
             let allocationChart, trendChart, cashFlowChart;
@@ -628,15 +665,16 @@
              }
              
             // --- Render Functions ---
-            const renderGroupedAssets = (assets, settings) => {
+            const renderGroupedAssets = (assetsToRender, settings) => {
                 assetList.innerHTML = '';
-                 if (assets.length === 0) {
+                 if (assetsToRender.length === 0) {
                     noAssetsMessage.classList.remove('hidden');
+                    assetList.innerHTML = '';
                     return;
                 }
                 noAssetsMessage.classList.add('hidden');
 
-                const groupedByMonth = assets.reduce((acc, asset) => {
+                const groupedByMonth = assetsToRender.reduce((acc, asset) => {
                     const date = new Date(asset.purchaseDate + 'T00:00:00');
                     if(isNaN(date.getTime())) {
                         console.error("Invalid date found in asset, skipping:", asset);
@@ -709,11 +747,17 @@
             const updateDatalists = (assets) => {
                 const uniqueNames = [...new Set(assets.map(asset => asset.name))];
                 if (assetDatalist) assetDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
+                 if (filterAssetName) {
+                    filterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join('');
+                }
 
                 const defaultTxCategories = ['Market Value Update', 'Deposit', 'Withdrawal'];
                 const customTxCategories = assets.map(asset => asset.category).filter(Boolean);
                 const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])];
                 if (categoryDatalist) categoryDatalist.innerHTML = allTxCategories.map(cat => `<option value="${cat}"></option>`).join('');
+                if (filterCategory) {
+                    filterCategory.innerHTML = '<option value="">All</option>' + allTxCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+                }
 
                 const defaultAssetCategories = ['Cash', 'Bond', 'Stocks', 'Fixed Income', 'Crypto'];
                 const customAssetCategories = assets.map(asset => asset.assetCategory).filter(Boolean);
@@ -1252,6 +1296,40 @@
                     return obj;
                 }).filter(Boolean);
             }
+            
+             // --- Filter Logic ---
+            applyFiltersBtn.addEventListener('click', () => {
+                const name = filterAssetName.value;
+                const category = filterCategory.value;
+                const startDate = filterStartDate.value;
+                const endDate = filterEndDate.value;
+
+                let filteredAssets = [...allAssets];
+
+                if (name) {
+                    filteredAssets = filteredAssets.filter(asset => asset.name === name);
+                }
+                if (category) {
+                    filteredAssets = filteredAssets.filter(asset => asset.category === category);
+                }
+                if (startDate) {
+                    filteredAssets = filteredAssets.filter(asset => new Date(asset.purchaseDate) >= new Date(startDate));
+                }
+                if (endDate) {
+                    filteredAssets = filteredAssets.filter(asset => new Date(asset.purchaseDate) <= new Date(endDate));
+                }
+                
+                renderGroupedAssets(filteredAssets, appSettings);
+            });
+
+            resetFiltersBtn.addEventListener('click', () => {
+                filterAssetName.value = '';
+                filterCategory.value = '';
+                filterStartDate.value = '';
+                filterEndDate.value = '';
+                renderGroupedAssets(allAssets, appSettings);
+            });
+
 
             // --- Dashboard Rendering ---
             function renderDashboard(assets, settings){
