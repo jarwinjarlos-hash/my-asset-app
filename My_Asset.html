@@ -48,6 +48,14 @@
         .rotate-90 {
             transform: rotate(90deg);
         }
+        .dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        .drag-over {
+           border-top: 2px dashed #3b82f6;
+        }
+
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
@@ -250,10 +258,6 @@
             </form>
         </div>
     </div>
-
-    <!-- Edit Modal (Simplified - Uses Transaction Modal) -->
-    <!-- Kept for backward compatibility with old functions if any, but new edits will use the main transaction modal -->
-    <div id="edit-modal"></div>
     
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
@@ -299,6 +303,34 @@
         </div>
     </div>
 
+     <!-- Asset Assignment Modal -->
+    <div id="assign-asset-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="assign-asset-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Assign Assets</h3>
+            <div id="unassigned-assets-list" class="space-y-2 max-h-60 overflow-y-auto">
+                <!-- Unassigned assets will be rendered here -->
+            </div>
+             <div class="mt-6 flex justify-end space-x-2">
+                <button type="button" id="cancel-assign-asset-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                <button type="button" id="save-assign-asset-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Add Selected</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Assets Modal -->
+    <div id="view-assets-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="view-assets-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Assigned Assets</h3>
+            <div id="assigned-assets-list" class="space-y-2 max-h-60 overflow-y-auto">
+                <!-- Assigned assets will be rendered here -->
+            </div>
+             <div class="mt-6 flex justify-end">
+                <button type="button" id="close-view-assets-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Close</button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Alert Modal -->
     <div id="alert-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
         <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-white dark:bg-gray-800">
@@ -333,6 +365,8 @@
             let appSettings = {};
             let isEditMode = false;
             let currentEditId = null;
+            let currentlyEditingBucketId = null;
+
             const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
 
             const commonCurrencies = { "USD": "United States Dollar", "EUR": "Euro", "JPY": "Japanese Yen", "GBP": "British Pound Sterling", "AUD": "Australian Dollar", "CAD": "Canadian Dollar", "CHF": "Swiss Franc", "CNY": "Chinese Yuan", "HKD": "Hong Kong Dollar", "NZD": "New Zealand Dollar", "SEK": "Swedish Krona", "KRW": "South Korean Won", "SGD": "Singapore Dollar", "NOK": "Norwegian Krone", "MXN": "Mexican Peso", "INR": "Indian Rupee", "RUB": "Russian Ruble", "ZAR": "South African Rand", "BRL": "Brazilian Real", "PHP": "Philippine Peso", "SAR": "Saudi Riyal" };
@@ -405,7 +439,6 @@
             const assetDatalist = document.getElementById('asset-datalist');
             const currencyDatalist = document.getElementById('currency-datalist');
             const categoryDatalist = document.getElementById('category-datalist');
-            const tagDatalist = document.getElementById('tag-datalist');
 
             const totalValueEl = document.getElementById('total-value');
             const totalGainLossAmountEl = document.getElementById('total-gain-loss-amount');
@@ -427,7 +460,15 @@
             const noBucketsMessage = document.getElementById('no-buckets-message');
             const bucketsSettingsList = document.getElementById('buckets-settings-list');
             const addBucketForm = document.getElementById('add-bucket-form');
-            const assetBucketAssignmentsList = document.getElementById('asset-bucket-assignments-list');
+
+            const assignAssetModal = document.getElementById('assign-asset-modal');
+            const unassignedAssetsList = document.getElementById('unassigned-assets-list');
+            const cancelAssignAssetBtn = document.getElementById('cancel-assign-asset-btn');
+            const saveAssignAssetBtn = document.getElementById('save-assign-asset-btn');
+
+            const viewAssetsModal = document.getElementById('view-assets-modal');
+            const assignedAssetsList = document.getElementById('assigned-assets-list');
+            const closeViewAssetsBtn = document.getElementById('close-view-assets-btn');
             
             // --- Chart variables ---
             let allocationChart, trendChart, cashFlowChart;
@@ -516,6 +557,13 @@
                     buckets: [],
                     ...(Array.isArray(storedSettings) ? {} : storedSettings) // handle case where old data is an array
                 };
+                if(appSettings.buckets.length === 0){ // Seed default buckets
+                    appSettings.buckets = [
+                        {id: crypto.randomUUID(), name: 'Retirement', target: 500000},
+                        {id: crypto.randomUUID(), name: 'House', target: 100000}
+                    ];
+                    saveToStorage(SETTINGS_STORAGE_KEY, appSettings);
+                }
                 updateRatesStatus();
             }
             
@@ -539,7 +587,6 @@
                     renderGroupedAssets(allAssets, appSettings);
                 }
                 renderBucketSettings();
-                renderAssetBucketAssignments();
             }
             
             // --- Tab Switching ---
@@ -746,10 +793,6 @@
                 const allAssetCategories = [...new Set([...defaultAssetCategories, ...customAssetCategories])];
                 if (assetTypeDatalist) assetTypeDatalist.innerHTML = allAssetCategories.map(cat => `<option value="${cat}"></option>`).join('');
 
-                if (tagDatalist) {
-                    const uniqueTags = [...new Set(appSettings.buckets.map(b => b.name))];
-                    tagDatalist.innerHTML = uniqueTags.map(tag => `<option value="${tag}"></option>`).join('');
-                }
             };
             
             function calculateMonthlyGainLoss(assets, settings, periodStartDate, periodEndDate) {
@@ -1323,7 +1366,10 @@
                     const progress = bucket.target > 0 ? (currentValue / bucket.target) * 100 : 0;
                     
                     const bucketEl = document.createElement('div');
-                    bucketEl.className = 'bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md';
+                    bucketEl.className = 'bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md cursor-grab';
+                    bucketEl.setAttribute('draggable', true);
+                    bucketEl.dataset.bucketId = bucket.id;
+
                     bucketEl.innerHTML = `
                         <div class="flex justify-between items-center mb-2">
                             <h3 class="text-xl font-bold text-gray-900 dark:text-white">${bucket.name}</h3>
@@ -1338,6 +1384,10 @@
                         </div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             Deposited: ${formatCurrency(totalDeposited, appSettings.mainCurrency)}
+                        </div>
+                         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+                            <button class="view-assets-btn text-sm py-1 px-3 bg-gray-200 dark:bg-gray-600 rounded-md">View Assets</button>
+                            <button class="assign-asset-btn text-sm py-1 px-3 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-md">Assign Asset</button>
                         </div>
                     `;
                     bucketsList.appendChild(bucketEl);
@@ -1355,24 +1405,6 @@
                         </button>
                     </div>
                 `).join('');
-            }
-
-            function renderAssetBucketAssignments() {
-                if (!assetBucketAssignmentsList) return;
-                const uniqueAssetNames = [...new Set(allAssets.map(a => a.name))];
-                assetBucketAssignmentsList.innerHTML = uniqueAssetNames.map(name => {
-                    const currentTag = allAssets.find(a => a.name === name)?.tag || '';
-                    const bucketOptions = appSettings.buckets.map(b => `<option value="${b.name}" ${currentTag === b.name ? 'selected' : ''}>${b.name}</option>`).join('');
-                    return `
-                        <div class="flex items-center justify-between gap-4">
-                            <span class="text-sm font-medium text-gray-800 dark:text-gray-200">${name}</span>
-                            <select data-asset-name="${name}" class="block w-1/2 px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm sm:text-sm">
-                                <option value="" ${!currentTag ? 'selected' : ''}>Unassigned</option>
-                                ${bucketOptions}
-                            </select>
-                        </div>
-                    `;
-                }).join('');
             }
 
 
