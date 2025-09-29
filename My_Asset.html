@@ -207,9 +207,9 @@
                         </div>
                     </div>
                      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monthly Cash Flow</h2>
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Historical Gain/Loss</h2>
                         <div class="h-96">
-                             <canvas id="cashFlowChart"></canvas>
+                             <canvas id="gainLossChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -436,7 +436,7 @@
             const resetFiltersBtn = document.getElementById('reset-filters-btn');
             
             // --- Chart variables ---
-            let allocationChart, trendChart, cashFlowChart;
+            let allocationChart, trendChart, gainLossChart;
 
             // --- Custom Modals ---
             const alertModal = document.getElementById('alert-modal');
@@ -1341,7 +1341,7 @@
                 renderCashFlowSummary(assets, settings, mainCurrency);
                 renderAssetBreakdown(assets, settings, mainCurrency);
                 renderTrendChart(assets, settings, isDark, mainCurrency, currentTimeline);
-                renderCashFlowChart(assets, settings, isDark, mainCurrency, currentTimeline);
+                renderGainLossChart(assets, settings, isDark, mainCurrency, currentTimeline);
             }
 
             function getChartColors(isDark) { return { grid: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)', ticks: isDark ? '#9ca3af' : '#6b7280', labels: isDark ? '#d1d5db' : '#374151', pie: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#6b7280', '#ec4899'] }; }
@@ -1635,50 +1635,86 @@
                 });
             }
 
-             function renderCashFlowChart(assets, settings, isDark, mainCurrency, timeline) {
+             function renderGainLossChart(assets, settings, isDark, mainCurrency, timeline) {
                 const colors = getChartColors(isDark);
                 const sortedAssets = [...assets].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
                 if (sortedAssets.length === 0) return;
 
                 let startDate;
                 const now = new Date();
-                switch (timeline) { case '1M': startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); break; case '3M': startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1); break; case '1Y': startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1); break; default: startDate = new Date(sortedAssets[0].purchaseDate); break; }
-
-                const monthlyData = {};
-                const groupedAssets = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {});
-                for (const name in groupedAssets) groupedAssets[name].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
-
-                for (const name in groupedAssets) {
-                    const group = groupedAssets[name];
-                    for (let i = 0; i < group.length; i++) {
-                        const currentTx = group[i];
-                        if (new Date(currentTx.purchaseDate) < startDate) continue;
-                        const prevTx = i > 0 ? group[i - 1] : null;
-                        
-                        let deposit = 0, withdrawal = 0;
-                        if (currentTx.category === 'Deposit') deposit = convertCurrency(prevTx ? (currentTx.value - prevTx.value) : currentTx.value, currentTx.currency, mainCurrency, settings.rates);
-                        else if (currentTx.category === 'Withdrawal' && prevTx) withdrawal = convertCurrency(prevTx.value - currentTx.value, currentTx.currency, mainCurrency, settings.rates);
-
-                        if(deposit > 0 || withdrawal > 0){
-                            const txDate = new Date(currentTx.purchaseDate);
-                            const monthKey = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`;
-                            if(!monthlyData[monthKey]) monthlyData[monthKey] = { deposits: 0, withdrawals: 0 };
-                            if(deposit > 0) monthlyData[monthKey].deposits += deposit;
-                            if(withdrawal > 0) monthlyData[monthKey].withdrawals += withdrawal;
-                        }
-                    }
+                switch (timeline) {
+                    case '1M': startDate = new Date(new Date().setMonth(now.getMonth() - 1)); break;
+                    case '3M': startDate = new Date(new Date().setMonth(now.getMonth() - 3)); break;
+                    case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break;
+                    default: startDate = new Date(sortedAssets[0].purchaseDate); break;
                 }
 
-                const sortedMonths = Object.keys(monthlyData).sort();
-                const labels = sortedMonths.map(key => new Date(`${key}-02`).toLocaleString('default', { month: 'short', year: 'numeric' }));
-                const depositData = sortedMonths.map(key => monthlyData[key].deposits);
-                const withdrawalData = sortedMonths.map(key => monthlyData[key].withdrawals);
+                const dataPoints = {};
                 
-                const ctx = document.getElementById('cashFlowChart').getContext('2d');
-                if (cashFlowChart) cashFlowChart.destroy();
-                cashFlowChart = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: 'Deposited', data: depositData, backgroundColor: '#10b981' }, { label: 'Withdrawn', data: withdrawalData, backgroundColor: '#ef4444' }] },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { color: colors.grid }, ticks: { color: colors.ticks } }, y: { stacked: true, grid: { color: colors.grid }, ticks: { color: colors.ticks, callback: (v) => formatCurrency(v, mainCurrency, true) } } },
-                        plugins: { legend: { display: true, position: 'top', labels: { color: colors.labels } }, tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `${c.dataset.label || ''}: ${formatCurrency(c.parsed.y, mainCurrency)}` } } } }
+                const assetsInTimeline = sortedAssets.filter(tx => new Date(tx.purchaseDate) >= startDate);
+                
+                let cumulativeDeposits = 0;
+                let cumulativeWithdrawals = 0;
+                const valueHistory = {};
+
+                // Establish baseline before the start date
+                const assetsBeforeStart = sortedAssets.filter(tx => new Date(tx.purchaseDate) < startDate);
+                assetsBeforeStart.forEach(tx => {
+                     const prevTx = valueHistory[tx.name];
+                     if (tx.category === 'Deposit') {
+                         const depositAmount = prevTx ? (tx.value - prevTx.value) : tx.value;
+                         cumulativeDeposits += convertCurrency(depositAmount, tx.currency, mainCurrency, settings.rates) || 0;
+                     } else if (tx.category === 'Withdrawal' && prevTx) {
+                         const withdrawalAmount = prevTx.value - tx.value;
+                         cumulativeWithdrawals += convertCurrency(withdrawalAmount, tx.currency, mainCurrency, settings.rates) || 0;
+                     }
+                     valueHistory[tx.name] = tx;
+                });
+                
+                assetsInTimeline.forEach(tx => {
+                    const prevTx = valueHistory[tx.name];
+                    if (tx.category === 'Deposit') {
+                        const depositAmount = prevTx ? (tx.value - prevTx.value) : tx.value;
+                        cumulativeDeposits += convertCurrency(depositAmount, tx.currency, mainCurrency, settings.rates) || 0;
+                    } else if (tx.category === 'Withdrawal' && prevTx) {
+                        const withdrawalAmount = prevTx.value - tx.value;
+                        cumulativeWithdrawals += convertCurrency(withdrawalAmount, tx.currency, mainCurrency, settings.rates) || 0;
+                    }
+                    valueHistory[tx.name] = tx;
+
+                    const totalValue = Object.values(valueHistory).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0);
+                    const netCapital = cumulativeDeposits - cumulativeWithdrawals;
+                    dataPoints[tx.purchaseDate] = totalValue - netCapital;
+                });
+
+                const labels = Object.keys(dataPoints).sort((a, b) => new Date(a) - new Date(b));
+                const data = labels.map(label => dataPoints[label]);
+                const backgroundColors = data.map(value => value >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)');
+
+                const ctx = document.getElementById('gainLossChart').getContext('2d');
+                if (gainLossChart) gainLossChart.destroy();
+                gainLossChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Gain/Loss',
+                            data,
+                            backgroundColor: backgroundColors,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.ticks, callback: (v) => formatCurrency(v, mainCurrency, true) } },
+                            x: { grid: { display: false }, ticks: { color: colors.ticks } }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `Gain/Loss: ${formatCurrency(c.parsed.y, mainCurrency)}` } }
+                        }
+                    }
                 });
             }
 
