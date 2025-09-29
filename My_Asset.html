@@ -745,15 +745,15 @@
             };
             
             const updateDatalists = (assets) => {
-                const uniqueNames = [...new Set(assets.map(asset => asset.name))];
+                const uniqueNames = [...new Set(assets.map(asset => asset.name))].sort();
                 if (assetDatalist) assetDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
-                 if (filterAssetName) {
+                if (filterAssetName) {
                     filterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join('');
                 }
 
                 const defaultTxCategories = ['Market Value Update', 'Deposit', 'Withdrawal'];
                 const customTxCategories = assets.map(asset => asset.category).filter(Boolean);
-                const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])];
+                const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])].sort();
                 if (categoryDatalist) categoryDatalist.innerHTML = allTxCategories.map(cat => `<option value="${cat}"></option>`).join('');
                 if (filterCategory) {
                     filterCategory.innerHTML = '<option value="">All</option>' + allTxCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
