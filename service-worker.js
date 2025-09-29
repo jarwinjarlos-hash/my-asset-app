@@ -1,7 +1,8 @@
-const CACHE_NAME = 'asset-tracker-cache-v2'; // Updated cache version
+const CACHE_NAME = 'asset-tracker-cache-v5'; // Updated cache version
 const urlsToCache = [
   '/',
   'My_Asset.html',
+  'Manifest.json',
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://cdn.jsdelivr.net/npm/chart.js'
@@ -59,7 +60,6 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
