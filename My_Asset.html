@@ -60,6 +60,11 @@
                 <p class="text-gray-500 dark:text-gray-400 mt-1">Your personal multi-currency portfolio.</p>
             </div>
             <div class="flex items-center space-x-2">
+                 <button id="orientation-toggle-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle screen orientation">
+                    <svg id="orientation-auto-icon" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.667 0l3.181-3.183m-4.991-2.695v-2.695A8.25 8.25 0 0012 4.5c-2.31 0-4.418.99-5.867 2.625l-2.072 2.072m10.238-3.183v4.992m0 0h-4.992m4.992 0l-3.181-3.183a8.25 8.25 0 00-11.667 0l-3.181 3.183" /></svg>
+                    <svg id="orientation-portrait-icon" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+                    <svg id="orientation-landscape-icon" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5a2.25 2.25 0 012.25 2.25v6.75a2.25 2.25 0 01-2.25 2.25H3.75a2.25 2.25 0 01-2.25-2.25V7.5a2.25 2.25 0 012.25-2.25z" /></svg>
+                </button>
                  <button id="privacy-toggle-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle privacy mode">
                     <svg id="privacy-on-icon" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     <svg id="privacy-off-icon" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L6.228 6.228" /></svg>
@@ -442,6 +447,10 @@
             const filterEndDate = document.getElementById('filter-end-date');
             const applyFiltersBtn = document.getElementById('apply-filters-btn');
             const resetFiltersBtn = document.getElementById('reset-filters-btn');
+            const orientationToggleBtn = document.getElementById('orientation-toggle-btn');
+            const orientationAutoIcon = document.getElementById('orientation-auto-icon');
+            const orientationPortraitIcon = document.getElementById('orientation-portrait-icon');
+            const orientationLandscapeIcon = document.getElementById('orientation-landscape-icon');
             
             // --- Chart variables ---
             let allocationChart, trendChart, gainLossChart;
@@ -529,8 +538,11 @@
                     lastUpdated: null,
                     ...(Array.isArray(storedSettings) ? {} : storedSettings) // handle case where old data is an array
                 };
-                 isPrivacyMode = localStorage.getItem('assetTrackerPrivacyMode') === 'true';
+                isPrivacyMode = localStorage.getItem('assetTrackerPrivacyMode') === 'true';
                 updatePrivacyView();
+                const savedOrientation = localStorage.getItem('assetTrackerOrientation') || 'any';
+                const orientationIndex = ['any', 'portrait', 'landscape'].indexOf(savedOrientation);
+                setOrientation(orientationIndex);
                 updateRatesStatus();
             }
             
@@ -1723,7 +1735,6 @@
 
 
             function seedInitialData() {
-                // Current date is mocked as Sep 27, 2025 for this sample data
                 const sampleTransactions = [
                     { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Deposit', purchaseDate: '2025-07-15', value: 3000, currency: 'USD', description: 'Initial investment'},
                     { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Deposit', purchaseDate: '2025-08-05', value: 3200, currency: 'USD', description: 'Added $200'},
@@ -1732,7 +1743,7 @@
                     { id: crypto.randomUUID(), name: 'Jollibee Food Corp.', assetCategory: 'Stocks', category: 'Deposit', purchaseDate: '2025-09-15', value: 100000, currency: 'PHP', description: 'New investment'},
                     { id: crypto.randomUUID(), name: 'House Fund', assetCategory: 'Cash', category: 'Deposit', purchaseDate: '2025-09-01', value: 5000, currency: 'SAR', description: 'Monthly Savings' }
                 ];
-                saveToStorage(DATA_STORAGE_KEY, allAssets);
+                saveToStorage(DATA_STORAGE_KEY, sampleTransactions);
             }
 
             // --- Privacy Mode ---
@@ -1752,6 +1763,45 @@
                 updatePrivacyView();
                 renderAll();
             });
+
+             // --- Orientation Lock ---
+            let currentOrientationIndex = 0;
+            const orientations = ['any', 'portrait', 'landscape'];
+
+            function setOrientation(index) {
+                const modes = ['any', 'portrait-primary', 'landscape-primary'];
+                const icons = [orientationAutoIcon, orientationPortraitIcon, orientationLandscapeIcon];
+                
+                currentOrientationIndex = index;
+                const mode = orientations[currentOrientationIndex];
+                localStorage.setItem('assetTrackerOrientation', mode);
+
+                // Update icon visibility
+                icons.forEach((icon, i) => {
+                    if (i === index) {
+                        icon.classList.remove('hidden');
+                    } else {
+                        icon.classList.add('hidden');
+                    }
+                });
+
+                // Apply orientation lock
+                if (screen.orientation && screen.orientation.lock) {
+                    if (mode === 'any') {
+                        screen.orientation.unlock();
+                    } else {
+                       screen.orientation.lock(modes[currentOrientationIndex]).catch(err => console.error(`Could not lock orientation: ${err}`));
+                    }
+                } else {
+                    console.warn('Screen Orientation API not supported.');
+                }
+            }
+
+            orientationToggleBtn.addEventListener('click', () => {
+                currentOrientationIndex = (currentOrientationIndex + 1) % orientations.length;
+                setOrientation(currentOrientationIndex);
+            });
+
 
             // --- App Startup ---
             initializeApp();
