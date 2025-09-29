@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Tracker (Offline)</title>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="Manifest.json">
     <meta name="theme-color" content="#3b82f6"/>
     <link rel="apple-touch-icon" href="https://placehold.co/192x192/3b82f6/FFFFFF?text=AT">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -168,7 +168,7 @@
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Left Column -->
                 <div class="lg:col-span-1 space-y-8">
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
@@ -756,7 +756,7 @@
             };
             
             const updateDatalists = (assets) => {
-                const uniqueNames = [...new Set(assets.map(asset => asset.name))].sort();
+                const uniqueNames = [...new Set(assets.map(asset => asset.name))].sort((a, b) => a.localeCompare(b));
                 if (assetDatalist) assetDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
                 if (filterAssetName) {
                     filterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join('');
@@ -764,7 +764,7 @@
 
                 const defaultTxCategories = ['Market Value Update', 'Deposit', 'Withdrawal'];
                 const customTxCategories = assets.map(asset => asset.category).filter(Boolean);
-                const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])].sort();
+                const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])].sort((a, b) => a.localeCompare(b));
                 if (categoryDatalist) categoryDatalist.innerHTML = allTxCategories.map(cat => `<option value="${cat}"></option>`).join('');
                 if (filterCategory) {
                     filterCategory.innerHTML = '<option value="">All</option>' + allTxCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
