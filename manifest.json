@@ -1,7 +1,7 @@
 {
   "name": "Asset Tracker",
   "short_name": "AssetTracker",
-  "start_url": "My_A_s_s_e_t.html",
+  "start_url": "My_Asset.html",
   "display": "standalone",
   "background_color": "#f9fafb",
   "theme_color": "#3b82f6",
@@ -44,3 +44,4 @@
     }
   ]
 }
+
