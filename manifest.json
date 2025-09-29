@@ -1,11 +1,11 @@
 {
   "name": "Asset Tracker",
   "short_name": "AssetTracker",
-  "start_url": "My_Asset.html",
+  "start_url": "My_A_s_s_e_t.html",
   "display": "standalone",
   "background_color": "#f9fafb",
   "theme_color": "#3b82f6",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
     {
       "src": "https://placehold.co/72x72/3b82f6/FFFFFF?text=AT",
@@ -38,15 +38,9 @@
       "sizes": "192x192"
     },
     {
-      "src": "https://placehold.co/384x384/3b82f6/FFFFFF?text=AT",
-      "type": "image/png",
-      "sizes": "384x384"
-    },
-    {
       "src": "https://placehold.co/512x512/3b82f6/FFFFFF?text=AT",
       "type": "image/png",
       "sizes": "512x512"
     }
   ]
 }
-
