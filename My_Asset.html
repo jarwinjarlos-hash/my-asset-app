@@ -568,7 +568,15 @@
                 } else if (tabName === 'tracker') {
                     trackerContent.classList.remove('hidden');
                     trackerTabButton.classList.add('active');
-                    renderGroupedAssets(allAssets, appSettings);
+                    
+                    const today = new Date();
+                    const twoMonthsAgo = new Date();
+                    twoMonthsAgo.setMonth(today.getMonth() - 2);
+
+                    filterStartDate.value = twoMonthsAgo.toISOString().split('T')[0];
+                    filterEndDate.value = today.toISOString().split('T')[0];
+                    
+                    applyAndRenderFilters();
                 }
             }
 
@@ -1314,7 +1322,7 @@
             }
             
              // --- Filter Logic ---
-            applyFiltersBtn.addEventListener('click', () => {
+            function applyAndRenderFilters() {
                 const name = filterAssetName.value;
                 const category = filterCategory.value;
                 const startDate = filterStartDate.value;
@@ -1336,7 +1344,9 @@
                 }
                 
                 renderGroupedAssets(filteredAssets, appSettings);
-            });
+            }
+
+            applyFiltersBtn.addEventListener('click', applyAndRenderFilters);
 
             resetFiltersBtn.addEventListener('click', () => {
                 filterAssetName.value = '';
@@ -1665,47 +1675,23 @@
                     case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break;
                     default: startDate = new Date(sortedAssets[0].purchaseDate); break;
                 }
-
-                const dataPoints = {};
                 
-                const assetsInTimeline = sortedAssets.filter(tx => new Date(tx.purchaseDate) >= startDate);
+                const monthlyGainLoss = {};
                 
-                let cumulativeDeposits = 0;
-                let cumulativeWithdrawals = 0;
-                const valueHistory = {};
+                const firstMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+                const lastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-                // Establish baseline before the start date
-                const assetsBeforeStart = sortedAssets.filter(tx => new Date(tx.purchaseDate) < startDate);
-                assetsBeforeStart.forEach(tx => {
-                     const prevTx = valueHistory[tx.name];
-                     if (tx.category === 'Deposit') {
-                         const depositAmount = prevTx ? (tx.value - prevTx.value) : tx.value;
-                         cumulativeDeposits += convertCurrency(depositAmount, tx.currency, mainCurrency, settings.rates) || 0;
-                     } else if (tx.category === 'Withdrawal' && prevTx) {
-                         const withdrawalAmount = prevTx.value - tx.value;
-                         cumulativeWithdrawals += convertCurrency(withdrawalAmount, tx.currency, mainCurrency, settings.rates) || 0;
-                     }
-                     valueHistory[tx.name] = tx;
-                });
-                
-                assetsInTimeline.forEach(tx => {
-                    const prevTx = valueHistory[tx.name];
-                    if (tx.category === 'Deposit') {
-                        const depositAmount = prevTx ? (tx.value - prevTx.value) : tx.value;
-                        cumulativeDeposits += convertCurrency(depositAmount, tx.currency, mainCurrency, settings.rates) || 0;
-                    } else if (tx.category === 'Withdrawal' && prevTx) {
-                        const withdrawalAmount = prevTx.value - tx.value;
-                        cumulativeWithdrawals += convertCurrency(withdrawalAmount, tx.currency, mainCurrency, settings.rates) || 0;
-                    }
-                    valueHistory[tx.name] = tx;
+                for (let d = new Date(firstMonth); d <= lastMonth; d.setMonth(d.getMonth() + 1)) {
+                    const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+                    const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+                    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    
+                    const data = calculateMonthlyGainLoss(assets, settings, startOfMonth, endOfMonth);
+                    monthlyGainLoss[monthKey] = data.gainLoss;
+                }
 
-                    const totalValue = Object.values(valueHistory).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0);
-                    const netCapital = cumulativeDeposits - cumulativeWithdrawals;
-                    dataPoints[tx.purchaseDate] = totalValue - netCapital;
-                });
-
-                const labels = Object.keys(dataPoints).sort((a, b) => new Date(a) - new Date(b));
-                const data = labels.map(label => dataPoints[label]);
+                const labels = Object.keys(monthlyGainLoss).sort();
+                const data = labels.map(key => monthlyGainLoss[key]);
                 const backgroundColors = data.map(value => value >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)');
 
                 const ctx = document.getElementById('gainLossChart').getContext('2d');
@@ -1713,7 +1699,7 @@
                 gainLossChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels,
+                        labels: labels.map(l => new Date(`${l}-02`).toLocaleString('default', { month: 'short', year: 'numeric' })),
                         datasets: [{
                             label: 'Gain/Loss',
                             data,
@@ -1746,7 +1732,7 @@
                     { id: crypto.randomUUID(), name: 'Jollibee Food Corp.', assetCategory: 'Stocks', category: 'Deposit', purchaseDate: '2025-09-15', value: 100000, currency: 'PHP', description: 'New investment'},
                     { id: crypto.randomUUID(), name: 'House Fund', assetCategory: 'Cash', category: 'Deposit', purchaseDate: '2025-09-01', value: 5000, currency: 'SAR', description: 'Monthly Savings' }
                 ];
-                saveToStorage(DATA_STORAGE_KEY, sampleTransactions);
+                saveToStorage(DATA_STORAGE_KEY, allAssets);
             }
 
             // --- Privacy Mode ---
