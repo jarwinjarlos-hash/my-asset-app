@@ -91,8 +91,8 @@
                         <button id="tracker-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
                             Tracker
                         </button>
-                        <button id="passive-income-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
-                            Passive Income
+                        <button id="dividends-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
+                            Dividends
                         </button>
                         <button id="summary-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
                             Summary
@@ -131,7 +131,7 @@
                                    <div id="prev-monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
                                </div>
                                <div class="text-left sm:text-right">
-                                    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">AVG Monthly Income</h2>
+                                    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">AVG Monthly Dividend</h2>
                                     <p id="avg-monthly-income" class="text-xl font-bold text-gray-900 dark:text-white">-</p>
                                     <div class="text-sm font-medium text-gray-500 dark:text-gray-400">&nbsp;</div>
                                 </div>
@@ -194,7 +194,7 @@
                                 </div>
                             </div>
                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monthly Passive Income</h2>
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monthly Dividends</h2>
                                 <div class="h-96">
                                      <canvas id="monthlyIncomeChart"></canvas>
                                 </div>
@@ -246,29 +246,29 @@
                  </div>
             </div>
 
-            <!-- Passive Income Content -->
-            <div id="passive-income-content" class="hidden">
+            <!-- Dividends Content -->
+            <div id="dividends-content" class="hidden">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Passive Income</h2>
-                    <button id="add-income-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center">
+                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Dividends</h2>
+                    <button id="add-dividend-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        Add Income
+                        Add Dividend
                     </button>
                 </div>
 
                 <!-- Monthly Summary -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
-                    <h3 id="passive-income-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Income</h3>
-                    <p id="passive-income-total" class="text-4xl font-bold text-gray-900 dark:text-white">$0.00</p>
+                    <h3 id="dividends-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Dividends</h3>
+                    <p id="dividends-total" class="text-4xl font-bold text-gray-900 dark:text-white">$0.00</p>
                 </div>
 
-                <div id="passive-income-list" class="space-y-6">
-                    <!-- Income entries will be injected here -->
+                <div id="dividends-list" class="space-y-6">
+                    <!-- Dividend entries will be injected here -->
                 </div>
-                <div id="no-passive-income-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                <div id="no-dividends-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
                     <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m12 0V9" /></svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No income recorded</h3>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a dividend or other passive income.</p>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No dividends recorded</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a dividend.</p>
                 </div>
             </div>
 
@@ -396,44 +396,44 @@
         </div>
     </div>
 
-    <!-- Add/Edit Passive Income Modal -->
-    <div id="passive-income-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+    <!-- Add/Edit Dividend Modal -->
+    <div id="dividend-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
         <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
-            <h3 id="passive-income-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add Passive Income</h3>
-            <form id="passive-income-form">
-                <input type="hidden" id="edit-income-id">
+            <h3 id="dividend-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add Dividend</h3>
+            <form id="dividend-form">
+                <input type="hidden" id="edit-dividend-id">
                 <div class="space-y-4">
                     <div>
-                        <label for="income-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link to Asset</label>
-                        <select id="income-asset-name-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        <label for="dividend-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link to Asset</label>
+                        <select id="dividend-asset-name-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                              <option value="" disabled selected>Select an existing asset</option>
                         </select>
                     </div>
                     <div>
-                        <label for="income-sub-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub-Asset Name (Optional)</label>
-                        <input type="text" id="income-sub-asset-name-modal" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Specific Bond ID, Rental Unit A">
+                        <label for="dividend-sub-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub-Asset Name (Optional)</label>
+                        <input type="text" id="dividend-sub-asset-name-modal" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Specific Bond ID, Rental Unit A">
                     </div>
                     <div>
-                        <label for="income-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Received</label>
-                        <input type="date" id="income-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        <label for="dividend-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Received</label>
+                        <input type="date" id="dividend-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                     </div>
                     <div>
-                        <label for="income-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                        <label for="dividend-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
                         <div class="relative mt-1">
-                            <input type="number" id="income-value-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <input type="number" id="dividend-value-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                             <div class="absolute inset-y-0 right-0 flex items-center">
-                                <input type="text" id="income-currency-modal" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16 disabled:bg-gray-100 dark:disabled:bg-gray-700" placeholder="AUTO">
+                                <input type="text" id="dividend-currency-modal" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16 disabled:bg-gray-100 dark:disabled:bg-gray-700" placeholder="AUTO">
                             </div>
                         </div>
                     </div>
                     <div>
-                        <label for="income-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
-                        <textarea id="income-description-modal" rows="2" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Q3 Dividend"></textarea>
+                        <label for="dividend-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                        <textarea id="dividend-description-modal" rows="2" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Q3 Dividend"></textarea>
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end space-x-2">
-                    <button type="button" id="cancel-income-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
-                    <button type="submit" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save Income</button>
+                    <button type="button" id="cancel-dividend-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="submit" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save Dividend</button>
                 </div>
             </form>
         </div>
@@ -500,10 +500,10 @@
             // --- Storage and Settings ---
             const DATA_STORAGE_KEY = 'assetTrackerOfflineData';
             const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
-            const PASSIVE_INCOME_STORAGE_KEY = 'assetTrackerPassiveIncomeData';
+            const DIVIDENDS_STORAGE_KEY = 'assetTrackerDividendsData';
             
             let allAssets = [];
-            let allPassiveIncome = [];
+            let allDividends = [];
             let appSettings = {};
             let isEditMode = false;
             let currentEditId = null;
@@ -538,7 +538,7 @@
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                 localStorage.setItem('theme', newTheme);
                 applyTheme(newTheme);
-                if(document.getElementById('dashboard-content').classList.contains('hidden')) {
+                if(currentTab === 'dashboard') {
                     renderDashboard(allAssets, appSettings);
                 }
             };
@@ -549,14 +549,14 @@
 
 
             // --- DOM Elements ---
-            const trackerTabButton = document.getElementById('tracker-tab-button');
             const dashboardTabButton = document.getElementById('dashboard-tab-button');
-            const passiveIncomeTabButton = document.getElementById('passive-income-tab-button');
+            const trackerTabButton = document.getElementById('tracker-tab-button');
+            const dividendsTabButton = document.getElementById('dividends-tab-button');
             const summaryTabButton = document.getElementById('summary-tab-button');
 
-            const trackerContent = document.getElementById('tracker-content');
             const dashboardContent = document.getElementById('dashboard-content');
-            const passiveIncomeContent = document.getElementById('passive-income-content');
+            const trackerContent = document.getElementById('tracker-content');
+            const dividendsContent = document.getElementById('dividends-content');
             const summaryContent = document.getElementById('summary-content');
             
             const transactionModal = document.getElementById('transaction-modal');
@@ -597,15 +597,15 @@
             const thisMonthLabel = document.getElementById('this-month-label');
             const prevMonthLabel = document.getElementById('prev-month-label');
 
-            const addIncomeBtn = document.getElementById('add-income-btn');
-            const passiveIncomeModal = document.getElementById('passive-income-modal');
-            const passiveIncomeForm = document.getElementById('passive-income-form');
-            const cancelIncomeBtn = document.getElementById('cancel-income-btn');
-            const passiveIncomeList = document.getElementById('passive-income-list');
-            const noPassiveIncomeMessage = document.getElementById('no-passive-income-message');
-            const passiveIncomeTotalEl = document.getElementById('passive-income-total');
-            const passiveIncomeMonthLabelEl = document.getElementById('passive-income-month-label');
-            const incomeAssetNameModalSelect = document.getElementById('income-asset-name-modal');
+            const addDividendBtn = document.getElementById('add-dividend-btn');
+            const dividendModal = document.getElementById('dividend-modal');
+            const dividendForm = document.getElementById('dividend-form');
+            const cancelDividendBtn = document.getElementById('cancel-dividend-btn');
+            const dividendsList = document.getElementById('dividends-list');
+            const noDividendsMessage = document.getElementById('no-dividends-message');
+            const dividendsTotalEl = document.getElementById('dividends-total');
+            const dividendsMonthLabelEl = document.getElementById('dividends-month-label');
+            const dividendAssetNameModalSelect = document.getElementById('dividend-asset-name-modal');
             
             const assetBreakdownContainer = document.getElementById('asset-breakdown');
             
@@ -756,11 +756,11 @@
             
             function loadData() {
                  allAssets = getFromStorage(DATA_STORAGE_KEY, true) || [];
-                 allPassiveIncome = getFromStorage(PASSIVE_INCOME_STORAGE_KEY, true) || [];
+                 allDividends = getFromStorage(DIVIDENDS_STORAGE_KEY, true) || [];
                  if (allAssets.length === 0) {
                     seedInitialData();
                     allAssets = getFromStorage(DATA_STORAGE_KEY) || [];
-                    allPassiveIncome = getFromStorage(PASSIVE_INCOME_STORAGE_KEY, true) || [];
+                    allDividends = getFromStorage(DIVIDENDS_STORAGE_KEY, true) || [];
                 }
             }
             
@@ -768,13 +768,13 @@
                 updateDatalists(allAssets);
                 updateTotalValue(allAssets, appSettings);
                 
-                if (dashboardTabButton.classList.contains('active')) {
+                if (currentTab === 'dashboard') {
                      renderDashboard(allAssets, appSettings);
-                } else if(trackerTabButton.classList.contains('active')) {
+                } else if(currentTab === 'tracker') {
                     renderGroupedAssets(allAssets, appSettings);
-                } else if(passiveIncomeTabButton.classList.contains('active')) {
-                    renderPassiveIncome(allPassiveIncome, appSettings);
-                } else if(summaryTabButton.classList.contains('active')) {
+                } else if(currentTab === 'dividends') {
+                    renderDividends(allDividends, appSettings);
+                } else if(currentTab === 'summary') {
                     renderSummaryTable();
                 }
             }
@@ -782,16 +782,16 @@
             // --- Tab Switching ---
             dashboardTabButton.addEventListener('click', () => switchTab('dashboard'));
             trackerTabButton.addEventListener('click', () => switchTab('tracker'));
-            passiveIncomeTabButton.addEventListener('click', () => switchTab('passive-income'));
+            dividendsTabButton.addEventListener('click', () => switchTab('dividends'));
             summaryTabButton.addEventListener('click', () => switchTab('summary'));
 
 
             function switchTab(tabName) {
                 currentTab = tabName;
-                [dashboardContent, trackerContent, passiveIncomeContent, summaryContent].forEach(el => el.classList.add('hidden'));
-                [dashboardTabButton, trackerTabButton, passiveIncomeTabButton, summaryTabButton].forEach(el => el.classList.remove('active'));
+                [dashboardContent, trackerContent, dividendsContent, summaryContent].forEach(el => el.classList.add('hidden'));
+                [dashboardTabButton, trackerTabButton, dividendsTabButton, summaryTabButton].forEach(el => el.classList.remove('active'));
                 
-                addTransactionFab.classList.toggle('hidden', tabName === 'summary');
+                addTransactionFab.classList.toggle('hidden', tabName === 'summary' || tabName === 'dividends');
 
                 if (tabName === 'dashboard') {
                     dashboardContent.classList.remove('hidden');
@@ -801,10 +801,10 @@
                     trackerContent.classList.remove('hidden');
                     trackerTabButton.classList.add('active');
                     renderGroupedAssets(allAssets, appSettings);
-                } else if (tabName === 'passive-income') {
-                    passiveIncomeContent.classList.remove('hidden');
-                    passiveIncomeTabButton.classList.add('active');
-                    renderPassiveIncome(allPassiveIncome, appSettings);
+                } else if (tabName === 'dividends') {
+                    dividendsContent.classList.remove('hidden');
+                    dividendsTabButton.classList.add('active');
+                    renderDividends(allDividends, appSettings);
                 } else if (tabName === 'summary') {
                     summaryContent.classList.remove('hidden');
                     summaryTabButton.classList.add('active');
@@ -995,40 +995,39 @@
                 }
             };
 
-            const renderPassiveIncome = (incomeToRender, settings) => {
-                passiveIncomeList.innerHTML = '';
+            const renderDividends = (dividendsToRender, settings) => {
+                dividendsList.innerHTML = '';
 
                 // Update Monthly Total
                 const now = new Date();
                 const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
                 const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-                const monthlyTotal = incomeToRender
-                    .filter(income => {
-                        const incomeDate = parseDate(income.date);
-                        return incomeDate >= startOfMonth && incomeDate <= endOfMonth;
+                const monthlyTotal = dividendsToRender
+                    .filter(dividend => {
+                        const dividendDate = parseDate(dividend.date);
+                        return dividendDate >= startOfMonth && dividendDate <= endOfMonth;
                     })
-                    .reduce((total, income) => {
-                        const convertedValue = convertCurrency(income.value, income.currency, settings.mainCurrency, settings.rates) || 0;
+                    .reduce((total, dividend) => {
+                        const convertedValue = convertCurrency(dividend.value, dividend.currency, settings.mainCurrency, settings.rates) || 0;
                         return total + convertedValue;
                     }, 0);
                 
-                passiveIncomeMonthLabelEl.textContent = `${now.toLocaleString('default', { month: 'long' })}'s Income`;
-                passiveIncomeTotalEl.textContent = formatCurrency(monthlyTotal, settings.mainCurrency);
+                dividendsMonthLabelEl.textContent = `${now.toLocaleString('default', { month: 'long' })}'s Dividends`;
+                dividendsTotalEl.textContent = formatCurrency(monthlyTotal, settings.mainCurrency);
 
-                if (incomeToRender.length === 0) {
-                    noPassiveIncomeMessage.classList.remove('hidden');
-                    passiveIncomeList.innerHTML = '';
+                if (dividendsToRender.length === 0) {
+                    noDividendsMessage.classList.remove('hidden');
                     return;
                 }
-                noPassiveIncomeMessage.classList.add('hidden');
+                noDividendsMessage.classList.add('hidden');
 
-                const groupedByMonth = incomeToRender.reduce((acc, income) => {
-                    const date = parseDate(income.date);
+                const groupedByMonth = dividendsToRender.reduce((acc, dividend) => {
+                    const date = parseDate(dividend.date);
                      if(!date || isNaN(date.getTime())) return acc;
                     const monthKey = new Date(date.getFullYear(), date.getMonth()).toISOString();
                     acc[monthKey] = acc[monthKey] || [];
-                    acc[monthKey].push(income);
+                    acc[monthKey].push(dividend);
                     return acc;
                 }, {});
 
@@ -1042,31 +1041,31 @@
                     monthContainer.className = 'bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md';
                     monthContainer.innerHTML = `<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">${monthName}</h3>`;
 
-                    const incomeHtml = group.map(income => {
-                        const valueFormatted = formatCurrency(income.value, income.currency);
-                        const dateFormatted = parseDate(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const dividendHtml = group.map(dividend => {
+                        const valueFormatted = formatCurrency(dividend.value, dividend.currency);
+                        const dateFormatted = parseDate(dividend.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         return `
-                        <div data-id="${income.id}" class="income-item py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                        <div data-id="${dividend.id}" class="dividend-item py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="font-semibold text-gray-800 dark:text-gray-100">${income.name}</p>
-                                    ${income.subAssetName ? `<p class="text-sm text-gray-500 dark:text-gray-400">${income.subAssetName}</p>` : ''}
+                                    <p class="font-semibold text-gray-800 dark:text-gray-100">${dividend.name}</p>
+                                    ${dividend.subAssetName ? `<p class="text-sm text-gray-500 dark:text-gray-400">${dividend.subAssetName}</p>` : ''}
                                     <p class="text-sm text-gray-500 dark:text-gray-400">${dateFormatted}</p>
-                                    ${income.description ? `<p class="mt-1 text-xs text-gray-600 dark:text-gray-300 italic">"${income.description}"</p>` : ''}
+                                    ${dividend.description ? `<p class="mt-1 text-xs text-gray-600 dark:text-gray-300 italic">"${dividend.description}"</p>` : ''}
                                 </div>
                                 <div class="text-right">
                                     <p class="font-semibold text-lg text-green-600">${valueFormatted}</p>
                                     <div class="flex space-x-2 mt-2 justify-end">
-                                        <button class="edit-income-btn text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-medium py-1 px-2 rounded text-sm">Edit</button>
-                                        <button class="delete-income-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium py-1 px-2 rounded text-sm">Delete</button>
+                                        <button class="edit-dividend-btn text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-medium py-1 px-2 rounded text-sm">Edit</button>
+                                        <button class="delete-dividend-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium py-1 px-2 rounded text-sm">Delete</button>
                                     </div>
                                 </div>
                             </div>
                         </div>`;
                     }).join('');
 
-                    monthContainer.innerHTML += `<div class="space-y-1">${incomeHtml}</div>`;
-                    passiveIncomeList.appendChild(monthContainer);
+                    monthContainer.innerHTML += `<div class="space-y-1">${dividendHtml}</div>`;
+                    dividendsList.appendChild(monthContainer);
                 });
             };
             
@@ -1074,13 +1073,13 @@
                 const uniqueNames = [...new Set(assets.map(asset => asset.name))].sort();
                 if (assetDatalist) assetDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
 
-                if (incomeAssetNameModalSelect) {
-                    const existingValue = incomeAssetNameModalSelect.value;
-                    incomeAssetNameModalSelect.innerHTML = '<option value="" disabled>Select an existing asset</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join('');
+                if (dividendAssetNameModalSelect) {
+                    const existingValue = dividendAssetNameModalSelect.value;
+                    dividendAssetNameModalSelect.innerHTML = '<option value="" disabled>Select an existing asset</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join('');
                     if (existingValue) {
-                        incomeAssetNameModalSelect.value = existingValue;
+                        dividendAssetNameModalSelect.value = existingValue;
                     } else {
-                        incomeAssetNameModalSelect.value = "";
+                        dividendAssetNameModalSelect.value = "";
                     }
                 }
 
@@ -1251,16 +1250,16 @@
                 prevMonthLabel.textContent = `${prevMonthDate.toLocaleString('default', { month: 'long' })}'s Gain/Loss`;
                 renderGainLossDisplay(prevMonthlyGainLossAmountEl, prevMonthlyGainLossPercentageEl, prevMonthData.gainLoss, prevMonthData.percentage, mainCurrency, false);
             
-                // AVG Monthly Income Calculation
+                // AVG Monthly Dividend Calculation
                 const avgMonthlyIncomeEl = document.getElementById('avg-monthly-income');
-                if (allPassiveIncome.length > 0) {
-                    const sortedIncome = [...allPassiveIncome].sort((a,b) => parseDate(a.date) - parseDate(b.date));
+                if (allDividends.length > 0) {
+                    const sortedIncome = [...allDividends].sort((a,b) => parseDate(a.date) - parseDate(b.date));
                     const firstIncomeDate = parseDate(sortedIncome[0].date);
                     const lastIncomeDate = parseDate(sortedIncome[sortedIncome.length - 1].date);
                     
                     const monthDiff = (lastIncomeDate.getFullYear() - firstIncomeDate.getFullYear()) * 12 + (lastIncomeDate.getMonth() - firstIncomeDate.getMonth()) + 1;
                     
-                    const totalIncome = allPassiveIncome.reduce((sum, income) => {
+                    const totalIncome = allDividends.reduce((sum, income) => {
                         const convertedValue = convertCurrency(income.value, income.currency, mainCurrency, settings.rates) || 0;
                         return sum + convertedValue;
                     }, 0);
@@ -1292,8 +1291,8 @@
 
             // --- Transaction Modal & Form Logic ---
             addTransactionFab.addEventListener('click', () => {
-                if (currentTab === 'passive-income') {
-                    openPassiveIncomeModal();
+                if (currentTab === 'dividends') {
+                    openDividendModal();
                 } else if (currentTab === 'tracker') {
                     openTransactionModal();
                 }
@@ -1523,35 +1522,35 @@
                 }
             }
             
-             // --- Passive Income Modal & Form Logic ---
-            addIncomeBtn.addEventListener('click', () => openPassiveIncomeModal());
+             // --- Dividend Modal & Form Logic ---
+            addDividendBtn.addEventListener('click', () => openDividendModal());
 
-            incomeAssetNameModalSelect.addEventListener('change', (e) => {
+            dividendAssetNameModalSelect.addEventListener('change', (e) => {
                 const assetName = e.target.value;
                 const latestAsset = allAssets
                     .filter(a => a.name === assetName)
                     .sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0];
 
-                const incomeCurrencyInput = document.getElementById('income-currency-modal');
+                const dividendCurrencyInput = document.getElementById('dividend-currency-modal');
                 if (latestAsset) {
-                    incomeCurrencyInput.value = latestAsset.currency;
-                    incomeCurrencyInput.disabled = true;
+                    dividendCurrencyInput.value = latestAsset.currency;
+                    dividendCurrencyInput.disabled = true;
                 } else {
-                    incomeCurrencyInput.value = '';
-                    incomeCurrencyInput.disabled = false;
+                    dividendCurrencyInput.value = '';
+                    dividendCurrencyInput.disabled = false;
                 }
             });
 
-            passiveIncomeForm.addEventListener('submit', (e) => {
+            dividendForm.addEventListener('submit', (e) => {
                 e.preventDefault();
 
-                const name = document.getElementById('income-asset-name-modal').value.trim();
-                const subAssetName = document.getElementById('income-sub-asset-name-modal').value.trim();
-                const date = document.getElementById('income-date-modal').value;
-                const value = parseFloat(document.getElementById('income-value-modal').value);
-                const currency = document.getElementById('income-currency-modal').value.toUpperCase().trim();
-                const description = document.getElementById('income-description-modal').value.trim();
-                const id = document.getElementById('edit-income-id').value;
+                const name = document.getElementById('dividend-asset-name-modal').value.trim();
+                const subAssetName = document.getElementById('dividend-sub-asset-name-modal').value.trim();
+                const date = document.getElementById('dividend-date-modal').value;
+                const value = parseFloat(document.getElementById('dividend-value-modal').value);
+                const currency = document.getElementById('dividend-currency-modal').value.toUpperCase().trim();
+                const description = document.getElementById('dividend-description-modal').value.trim();
+                const id = document.getElementById('edit-dividend-id').value;
                 
                 if (!name) {
                     showAlert("Please select an asset.", "Invalid Input");
@@ -1563,70 +1562,70 @@
                 }
 
                 if (isEditMode) {
-                    const index = allPassiveIncome.findIndex(i => i.id === id);
+                    const index = allDividends.findIndex(i => i.id === id);
                     if (index !== -1) {
-                        allPassiveIncome[index] = { ...allPassiveIncome[index], name, subAssetName, date, value, currency, description };
+                        allDividends[index] = { ...allDividends[index], name, subAssetName, date, value, currency, description };
                     }
                 } else {
-                    const newIncome = { id: crypto.randomUUID(), name, subAssetName, date, value, currency, description };
-                    allPassiveIncome.push(newIncome);
+                    const newDividend = { id: crypto.randomUUID(), name, subAssetName, date, value, currency, description };
+                    allDividends.push(newDividend);
                 }
 
-                saveToStorage(PASSIVE_INCOME_STORAGE_KEY, allPassiveIncome);
-                renderPassiveIncome(allPassiveIncome, appSettings);
-                closePassiveIncomeModal();
+                saveToStorage(DIVIDENDS_STORAGE_KEY, allDividends);
+                renderDividends(allDividends, appSettings);
+                closeDividendModal();
             });
 
-            function openPassiveIncomeModal(income = null) {
-                passiveIncomeForm.reset();
-                isEditMode = !!income;
-                document.getElementById('passive-income-modal-title').textContent = isEditMode ? 'Edit Passive Income' : 'Add Passive Income';
-                const incomeCurrencyInput = document.getElementById('income-currency-modal');
+            function openDividendModal(dividend = null) {
+                dividendForm.reset();
+                isEditMode = !!dividend;
+                document.getElementById('dividend-modal-title').textContent = isEditMode ? 'Edit Dividend' : 'Add Dividend';
+                const dividendCurrencyInput = document.getElementById('dividend-currency-modal');
                 
-                if (income) {
-                    document.getElementById('edit-income-id').value = income.id;
-                    document.getElementById('income-asset-name-modal').value = income.name;
-                    document.getElementById('income-sub-asset-name-modal').value = income.subAssetName || '';
-                    document.getElementById('income-date-modal').value = income.date;
-                    document.getElementById('income-value-modal').value = income.value;
-                    incomeCurrencyInput.value = income.currency;
-                    incomeCurrencyInput.disabled = true;
-                    document.getElementById('income-description-modal').value = income.description;
+                if (dividend) {
+                    document.getElementById('edit-dividend-id').value = dividend.id;
+                    document.getElementById('dividend-asset-name-modal').value = dividend.name;
+                    document.getElementById('dividend-sub-asset-name-modal').value = dividend.subAssetName || '';
+                    document.getElementById('dividend-date-modal').value = dividend.date;
+                    document.getElementById('dividend-value-modal').value = dividend.value;
+                    dividendCurrencyInput.value = dividend.currency;
+                    dividendCurrencyInput.disabled = true;
+                    document.getElementById('dividend-description-modal').value = dividend.description;
                 } else {
-                     document.getElementById('income-date-modal').value = new Date().toISOString().split('T')[0];
-                     incomeCurrencyInput.disabled = false;
+                     document.getElementById('dividend-date-modal').value = new Date().toISOString().split('T')[0];
+                     dividendCurrencyInput.disabled = false;
                 }
                 
-                passiveIncomeModal.classList.remove('hidden');
+                dividendModal.classList.remove('hidden');
             }
 
-            function closePassiveIncomeModal() {
-                passiveIncomeModal.classList.add('hidden');
+            function closeDividendModal() {
+                dividendModal.classList.add('hidden');
                 isEditMode = false;
             }
             
-            cancelIncomeBtn.addEventListener('click', closePassiveIncomeModal);
-            passiveIncomeModal.addEventListener('click', (e) => { if (e.target === passiveIncomeModal) closePassiveIncomeModal(); });
+            cancelDividendBtn.addEventListener('click', closeDividendModal);
+            dividendModal.addEventListener('click', (e) => { if (e.target === dividendModal) closeDividendModal(); });
             
-            passiveIncomeList.addEventListener('click', (e) => {
+            dividendsList.addEventListener('click', (e) => {
                 const target = e.target;
-                const incomeItem = target.closest('.income-item');
-                if (!incomeItem) return;
-                const incomeId = incomeItem.getAttribute('data-id');
+                const dividendItem = target.closest('.dividend-item');
+                if (!dividendItem) return;
+                const dividendId = dividendItem.getAttribute('data-id');
 
-                if (target.classList.contains('delete-income-btn')) deletePassiveIncome(incomeId);
-                if (target.classList.contains('edit-income-btn')) {
-                    const income = allPassiveIncome.find(i => i.id === incomeId);
-                    if (income) openPassiveIncomeModal(income);
+                if (target.classList.contains('delete-dividend-btn')) deleteDividend(dividendId);
+                if (target.classList.contains('edit-dividend-btn')) {
+                    const dividend = allDividends.find(i => i.id === dividendId);
+                    if (dividend) openDividendModal(dividend);
                 }
             });
             
-            async function deletePassiveIncome(id) {
-                const confirmed = await showConfirm('Are you sure you want to delete this income entry?', 'Delete Income');
+            async function deleteDividend(id) {
+                const confirmed = await showConfirm('Are you sure you want to delete this dividend entry?', 'Delete Dividend');
                 if (confirmed) {
-                    allPassiveIncome = allPassiveIncome.filter(i => i.id !== id);
-                    saveToStorage(PASSIVE_INCOME_STORAGE_KEY, allPassiveIncome);
-                    renderPassiveIncome(allPassiveIncome, appSettings);
+                    allDividends = allDividends.filter(i => i.id !== id);
+                    saveToStorage(DIVIDENDS_STORAGE_KEY, allDividends);
+                    renderDividends(allDividends, appSettings);
                 }
             }
 
@@ -1668,15 +1667,15 @@
                     try {
                         const zip = await JSZip.loadAsync(content);
                         let importedAssets = null;
-                        let importedIncomes = null;
+                        let importedDividends = null;
 
                         if (zip.files['assets.csv']) {
                             const assetsText = await zip.files['assets.csv'].async('string');
                             importedAssets = csvToArray(assetsText);
                         }
-                        if (zip.files['income.csv']) {
-                            const incomeText = await zip.files['income.csv'].async('string');
-                            importedIncomes = csvToIncomeArray(incomeText);
+                        if (zip.files['dividends.csv']) {
+                            const incomeText = await zip.files['dividends.csv'].async('string');
+                            importedDividends = csvToDividendArray(incomeText);
                         }
 
                         if (importedAssets) {
@@ -1689,14 +1688,14 @@
                             saveToStorage(DATA_STORAGE_KEY, allAssets);
                         }
                         
-                        if (importedIncomes) {
-                            const replaceIncomes = await showConfirm('Found income data. Do you want to REPLACE your current income with the imported file? Pressing Cancel will MERGE the data instead.', 'Import Income');
+                        if (importedDividends) {
+                            const replaceIncomes = await showConfirm('Found dividend data. Do you want to REPLACE your current dividend data with the imported file? Pressing Cancel will MERGE the data instead.', 'Import Dividends');
                             if (replaceIncomes) {
-                                allPassiveIncome = importedIncomes;
+                                allDividends = importedDividends;
                             } else {
-                                allPassiveIncome = [...allPassiveIncome, ...importedIncomes];
+                                allDividends = [...allDividends, ...importedDividends];
                             }
-                             saveToStorage(PASSIVE_INCOME_STORAGE_KEY, allPassiveIncome);
+                             saveToStorage(DIVIDENDS_STORAGE_KEY, allDividends);
                         }
 
                         renderAll();
@@ -1711,7 +1710,7 @@
             });
 
             function exportBackup() {
-                if (allAssets.length === 0 && allPassiveIncome.length === 0) {
+                if (allAssets.length === 0 && allDividends.length === 0) {
                     showAlert('No data to export.');
                     return;
                 }
@@ -1731,18 +1730,18 @@
                 );
                 zip.file("assets.csv", [assetHeaders.join(','), ...assetRows].join('\n'));
 
-                // Export Income
-                const incomeHeaders = ['id', 'name', 'subAssetName', 'date', 'value', 'currency', 'description'];
-                 const incomeRows = allPassiveIncome.map(income => 
-                    incomeHeaders.map(header => {
-                        let cell = income[header] === null || income[header] === undefined ? '' : String(income[header]);
+                // Export Dividends
+                const dividendHeaders = ['id', 'name', 'subAssetName', 'date', 'value', 'currency', 'description'];
+                 const dividendRows = allDividends.map(dividend => 
+                    dividendHeaders.map(header => {
+                        let cell = dividend[header] === null || dividend[header] === undefined ? '' : String(dividend[header]);
                         if (/[",\n]/.test(cell)) {
                            cell = `"${cell.replace(/"/g, '""')}"`;
                         }
                         return cell;
                     }).join(',')
                 );
-                zip.file("income.csv", [incomeHeaders.join(','), ...incomeRows].join('\n'));
+                zip.file("dividends.csv", [dividendHeaders.join(','), ...dividendRows].join('\n'));
 
                 zip.generateAsync({type:"blob"}).then(function(content) {
                     const link = document.createElement("a");
@@ -1778,7 +1777,7 @@
                 }).filter(Boolean);
             }
 
-            function csvToIncomeArray(csv) {
+            function csvToDividendArray(csv) {
                  const lines = csv.trim().replace(/\r\n/g, '\n').split('\n');
                 if (lines.length < 2) return [];
                 const headers = lines[0].trim().split(',').map(h => h.trim());
@@ -1843,7 +1842,7 @@
                 renderAssetBreakdown(assets, settings, mainCurrency);
                 renderTrendChart(assets, settings, isDark, mainCurrency, currentTimeline);
                 renderGainLossChart(assets, settings, isDark, mainCurrency, currentTimeline);
-                renderMonthlyIncomeChart(allPassiveIncome, settings, isDark, mainCurrency, currentTimeline);
+                renderMonthlyIncomeChart(allDividends, settings, isDark, mainCurrency, currentTimeline);
             }
 
             // --- Summary Tab Logic ---
@@ -1940,15 +1939,15 @@
 
                     if(!performance) return null; // No transactions for this asset in the entire history
                     
-                    const assetIncomes = allPassiveIncome.filter(i => {
-                        const incomeDate = parseDate(i.date);
-                        const startCheck = filters.startDate ? incomeDate >= parseDate(filters.startDate) : true;
-                        const endCheck = filters.endDate ? incomeDate <= parseDate(filters.endDate) : true;
+                    const assetDividends = allDividends.filter(i => {
+                        const dividendDate = parseDate(i.date);
+                        const startCheck = filters.startDate ? dividendDate >= parseDate(filters.startDate) : true;
+                        const endCheck = filters.endDate ? dividendDate <= parseDate(filters.endDate) : true;
                         return i.name === name && startCheck && endCheck;
                     });
 
-                    const totalDividend = assetIncomes.reduce((sum, income) => {
-                        return sum + (convertCurrency(income.value, income.currency, mainCurrency, rates) || 0);
+                    const totalDividend = assetDividends.reduce((sum, dividend) => {
+                        return sum + (convertCurrency(dividend.value, dividend.currency, mainCurrency, rates) || 0);
                     }, 0);
                     
                     const allocation = totalPortfolioValue > 0 ? (performance.currentValue / totalPortfolioValue) * 100 : 0;
@@ -2154,15 +2153,15 @@
                     }
                 }
                 
-                const totalIncome = allPassiveIncome.reduce((sum, income) => {
-                    const convertedValue = convertCurrency(income.value, income.currency, mainCurrency, settings.rates) || 0;
+                const totalDividends = allDividends.reduce((sum, dividend) => {
+                    const convertedValue = convertCurrency(dividend.value, dividend.currency, mainCurrency, settings.rates) || 0;
                     return sum + convertedValue;
                 }, 0);
 
                 document.getElementById('cash-flow-summary').innerHTML = `
                     <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Deposited</p><p class="text-xl font-semibold text-green-600">${formatCurrency(totalDeposits, mainCurrency)}</p></div>
                     <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Withdrawn</p><p class="text-xl font-semibold text-red-500">${formatCurrency(totalWithdrawals, mainCurrency)}</p></div>
-                    <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Income Received</p><p class="text-xl font-semibold text-blue-600">${formatCurrency(totalIncome, mainCurrency)}</p></div>`;
+                    <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Dividends Received</p><p class="text-xl font-semibold text-blue-600">${formatCurrency(totalDividends, mainCurrency)}</p></div>`;
             }
 
             function calculateAssetPerformance(transactions, settings, mainCurrency, nativeCurrencyValue = false) {
@@ -2431,11 +2430,11 @@
                 });
             }
 
-            function renderMonthlyIncomeChart(income, settings, isDark, mainCurrency, timeline) {
+            function renderMonthlyIncomeChart(dividends, settings, isDark, mainCurrency, timeline) {
                 const colors = getChartColors(isDark);
-                if(income.length === 0) return;
+                if(dividends.length === 0) return;
 
-                const sortedIncome = [...income].sort((a, b) => parseDate(a.date) - parseDate(b.date));
+                const sortedDividends = [...dividends].sort((a, b) => parseDate(a.date) - parseDate(b.date));
 
                 let startDate;
                 const now = new Date();
@@ -2444,15 +2443,15 @@
                     case '3M': startDate = new Date(new Date().setMonth(now.getMonth() - 3)); break;
                     case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break;
                     default: 
-                        if (sortedIncome.length > 0) {
-                           startDate = parseDate(sortedIncome[0].date);
+                        if (sortedDividends.length > 0) {
+                           startDate = parseDate(sortedDividends[0].date);
                         } else {
                             startDate = new Date();
                         }
                         break;
                 }
 
-                const incomeInTimeline = sortedIncome.filter(i => parseDate(i.date) >= startDate);
+                const incomeInTimeline = sortedDividends.filter(i => parseDate(i.date) >= startDate);
 
                 const monthlyTotals = incomeInTimeline.reduce((acc, i) => {
                     const monthKey = parseDate(i.date).toLocaleString('default', { month: 'short', year: 'numeric' });
@@ -2471,7 +2470,7 @@
                     data: {
                         labels,
                         datasets: [{
-                            label: 'Passive Income',
+                            label: 'Dividend',
                             data,
                             backgroundColor: 'rgba(16, 185, 129, 0.6)',
                         }]
@@ -2485,7 +2484,7 @@
                         },
                         plugins: {
                             legend: { display: false },
-                            tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `Income: ${formatCurrency(c.parsed.y, mainCurrency)}` } }
+                            tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `Dividend: ${formatCurrency(c.parsed.y, mainCurrency)}` } }
                         }
                     }
                 });
@@ -2504,12 +2503,12 @@
                 ];
                 saveToStorage(DATA_STORAGE_KEY, sampleTransactions);
 
-                const sampleIncome = [
+                const sampleDividends = [
                     { id: crypto.randomUUID(), name: 'Jollibee Food Corp.', subAssetName: '', date: '2025-09-20', value: 1500, currency: 'PHP', description: 'Q3 Dividend' },
                     { id: crypto.randomUUID(), name: 'Bitcoin', subAssetName: 'Staking Rewards', date: '2025-09-01', value: 25, currency: 'USD', description: 'Monthly Staking' },
                     { id: crypto.randomUUID(), name: 'Bitcoin', subAssetName: 'Staking Rewards', date: '2025-08-01', value: 24, currency: 'USD', description: 'Monthly Staking' },
                  ];
-                 saveToStorage(PASSIVE_INCOME_STORAGE_KEY, sampleIncome);
+                 saveToStorage(DIVIDENDS_STORAGE_KEY, sampleDividends);
             }
 
             // --- Privacy Mode ---
@@ -2547,6 +2546,4 @@
     </script>
 </body>
 </html>
-
-
 
