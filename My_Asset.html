@@ -191,6 +191,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Span</label>
                         <div id="summary-date-buttons" class="mt-1 flex space-x-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-lg">
+                            <button data-span="1M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1M</button>
                             <button data-span="3M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">3M</button>
                             <button data-span="6M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">6M</button>
                             <button data-span="1Y" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1Y</button>
@@ -676,6 +677,33 @@
             confirmModalCancelBtn.addEventListener('click', () => closeConfirm(false));
             confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(false); });
 
+            function parseDate(dateString) {
+                if (!dateString) return null;
+
+                // Handles YYYY-MM-DD format correctly by ensuring it's treated as local time
+                if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+                    return new Date(dateString + 'T00:00:00');
+                }
+                
+                // Handles MM/DD/YYYY or M/D/YYYY formats
+                if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) {
+                     const [month, day, year] = dateString.split('/');
+                     const date = new Date(year, month - 1, day);
+                     // Check for invalid dates that JS might auto-correct (e.g., month 13)
+                     if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) {
+                         return date;
+                     }
+                }
+                
+                // Fallback for other potential formats that new Date() can handle
+                const fallbackDate = new Date(dateString);
+                if (!isNaN(fallbackDate.getTime())) {
+                    return fallbackDate;
+                }
+
+                return null; // Return null if all parsing fails
+            }
+
             // --- Storage Functions ---
             const getFromStorage = (key, isJson = true) => {
                  try {
@@ -895,8 +923,8 @@
                 noAssetsMessage.classList.add('hidden');
 
                 const groupedByMonth = assetsToRender.reduce((acc, asset) => {
-                    const date = new Date(asset.purchaseDate + 'T00:00:00');
-                    if(isNaN(date.getTime())) {
+                    const date = parseDate(asset.purchaseDate);
+                    if(!date || isNaN(date.getTime())) {
                         console.error("Invalid date found in asset, skipping:", asset);
                         return acc;
                     }
@@ -911,7 +939,7 @@
                 for (const monthKey of sortedMonths) {
                     const monthName = new Date(monthKey).toLocaleString('default', { month: 'long', year: 'numeric' });
                     const group = groupedByMonth[monthKey];
-                    group.sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate));
+                    group.sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate));
 
                     const monthContainer = document.createElement('div');
                     monthContainer.className = 'bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md';
@@ -931,7 +959,7 @@
                         const txCategoryBadge = `<span class="text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full ${txCategoryColorClass}">${txCategory}</span>`;
                         
                         const valueFormatted = formatCurrency(transaction.value, transaction.currency || settings.mainCurrency);
-                        const dateFormatted = new Date(transaction.purchaseDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const dateFormatted = parseDate(transaction.purchaseDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
                         transactionsHtml += `
                             <div data-id="${transaction.id}" class="py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
@@ -974,7 +1002,7 @@
 
                 const monthlyTotal = incomeToRender
                     .filter(income => {
-                        const incomeDate = new Date(income.date);
+                        const incomeDate = parseDate(income.date);
                         return incomeDate >= startOfMonth && incomeDate <= endOfMonth;
                     })
                     .reduce((total, income) => {
@@ -993,8 +1021,8 @@
                 noPassiveIncomeMessage.classList.add('hidden');
 
                 const groupedByMonth = incomeToRender.reduce((acc, income) => {
-                    const date = new Date(income.date + 'T00:00:00');
-                     if(isNaN(date.getTime())) return acc;
+                    const date = parseDate(income.date);
+                     if(!date || isNaN(date.getTime())) return acc;
                     const monthKey = new Date(date.getFullYear(), date.getMonth()).toISOString();
                     acc[monthKey] = acc[monthKey] || [];
                     acc[monthKey].push(income);
@@ -1005,7 +1033,7 @@
 
                 sortedMonths.forEach(monthKey => {
                     const monthName = new Date(monthKey).toLocaleString('default', { month: 'long', year: 'numeric' });
-                    const group = groupedByMonth[monthKey].sort((a, b) => new Date(b.date) - new Date(a.date));
+                    const group = groupedByMonth[monthKey].sort((a, b) => parseDate(b.date) - parseDate(a.date));
 
                     const monthContainer = document.createElement('div');
                     monthContainer.className = 'bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md';
@@ -1013,7 +1041,7 @@
 
                     const incomeHtml = group.map(income => {
                         const valueFormatted = formatCurrency(income.value, income.currency);
-                        const dateFormatted = new Date(income.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const dateFormatted = parseDate(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         return `
                         <div data-id="${income.id}" class="income-item py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
                             <div class="flex justify-between items-start">
@@ -1081,10 +1109,10 @@
             function calculateMonthlyGainLoss(assets, settings, periodStartDate, periodEndDate) {
                 const mainCurrency = settings.mainCurrency;
 
-                const txBeforeStart = assets.filter(tx => new Date(tx.purchaseDate) < periodStartDate);
+                const txBeforeStart = assets.filter(tx => parseDate(tx.purchaseDate) < periodStartDate);
                 const latestAssetsBeforeStart = {};
                 txBeforeStart.forEach(asset => {
-                    if (!latestAssetsBeforeStart[asset.name] || new Date(asset.purchaseDate) >= new Date(latestAssetsBeforeStart[asset.name].purchaseDate)) {
+                    if (!latestAssetsBeforeStart[asset.name] || parseDate(asset.purchaseDate) >= parseDate(latestAssetsBeforeStart[asset.name].purchaseDate)) {
                         latestAssetsBeforeStart[asset.name] = asset;
                     }
                 });
@@ -1093,10 +1121,10 @@
                     return sum + (converted === null ? 0 : converted);
                 }, 0);
 
-                const txUntilEnd = assets.filter(tx => new Date(tx.purchaseDate) < periodEndDate);
+                const txUntilEnd = assets.filter(tx => parseDate(tx.purchaseDate) < periodEndDate);
                 const latestAssetsAtEnd = {};
                 txUntilEnd.forEach(asset => {
-                    if (!latestAssetsAtEnd[asset.name] || new Date(asset.purchaseDate) >= new Date(latestAssetsAtEnd[asset.name].purchaseDate)) {
+                    if (!latestAssetsAtEnd[asset.name] || parseDate(asset.purchaseDate) >= parseDate(latestAssetsAtEnd[asset.name].purchaseDate)) {
                         latestAssetsAtEnd[asset.name] = asset;
                     }
                 });
@@ -1113,10 +1141,10 @@
                 }, {});
 
                 for (const name in groupedAssets) {
-                    const sortedTxs = groupedAssets[name].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                    const sortedTxs = groupedAssets[name].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                     for (let i = 0; i < sortedTxs.length; i++) {
                         const currentTx = sortedTxs[i];
-                        const txDate = new Date(currentTx.purchaseDate);
+                        const txDate = parseDate(currentTx.purchaseDate);
                         if (txDate >= periodStartDate && txDate < periodEndDate) {
                             const prevTx = i > 0 ? sortedTxs[i-1] : null;
                             if (currentTx.category === 'Deposit') {
@@ -1154,7 +1182,7 @@
 
                 const latestAssets = {};
                 assets.forEach(asset => {
-                    if (!latestAssets[asset.name] || new Date(asset.purchaseDate) >= new Date(latestAssets[asset.name].purchaseDate)) {
+                    if (!latestAssets[asset.name] || parseDate(asset.purchaseDate) >= parseDate(latestAssets[asset.name].purchaseDate)) {
                         latestAssets[asset.name] = asset;
                     }
                 });
@@ -1170,7 +1198,7 @@
                     return acc;
                 }, {});
                 for (const name in groupedAssets) {
-                    groupedAssets[name].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                    groupedAssets[name].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                 }
 
                 let totalDeposits = 0;
@@ -1223,9 +1251,9 @@
                 // AVG Monthly Income Calculation
                 const avgMonthlyIncomeEl = document.getElementById('avg-monthly-income');
                 if (allPassiveIncome.length > 0) {
-                    const sortedIncome = [...allPassiveIncome].sort((a,b) => new Date(a.date) - new Date(b.date));
-                    const firstIncomeDate = new Date(sortedIncome[0].date);
-                    const lastIncomeDate = new Date(sortedIncome[sortedIncome.length - 1].date);
+                    const sortedIncome = [...allPassiveIncome].sort((a,b) => parseDate(a.date) - parseDate(b.date));
+                    const firstIncomeDate = parseDate(sortedIncome[0].date);
+                    const lastIncomeDate = parseDate(sortedIncome[sortedIncome.length - 1].date);
                     
                     const monthDiff = (lastIncomeDate.getFullYear() - firstIncomeDate.getFullYear()) * 12 + (lastIncomeDate.getMonth() - firstIncomeDate.getMonth()) + 1;
                     
@@ -1322,7 +1350,7 @@
                     recalculateAssetHistory(name, transactionAmount);
 
                 } else {
-                    const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                    const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                     const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
                     
                     if (!latestAsset && (category === 'Withdrawal' || category === 'Transfer')) {
@@ -1373,7 +1401,7 @@
             function recalculateAssetHistory(assetName, newTransactionValue) {
                 const assetTransactions = allAssets
                     .filter(a => a.name === assetName)
-                    .sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                    .sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
 
                 const editIndex = assetTransactions.findIndex(a => a.id === currentEditId);
                 if (editIndex === -1) return;
@@ -1452,8 +1480,8 @@
                     purchaseDateModalInput.value = asset.purchaseDate;
                     
                     const assetHistory = allAssets
-                        .filter(a => a.name === asset.name && new Date(a.purchaseDate) < new Date(a.purchaseDate))
-                        .sort((a,b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                        .filter(a => a.name === asset.name && parseDate(a.purchaseDate) < parseDate(asset.purchaseDate))
+                        .sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                     const prevAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
                     const prevValue = prevAsset ? prevAsset.value : 0;
                     
@@ -1499,7 +1527,7 @@
                 const assetName = e.target.value;
                 const latestAsset = allAssets
                     .filter(a => a.name === assetName)
-                    .sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))[0];
+                    .sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0];
 
                 const incomeCurrencyInput = document.getElementById('income-currency-modal');
                 if (latestAsset) {
@@ -1783,10 +1811,10 @@
                     filteredAssets = filteredAssets.filter(asset => asset.category === category);
                 }
                 if (startDate) {
-                    filteredAssets = filteredAssets.filter(asset => new Date(asset.purchaseDate) >= new Date(startDate));
+                    filteredAssets = filteredAssets.filter(asset => parseDate(asset.purchaseDate) >= parseDate(startDate));
                 }
                 if (endDate) {
-                    filteredAssets = filteredAssets.filter(asset => new Date(asset.purchaseDate) <= new Date(endDate));
+                    filteredAssets = filteredAssets.filter(asset => parseDate(asset.purchaseDate) <= parseDate(endDate));
                 }
                 
                 renderGroupedAssets(filteredAssets, appSettings);
@@ -1823,24 +1851,24 @@
                 // 1. Get all transactions for the asset, sorted by date
                 const allAssetTransactions = allAssets
                     .filter(a => a.name === assetName)
-                    .sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                    .sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
 
                 if (allAssetTransactions.length === 0) return null;
 
                 // 2. Determine start and end values
-                const txBeforeStart = startDate ? allAssetTransactions.filter(tx => new Date(tx.purchaseDate) < new Date(startDate)) : [];
+                const txBeforeStart = startDate ? allAssetTransactions.filter(tx => parseDate(tx.purchaseDate) < parseDate(startDate)) : [];
                 const latestTxBeforeStart = txBeforeStart.length > 0 ? txBeforeStart[txBeforeStart.length - 1] : null;
                 const valueAtStartConverted = latestTxBeforeStart ? (convertCurrency(latestTxBeforeStart.value, latestTxBeforeStart.currency, mainCurrency, rates) || 0) : 0;
 
-                const txUntilEnd = endDate ? allAssetTransactions.filter(tx => new Date(tx.purchaseDate) <= new Date(endDate)) : allAssetTransactions;
+                const txUntilEnd = endDate ? allAssetTransactions.filter(tx => parseDate(tx.purchaseDate) <= parseDate(endDate)) : allAssetTransactions;
                 const latestTxAtEnd = txUntilEnd.length > 0 ? txUntilEnd[txUntilEnd.length - 1] : null;
                 const valueAtEndConverted = latestTxAtEnd ? (convertCurrency(latestTxAtEnd.value, latestTxAtEnd.currency, mainCurrency, rates) || 0) : 0;
 
                 // 3. Calculate deposits and withdrawals within the period
                 const periodTransactions = allAssetTransactions.filter(tx => {
-                    const txDate = new Date(tx.purchaseDate);
-                    const startCheck = startDate ? txDate >= new Date(startDate) : true;
-                    const endCheck = endDate ? txDate <= new Date(endDate) : true;
+                    const txDate = parseDate(tx.purchaseDate);
+                    const startCheck = startDate ? txDate >= parseDate(startDate) : true;
+                    const endCheck = endDate ? txDate <= parseDate(endDate) : true;
                     return startCheck && endCheck;
                 });
 
@@ -1848,7 +1876,7 @@
                 let totalWithdrawals = 0;
 
                 for (const currentTx of periodTransactions) {
-                    const allPrevTxs = allAssetTransactions.filter(tx => new Date(tx.purchaseDate) < new Date(currentTx.purchaseDate));
+                    const allPrevTxs = allAssetTransactions.filter(tx => parseDate(tx.purchaseDate) < parseDate(currentTx.purchaseDate));
                     const prevTx = allPrevTxs.length > 0 ? allPrevTxs[allPrevTxs.length - 1] : null;
 
                     if (currentTx.category === 'Deposit') {
@@ -1888,17 +1916,17 @@
                 }
                 if (filters.assetCategory) {
                     uniqueAssetNames = uniqueAssetNames.filter(name => {
-                        const latestAsset = allAssets.filter(a => a.name === name).sort((a,b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))[0];
+                        const latestAsset = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0];
                         return latestAsset && latestAsset.assetCategory === filters.assetCategory;
                     });
                 }
 
                 // Calculate total portfolio value for allocation percentage, considering the end date of the filter
                 const totalPortfolioValue = uniqueAssetNames.reduce((total, name) => {
-                    const txUntilEnd = filters.endDate ? allAssets.filter(tx => tx.name === name && new Date(tx.purchaseDate) <= new Date(filters.endDate)) : allAssets.filter(tx => tx.name === name);
+                    const txUntilEnd = filters.endDate ? allAssets.filter(tx => tx.name === name && parseDate(tx.purchaseDate) <= parseDate(filters.endDate)) : allAssets.filter(tx => tx.name === name);
                     if(txUntilEnd.length === 0) return total;
                     
-                    const latestAsset = txUntilEnd.sort((a,b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))[0];
+                    const latestAsset = txUntilEnd.sort((a,b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0];
                     
                     return total + (convertCurrency(latestAsset.value, latestAsset.currency, mainCurrency, rates) || 0);
                 }, 0);
@@ -1910,9 +1938,9 @@
                     if(!performance) return null; // No transactions for this asset in the entire history
                     
                     const assetIncomes = allPassiveIncome.filter(i => {
-                        const incomeDate = new Date(i.date);
-                        const startCheck = filters.startDate ? incomeDate >= new Date(filters.startDate) : true;
-                        const endCheck = filters.endDate ? incomeDate <= new Date(filters.endDate) : true;
+                        const incomeDate = parseDate(i.date);
+                        const startCheck = filters.startDate ? incomeDate >= parseDate(filters.startDate) : true;
+                        const endCheck = filters.endDate ? incomeDate <= parseDate(filters.endDate) : true;
                         return i.name === name && startCheck && endCheck;
                     });
 
@@ -1922,7 +1950,7 @@
                     
                     const allocation = totalPortfolioValue > 0 ? (performance.currentValue / totalPortfolioValue) * 100 : 0;
                     
-                    const latestAssetOverall = allAssets.filter(a => a.name === name).sort((a,b)=> new Date(b.purchaseDate) - new Date(a.purchaseDate))[0];
+                    const latestAssetOverall = allAssets.filter(a => a.name === name).sort((a,b)=> parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0];
                     
                     return {
                         assetName: name,
@@ -2009,6 +2037,7 @@
                         summaryFilterEndDate.value = '';
                     } else {
                         summaryFilterEndDate.value = now.toISOString().split('T')[0];
+                        if (span === '1M') startDate.setMonth(now.getMonth() - 1);
                         if (span === '3M') startDate.setMonth(now.getMonth() - 3);
                         if (span === '6M') startDate.setMonth(now.getMonth() - 6);
                         if (span === '1Y') startDate.setFullYear(now.getFullYear() - 1);
@@ -2024,7 +2053,7 @@
                 const colors = getChartColors(isDark);
                 const latestAssets = {};
                 assets.forEach(asset => {
-                    if (!latestAssets[asset.name] || new Date(asset.purchaseDate) >= new Date(latestAssets[asset.name].purchaseDate)) {
+                    if (!latestAssets[asset.name] || parseDate(asset.purchaseDate) >= parseDate(latestAssets[asset.name].purchaseDate)) {
                         latestAssets[asset.name] = asset;
                     }
                 });
@@ -2104,7 +2133,7 @@
 
             function renderCashFlowSummary(assets, settings, mainCurrency) {
                 const groupedAssets = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {});
-                for (const name in groupedAssets) groupedAssets[name].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                for (const name in groupedAssets) groupedAssets[name].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
 
                 let totalDeposits = 0, totalWithdrawals = 0;
 
@@ -2138,7 +2167,7 @@
                     return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0, totalDeposits: 0, totalWithdrawals: 0 };
                 }
 
-                const sortedTxs = [...transactions].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                const sortedTxs = [...transactions].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                 const latestTx = sortedTxs[sortedTxs.length - 1];
 
                 const currentValue = nativeCurrencyValue ? latestTx.value : (convertCurrency(latestTx.value, latestTx.currency, mainCurrency, settings.rates) || 0);
@@ -2184,7 +2213,7 @@
                 }, {});
                 
                 const assetPerformances = Object.values(groupedByName).map(txs => {
-                    const latestTx = txs.sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))[0];
+                    const latestTx = txs.sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0];
                     const performance = calculateAssetPerformance(txs, settings, mainCurrency);
                     const nativePerformance = calculateAssetPerformance(txs, settings, mainCurrency, true);
                     return {
@@ -2277,7 +2306,7 @@
 
             function renderTrendChart(assets, settings, isDark, mainCurrency, timeline) {
                 const colors = getChartColors(isDark);
-                const sortedAssets = [...assets].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                const sortedAssets = [...assets].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                 if (sortedAssets.length === 0) return;
 
                 let startDate;
@@ -2286,26 +2315,26 @@
                     case '1M': startDate = new Date(new Date().setMonth(now.getMonth() - 1)); break;
                     case '3M': startDate = new Date(new Date().setMonth(now.getMonth() - 3)); break;
                     case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break;
-                    default: startDate = new Date(sortedAssets[0].purchaseDate); break;
+                    default: startDate = parseDate(sortedAssets[0].purchaseDate); break;
                 }
                 
                 const dataPoints = {};
                 const assetValues = {};
 
-                sortedAssets.filter(tx => new Date(tx.purchaseDate) < startDate).forEach(tx => assetValues[tx.name] = tx);
+                sortedAssets.filter(tx => parseDate(tx.purchaseDate) < startDate).forEach(tx => assetValues[tx.name] = tx);
                 
                 const initialTotal = Object.values(assetValues).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0);
                 if (Object.keys(assetValues).length > 0) {
                      dataPoints[new Date(startDate.getTime() - 86400000).toISOString().split('T')[0]] = initialTotal;
                 }
                
-                sortedAssets.filter(tx => new Date(tx.purchaseDate) >= startDate).forEach(tx => {
+                sortedAssets.filter(tx => parseDate(tx.purchaseDate) >= startDate).forEach(tx => {
                     assetValues[tx.name] = tx;
                     const totalValue = Object.values(assetValues).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0);
                     dataPoints[tx.purchaseDate] = totalValue;
                 });
                 
-                const labels = Object.keys(dataPoints).sort((a, b) => new Date(a) - new Date(b));
+                const labels = Object.keys(dataPoints).sort((a, b) => parseDate(a) - parseDate(b));
                 const data = labels.map(label => dataPoints[label]);
                 
                 const ctx = document.getElementById('trendChart').getContext('2d');
@@ -2318,7 +2347,7 @@
 
              function renderGainLossChart(assets, settings, isDark, mainCurrency, timeline) {
                 const colors = getChartColors(isDark);
-                const sortedAssets = [...assets].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+                const sortedAssets = [...assets].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                 if (sortedAssets.length === 0) return;
 
                 let startDate;
@@ -2327,19 +2356,19 @@
                     case '1M': startDate = new Date(new Date().setMonth(now.getMonth() - 1)); break;
                     case '3M': startDate = new Date(new Date().setMonth(now.getMonth() - 3)); break;
                     case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break;
-                    default: startDate = new Date(sortedAssets[0].purchaseDate); break;
+                    default: startDate = parseDate(sortedAssets[0].purchaseDate); break;
                 }
 
                 const dataPoints = {};
                 
-                const assetsInTimeline = sortedAssets.filter(tx => new Date(tx.purchaseDate) >= startDate);
+                const assetsInTimeline = sortedAssets.filter(tx => parseDate(tx.purchaseDate) >= startDate);
                 
                 let cumulativeDeposits = 0;
                 let cumulativeWithdrawals = 0;
                 const valueHistory = {};
 
                 // Establish baseline before the start date
-                const assetsBeforeStart = sortedAssets.filter(tx => new Date(tx.purchaseDate) < startDate);
+                const assetsBeforeStart = sortedAssets.filter(tx => parseDate(tx.purchaseDate) < startDate);
                 assetsBeforeStart.forEach(tx => {
                      const prevTx = valueHistory[tx.name];
                      if (tx.category === 'Deposit') {
@@ -2368,7 +2397,7 @@
                     dataPoints[tx.purchaseDate] = totalValue - netCapital;
                 });
 
-                const labels = Object.keys(dataPoints).sort((a, b) => new Date(a) - new Date(b));
+                const labels = Object.keys(dataPoints).sort((a, b) => parseDate(a) - parseDate(b));
                 const data = labels.map(label => dataPoints[label]);
                 const backgroundColors = data.map(value => value >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)');
 
@@ -2403,7 +2432,7 @@
                 const colors = getChartColors(isDark);
                 if(income.length === 0) return;
 
-                const sortedIncome = [...income].sort((a, b) => new Date(a.date) - new Date(b.date));
+                const sortedIncome = [...income].sort((a, b) => parseDate(a.date) - parseDate(b.date));
 
                 let startDate;
                 const now = new Date();
@@ -2413,17 +2442,17 @@
                     case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break;
                     default: 
                         if (sortedIncome.length > 0) {
-                           startDate = new Date(sortedIncome[0].date);
+                           startDate = parseDate(sortedIncome[0].date);
                         } else {
                             startDate = new Date();
                         }
                         break;
                 }
 
-                const incomeInTimeline = sortedIncome.filter(i => new Date(i.date) >= startDate);
+                const incomeInTimeline = sortedIncome.filter(i => parseDate(i.date) >= startDate);
 
                 const monthlyTotals = incomeInTimeline.reduce((acc, i) => {
-                    const monthKey = new Date(i.date).toLocaleString('default', { month: 'short', year: 'numeric' });
+                    const monthKey = parseDate(i.date).toLocaleString('default', { month: 'short', year: 'numeric' });
                     const convertedValue = convertCurrency(i.value, i.currency, mainCurrency, settings.rates) || 0;
                     acc[monthKey] = (acc[monthKey] || 0) + convertedValue;
                     return acc;
