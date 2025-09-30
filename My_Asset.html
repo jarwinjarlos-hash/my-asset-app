@@ -55,55 +55,157 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 h-screen overflow-hidden">
 
-    <div id="app" class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl pb-24">
-
-        <header class="mb-8 flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Asset Tracker</h1>
-                <p class="text-gray-500 dark:text-gray-400 mt-1">Your personal multi-currency portfolio.</p>
-            </div>
-            <div class="flex items-center space-x-2">
-                 <button id="privacy-toggle-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle privacy mode">
-                    <svg id="privacy-on-icon" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    <svg id="privacy-off-icon" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L6.228 6.228" /></svg>
-                </button>
-                 <button id="settings-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Open settings">
-                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-1.007 1.11-1.226l.28-.08c.568-.168 1.17.22 1.338.79l.08.28c.168.568-.22 1.17-.79 1.338l-.28.08c-.542.09-1.007.56-1.226 1.11l-.08.28c-.168.568-.79 1.008-1.338.84l-.28-.08c-.568-.168-.96-.79-.79-1.338l.08-.28zM14.25 5.16c.324-.972 1.26-1.63 2.28-1.63.02 0 .04 0 .06 0a2.25 2.25 0 012.25 2.25c0 .02 0 .04 0 .06 0 1.02-.658 1.956-1.63 2.28l-.28.08c-.568-.168-1.17-.22-1.338-.79l-.08-.28c-.168-.568.22-1.17.79-1.338l.28-.08zm-5.25-.16a2.25 2.25 0 10-3.182-3.182 2.25 2.25 0 003.182 3.182zM12 15a3 3 0 100-6 3 3 0 000 6z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-3.314-2.686-6-6-6s-6 2.686-6 6s2.686 6 6 6s6-2.686 6-6zM8.25 20.25a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182zM12 21a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 20.25a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182zM12 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" /></svg>
-                </button>
-                <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle theme">
-                    <svg id="theme-toggle-dark-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                    <svg id="theme-toggle-light-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-3.536a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.464-3.536a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zm1.414-7.071a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM3 10a1 1 0 01-1-1 1 1 0 011-1h1a1 1 0 110 2H3z"></path></svg>
-                </button>
-            </div>
-        </header>
-
-
-        <!-- Tabs -->
-        <div class="mb-8">
-            <div class="border-b border-gray-200 dark:border-gray-700">
-                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                    <button id="dashboard-tab-button" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent">
-                        Dashboard
-                    </button>
-                    <button id="tracker-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
-                        Tracker
-                    </button>
-                    <button id="passive-income-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
-                        Passive Income
-                    </button>
-                     <button id="summary-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
-                        Summary
-                    </button>
-                </nav>
-            </div>
-        </div>
+    <div id="app" class="h-full flex flex-col max-w-7xl mx-auto">
         
-        <!-- Tracker Content -->
-        <div id="tracker-content" class="hidden">
-            <!-- Asset List -->
-            <div>
+        <!-- Non-scrolling Header -->
+        <div class="flex-shrink-0 px-4 sm:px-6 lg:px-8">
+            <header class="pt-4 sm:pt-6 lg:pt-8 flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Asset Tracker</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">Your personal multi-currency portfolio.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="privacy-toggle-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle privacy mode">
+                        <svg id="privacy-on-icon" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        <svg id="privacy-off-icon" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L6.228 6.228" /></svg>
+                    </button>
+                    <button id="settings-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Open settings">
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-1.007 1.11-1.226l.28-.08c.568-.168 1.17.22 1.338.79l.08.28c.168.568-.22 1.17-.79 1.338l-.28.08c-.542.09-1.007.56-1.226 1.11l-.08.28c-.168.568-.79 1.008-1.338.84l-.28-.08c-.568-.168-.96-.79-.79-1.338l.08-.28zM14.25 5.16c.324-.972 1.26-1.63 2.28-1.63.02 0 .04 0 .06 0a2.25 2.25 0 012.25 2.25c0 .02 0 .04 0 .06 0 1.02-.658 1.956-1.63 2.28l-.28.08c-.568-.168-1.17-.22-1.338-.79l-.08-.28c-.168-.568.22-1.17.79-1.338l.28-.08zm-5.25-.16a2.25 2.25 0 10-3.182-3.182 2.25 2.25 0 003.182 3.182zM12 15a3 3 0 100-6 3 3 0 000 6z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-3.314-2.686-6-6-6s-6 2.686-6 6s2.686 6 6 6s6-2.686 6-6zM8.25 20.25a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182zM12 21a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 20.25a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182zM12 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" /></svg>
+                    </button>
+                    <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle theme">
+                        <svg id="theme-toggle-dark-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-3.536a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.464-3.536a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zm1.414-7.071a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM3 10a1 1 0 01-1-1 1 1 0 011-1h1a1 1 0 110 2H3z"></path></svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Tabs -->
+            <div class="mt-4">
+                <div class="border-b border-gray-200 dark:border-gray-700">
+                    <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
+                        <button id="dashboard-tab-button" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent">
+                            Dashboard
+                        </button>
+                        <button id="tracker-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
+                            Tracker
+                        </button>
+                        <button id="passive-income-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
+                            Passive Income
+                        </button>
+                        <button id="summary-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
+                            Summary
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </div> <!-- End Non-scrolling Header -->
+        
+        <!-- Scrolling Content -->
+        <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24">
+        
+            <!-- Dashboard Content -->
+            <div id="dashboard-content">
+                 <!-- Total Value Summary -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+                     <div class="flex justify-between items-start">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
+                             <div class="col-span-1 sm:col-span-2 lg:col-span-4">
+                                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Asset Value</h2>
+                                <p id="total-value" class="text-3xl font-bold text-gray-900 dark:text-white">$0.00</p>
+                            </div>
+                            <div class="text-left sm:text-right">
+                                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Gain/Loss</h2>
+                                <p id="total-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                                <div id="total-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                            </div>
+                             <div class="text-left sm:text-right">
+                                   <h2 id="this-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Gain/Loss</h2>
+                                   <p id="monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                                   <div id="monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                               </div>
+                             <div class="text-left sm:text-right">
+                                   <h2 id="prev-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Previous Month's Gain/Loss</h2>
+                                   <p id="prev-monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                                   <div id="prev-monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                               </div>
+                               <div class="text-left sm:text-right">
+                                    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">AVG Monthly Income</h2>
+                                    <p id="avg-monthly-income" class="text-xl font-bold text-gray-900 dark:text-white">-</p>
+                                    <div class="text-sm font-medium text-gray-500 dark:text-gray-400">&nbsp;</div>
+                                </div>
+                        </div>
+                         <div id="rates-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
+                            <div class="flex items-center justify-end">
+                                <span id="online-indicator" class="h-2 w-2 rounded-full bg-gray-400 mr-1.5"></span>
+                                <span id="rates-last-updated">Checking rates...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left Column -->
+                    <div class="lg:col-span-1 space-y-8">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                             <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Asset Allocation</h2>
+                                <div id="allocation-display-toggle" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                                    <button data-mode="amount" class="allocation-toggle-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">$</button>
+                                    <button data-mode="percent" class="allocation-toggle-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">%</button>
+                                </div>
+                            </div>
+                            <div class="h-64 flex items-center justify-center relative">
+                                <canvas id="allocationChart"></canvas>
+                            </div>
+                             <div id="allocation-legend" class="mt-4 space-y-2"></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Cash Flow</h2>
+                            <div id="cash-flow-summary" class="space-y-4"></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Asset Performance</h2>
+                            <div id="asset-breakdown" class="space-y-2">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Right Column -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Portfolio Value Trend</h2>
+                                <div id="trend-timeline-buttons" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                                    <button data-timeline="1M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1M</button>
+                                    <button data-timeline="3M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">3M</button>
+                                    <button data-timeline="1Y" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1Y</button>
+                                    <button data-timeline="ALL" class="timeline-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">ALL</button>
+                                </div>
+                            </div>
+                            <div class="h-96">
+                                 <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Historical Gain/Loss</h2>
+                                <div class="h-96">
+                                     <canvas id="gainLossChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monthly Passive Income</h2>
+                                <div class="h-96">
+                                     <canvas id="monthlyIncomeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tracker Content -->
+            <div id="tracker-content" class="hidden">
                 <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Transaction History</h2>
                 <!-- Filter Section -->
                 <div id="filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
@@ -143,199 +245,101 @@
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a new asset transaction.</p>
                  </div>
             </div>
-        </div>
 
-        <!-- Passive Income Content -->
-        <div id="passive-income-content" class="hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Passive Income</h2>
-                <button id="add-income-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                    Add Income
-                </button>
-            </div>
-
-            <!-- Monthly Summary -->
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
-                <h3 id="passive-income-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Income</h3>
-                <p id="passive-income-total" class="text-4xl font-bold text-gray-900 dark:text-white">$0.00</p>
-            </div>
-
-            <div id="passive-income-list" class="space-y-6">
-                <!-- Income entries will be injected here -->
-            </div>
-            <div id="no-passive-income-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-                <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m12 0V9" /></svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No income recorded</h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a dividend or other passive income.</p>
-            </div>
-        </div>
-
-        <!-- Summary Content -->
-        <div id="summary-content" class="hidden">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Portfolio Summary</h2>
-            <div id="summary-filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label for="summary-filter-asset-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
-                        <select id="summary-filter-asset-category" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                            <option value="">All</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="summary-filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
-                        <select id="summary-filter-asset-name" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                            <option value="">All</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Span</label>
-                        <div id="summary-date-buttons" class="mt-1 flex space-x-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-lg">
-                            <button data-span="1M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1M</button>
-                            <button data-span="3M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">3M</button>
-                            <button data-span="6M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">6M</button>
-                            <button data-span="1Y" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1Y</button>
-                            <button data-span="ALL" class="summary-filter-btn active flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300">ALL</button>
-                        </div>
-                    </div>
+            <!-- Passive Income Content -->
+            <div id="passive-income-content" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Passive Income</h2>
+                    <button id="add-income-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Add Income
+                    </button>
                 </div>
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                     <div>
-                        <label for="summary-filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
-                        <input type="date" id="summary-filter-start-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="summary-filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
-                        <input type="date" id="summary-filter-end-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                    </div>
-                 </div>
-                <div class="mt-4 flex justify-end gap-2">
-                    <button id="summary-reset-filters-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Reset</button>
-                    <button id="summary-apply-filters-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Apply Filters</button>
+
+                <!-- Monthly Summary -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+                    <h3 id="passive-income-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Income</h3>
+                    <p id="passive-income-total" class="text-4xl font-bold text-gray-900 dark:text-white">$0.00</p>
+                </div>
+
+                <div id="passive-income-list" class="space-y-6">
+                    <!-- Income entries will be injected here -->
+                </div>
+                <div id="no-passive-income-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m12 0V9" /></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No income recorded</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a dividend or other passive income.</p>
                 </div>
             </div>
-            <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-md">
-                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asset Name</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asset Category</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Allocation %</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Deposited</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Withdrawn</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gain/Loss</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gain/Loss %</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Dividend</th>
-                        </tr>
-                    </thead>
-                    <tbody id="summary-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        <!-- Summary data will be injected here -->
-                    </tbody>
-                     <tfoot id="summary-table-footer" class="bg-gray-50 dark:bg-gray-700">
-                        <!-- Totals will be injected here -->
-                    </tfoot>
-                </table>
-            </div>
-        </div>
 
-        <!-- Dashboard Content -->
-        <div id="dashboard-content">
-             <!-- Total Value Summary -->
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
-                 <div class="flex justify-between items-start">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
-                         <div class="col-span-1 sm:col-span-2 lg:col-span-4">
-                            <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Asset Value</h2>
-                            <p id="total-value" class="text-3xl font-bold text-gray-900 dark:text-white">$0.00</p>
+            <!-- Summary Content -->
+            <div id="summary-content" class="hidden">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Portfolio Summary</h2>
+                <div id="summary-filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="summary-filter-asset-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
+                            <select id="summary-filter-asset-category" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
                         </div>
-                        <div class="text-left sm:text-right">
-                            <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Gain/Loss</h2>
-                            <p id="total-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
-                            <div id="total-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                        <div>
+                            <label for="summary-filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                            <select id="summary-filter-asset-name" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
                         </div>
-                         <div class="text-left sm:text-right">
-                               <h2 id="this-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Gain/Loss</h2>
-                               <p id="monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
-                               <div id="monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
-                           </div>
-                         <div class="text-left sm:text-right">
-                               <h2 id="prev-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Previous Month's Gain/Loss</h2>
-                               <p id="prev-monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
-                               <div id="prev-monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
-                           </div>
-                           <div class="text-left sm:text-right">
-                                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">AVG Monthly Income</h2>
-                                <p id="avg-monthly-income" class="text-xl font-bold text-gray-900 dark:text-white">-</p>
-                                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">&nbsp;</div>
-                            </div>
-                    </div>
-                     <div id="rates-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
-                        <div class="flex items-center justify-end">
-                            <span id="online-indicator" class="h-2 w-2 rounded-full bg-gray-400 mr-1.5"></span>
-                            <span id="rates-last-updated">Checking rates...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Left Column -->
-                <div class="lg:col-span-1 space-y-8">
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                         <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Asset Allocation</h2>
-                            <div id="allocation-display-toggle" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-                                <button data-mode="amount" class="allocation-toggle-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">$</button>
-                                <button data-mode="percent" class="allocation-toggle-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">%</button>
-                            </div>
-                        </div>
-                        <div class="h-64 flex items-center justify-center relative">
-                            <canvas id="allocationChart"></canvas>
-                        </div>
-                         <div id="allocation-legend" class="mt-4 space-y-2"></div>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Cash Flow</h2>
-                        <div id="cash-flow-summary" class="space-y-4"></div>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Asset Performance</h2>
-                        <div id="asset-breakdown" class="space-y-2">
-                        </div>
-                    </div>
-                </div>
-                <!-- Right Column -->
-                <div class="lg:col-span-2 space-y-8">
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                        <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Portfolio Value Trend</h2>
-                            <div id="trend-timeline-buttons" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-                                <button data-timeline="1M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1M</button>
-                                <button data-timeline="3M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">3M</button>
-                                <button data-timeline="1Y" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1Y</button>
-                                <button data-timeline="ALL" class="timeline-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">ALL</button>
-                            </div>
-                        </div>
-                        <div class="h-96">
-                             <canvas id="trendChart"></canvas>
-                        </div>
-                    </div>
-                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Historical Gain/Loss</h2>
-                            <div class="h-96">
-                                 <canvas id="gainLossChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monthly Passive Income</h2>
-                            <div class="h-96">
-                                 <canvas id="monthlyIncomeChart"></canvas>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Span</label>
+                            <div id="summary-date-buttons" class="mt-1 flex space-x-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-lg">
+                                <button data-span="1M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1M</button>
+                                <button data-span="3M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">3M</button>
+                                <button data-span="6M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">6M</button>
+                                <button data-span="1Y" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1Y</button>
+                                <button data-span="ALL" class="summary-filter-btn active flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300">ALL</button>
                             </div>
                         </div>
                     </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                         <div>
+                            <label for="summary-filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                            <input type="date" id="summary-filter-start-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="summary-filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                            <input type="date" id="summary-filter-end-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                     </div>
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button id="summary-reset-filters-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Reset</button>
+                        <button id="summary-apply-filters-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Apply Filters</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asset Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asset Category</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Allocation %</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Deposited</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Withdrawn</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gain/Loss</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gain/Loss %</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Dividend</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Summary data will be injected here -->
+                        </tbody>
+                         <tfoot id="summary-table-footer" class="bg-gray-50 dark:bg-gray-700">
+                            <!-- Totals will be injected here -->
+                        </tfoot>
+                    </table>
                 </div>
             </div>
-        </div>
+            
+        </main> <!-- End Scrolling Content -->
     </div>
     
     <!-- Add Transaction Floating Button -->
@@ -490,7 +494,6 @@
             </div>
         </div>
     </div>
-
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
