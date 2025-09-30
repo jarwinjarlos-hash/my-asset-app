@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Tracker (Offline)</title>
-    <link rel="manifest" href="Manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3b82f6"/>
     <link rel="apple-touch-icon" href="https://placehold.co/192x192/3b82f6/FFFFFF?text=AT">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -48,6 +49,10 @@
         .rotate-90 {
             transform: rotate(90deg);
         }
+        .summary-filter-btn.active {
+            background-color: #3b82f6;
+            color: white;
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
@@ -60,11 +65,6 @@
                 <p class="text-gray-500 dark:text-gray-400 mt-1">Your personal multi-currency portfolio.</p>
             </div>
             <div class="flex items-center space-x-2">
-                 <button id="orientation-toggle-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle screen orientation">
-                    <svg id="orientation-auto-icon" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.667 0l3.181-3.183m-4.991-2.695v-2.695A8.25 8.25 0 0012 4.5c-2.31 0-4.418.99-5.867 2.625l-2.072 2.072m10.238-3.183v4.992m0 0h-4.992m4.992 0l-3.181-3.183a8.25 8.25 0 00-11.667 0l-3.181 3.183" /></svg>
-                    <svg id="orientation-portrait-icon" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
-                    <svg id="orientation-landscape-icon" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5a2.25 2.25 0 012.25 2.25v6.75a2.25 2.25 0 01-2.25 2.25H3.75a2.25 2.25 0 01-2.25-2.25V7.5a2.25 2.25 0 012.25-2.25z" /></svg>
-                </button>
                  <button id="privacy-toggle-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle privacy mode">
                     <svg id="privacy-on-icon" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     <svg id="privacy-off-icon" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L6.228 6.228" /></svg>
@@ -89,6 +89,12 @@
                     </button>
                     <button id="tracker-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
                         Tracker
+                    </button>
+                    <button id="passive-income-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
+                        Passive Income
+                    </button>
+                     <button id="summary-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">
+                        Summary
                     </button>
                 </nav>
             </div>
@@ -139,13 +145,105 @@
             </div>
         </div>
 
+        <!-- Passive Income Content -->
+        <div id="passive-income-content" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Passive Income</h2>
+                <button id="add-income-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    Add Income
+                </button>
+            </div>
+
+            <!-- Monthly Summary -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+                <h3 id="passive-income-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Income</h3>
+                <p id="passive-income-total" class="text-4xl font-bold text-gray-900 dark:text-white">$0.00</p>
+            </div>
+
+            <div id="passive-income-list" class="space-y-6">
+                <!-- Income entries will be injected here -->
+            </div>
+            <div id="no-passive-income-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m12 0V9" /></svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No income recorded</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a dividend or other passive income.</p>
+            </div>
+        </div>
+
+        <!-- Summary Content -->
+        <div id="summary-content" class="hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Portfolio Summary</h2>
+            <div id="summary-filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="summary-filter-asset-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
+                        <select id="summary-filter-asset-category" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="summary-filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                        <select id="summary-filter-asset-name" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Span</label>
+                        <div id="summary-date-buttons" class="mt-1 flex space-x-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-lg">
+                            <button data-span="3M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">3M</button>
+                            <button data-span="6M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">6M</button>
+                            <button data-span="1Y" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1Y</button>
+                            <button data-span="ALL" class="summary-filter-btn active flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300">ALL</button>
+                        </div>
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                     <div>
+                        <label for="summary-filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                        <input type="date" id="summary-filter-start-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="summary-filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                        <input type="date" id="summary-filter-end-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                 </div>
+                <div class="mt-4 flex justify-end gap-2">
+                    <button id="summary-reset-filters-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Reset</button>
+                    <button id="summary-apply-filters-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Apply Filters</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asset Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asset Category</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Allocation %</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Deposited</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Withdrawn</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gain/Loss</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gain/Loss %</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Dividend</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summary-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Summary data will be injected here -->
+                    </tbody>
+                     <tfoot id="summary-table-footer" class="bg-gray-50 dark:bg-gray-700">
+                        <!-- Totals will be injected here -->
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
         <!-- Dashboard Content -->
         <div id="dashboard-content">
              <!-- Total Value Summary -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
                  <div class="flex justify-between items-start">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
-                         <div class="md:col-span-3">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
+                         <div class="col-span-2 lg:col-span-4">
                             <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Asset Value</h2>
                             <p id="total-value" class="text-4xl font-bold text-gray-900 dark:text-white">$0.00</p>
                         </div>
@@ -164,6 +262,11 @@
                                <p id="prev-monthly-gain-loss-amount" class="text-2xl font-bold text-gray-500 dark:text-gray-300">-</p>
                                <div id="prev-monthly-gain-loss-percentage" class="text-md font-medium text-gray-500 dark:text-gray-400">-</div>
                            </div>
+                           <div class="text-left md:text-right">
+                                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">AVG Monthly Income</h2>
+                                <p id="avg-monthly-income" class="text-2xl font-bold text-gray-900 dark:text-white">-</p>
+                                <div class="text-md font-medium text-gray-500 dark:text-gray-400">&nbsp;</div>
+                            </div>
                     </div>
                      <div id="rates-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
                         <div class="flex items-center justify-end">
@@ -173,7 +276,7 @@
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Left Column -->
                 <div class="lg:col-span-1 space-y-8">
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
@@ -215,10 +318,18 @@
                              <canvas id="trendChart"></canvas>
                         </div>
                     </div>
-                     <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Historical Gain/Loss</h2>
-                        <div class="h-96">
-                             <canvas id="gainLossChart"></canvas>
+                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Historical Gain/Loss</h2>
+                            <div class="h-96">
+                                 <canvas id="gainLossChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monthly Passive Income</h2>
+                            <div class="h-96">
+                                 <canvas id="monthlyIncomeChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -279,6 +390,49 @@
             </form>
         </div>
     </div>
+
+    <!-- Add/Edit Passive Income Modal -->
+    <div id="passive-income-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="passive-income-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add Passive Income</h3>
+            <form id="passive-income-form">
+                <input type="hidden" id="edit-income-id">
+                <div class="space-y-4">
+                    <div>
+                        <label for="income-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link to Asset</label>
+                        <select id="income-asset-name-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                             <option value="" disabled selected>Select an existing asset</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="income-sub-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub-Asset Name (Optional)</label>
+                        <input type="text" id="income-sub-asset-name-modal" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Specific Bond ID, Rental Unit A">
+                    </div>
+                    <div>
+                        <label for="income-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Received</label>
+                        <input type="date" id="income-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="income-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                        <div class="relative mt-1">
+                            <input type="number" id="income-value-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <div class="absolute inset-y-0 right-0 flex items-center">
+                                <input type="text" id="income-currency-modal" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16 disabled:bg-gray-100 dark:disabled:bg-gray-700" placeholder="AUTO">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="income-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                        <textarea id="income-description-modal" rows="2" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Q3 Dividend"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button type="button" id="cancel-income-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="submit" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save Income</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
@@ -293,14 +447,14 @@
                  <div>
                      <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Management</h4>
                      <div class="flex flex-col sm:flex-row gap-4">
-                         <button id="import-csv-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
+                         <button id="import-data-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
                              <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                             Import from CSV
+                             Import Backup (.zip)
                          </button>
-                         <input type="file" id="import-csv-input" class="hidden" accept=".csv">
-                         <button id="export-csv-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
+                         <input type="file" id="import-file-input" class="hidden" accept=".zip">
+                         <button id="export-data-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
                              <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                             Export to CSV
+                             Export Backup (.zip)
                          </button>
                      </div>
                 </div>
@@ -342,13 +496,16 @@
             // --- Storage and Settings ---
             const DATA_STORAGE_KEY = 'assetTrackerOfflineData';
             const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
+            const PASSIVE_INCOME_STORAGE_KEY = 'assetTrackerPassiveIncomeData';
             
             let allAssets = [];
+            let allPassiveIncome = [];
             let appSettings = {};
             let isEditMode = false;
             let currentEditId = null;
             let allocationDisplayMode = 'amount'; // 'amount' or 'percent'
             let isPrivacyMode = false;
+            let currentTab = 'dashboard';
 
             const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
 
@@ -390,8 +547,13 @@
             // --- DOM Elements ---
             const trackerTabButton = document.getElementById('tracker-tab-button');
             const dashboardTabButton = document.getElementById('dashboard-tab-button');
+            const passiveIncomeTabButton = document.getElementById('passive-income-tab-button');
+            const summaryTabButton = document.getElementById('summary-tab-button');
+
             const trackerContent = document.getElementById('tracker-content');
             const dashboardContent = document.getElementById('dashboard-content');
+            const passiveIncomeContent = document.getElementById('passive-income-content');
+            const summaryContent = document.getElementById('summary-content');
             
             const transactionModal = document.getElementById('transaction-modal');
             const transactionModalTitle = document.getElementById('transaction-modal-title');
@@ -430,12 +592,23 @@
             const prevMonthlyGainLossPercentageEl = document.getElementById('prev-monthly-gain-loss-percentage');
             const thisMonthLabel = document.getElementById('this-month-label');
             const prevMonthLabel = document.getElementById('prev-month-label');
+
+            const addIncomeBtn = document.getElementById('add-income-btn');
+            const passiveIncomeModal = document.getElementById('passive-income-modal');
+            const passiveIncomeForm = document.getElementById('passive-income-form');
+            const cancelIncomeBtn = document.getElementById('cancel-income-btn');
+            const passiveIncomeList = document.getElementById('passive-income-list');
+            const noPassiveIncomeMessage = document.getElementById('no-passive-income-message');
+            const passiveIncomeTotalEl = document.getElementById('passive-income-total');
+            const passiveIncomeMonthLabelEl = document.getElementById('passive-income-month-label');
+            const incomeAssetNameModalSelect = document.getElementById('income-asset-name-modal');
             
             const assetBreakdownContainer = document.getElementById('asset-breakdown');
             
-            const importCsvBtn = document.getElementById('import-csv-btn');
-            const importCsvInput = document.getElementById('import-csv-input');
-            const exportCsvBtn = document.getElementById('export-csv-btn');
+            const importDataBtn = document.getElementById('import-data-btn');
+            const importFileInput = document.getElementById('import-file-input');
+            const exportDataBtn = document.getElementById('export-data-btn');
+
             const allocationDisplayToggle = document.getElementById('allocation-display-toggle');
             const privacyToggleBtn = document.getElementById('privacy-toggle-btn');
             const privacyOnIcon = document.getElementById('privacy-on-icon');
@@ -447,13 +620,20 @@
             const filterEndDate = document.getElementById('filter-end-date');
             const applyFiltersBtn = document.getElementById('apply-filters-btn');
             const resetFiltersBtn = document.getElementById('reset-filters-btn');
-            const orientationToggleBtn = document.getElementById('orientation-toggle-btn');
-            const orientationAutoIcon = document.getElementById('orientation-auto-icon');
-            const orientationPortraitIcon = document.getElementById('orientation-portrait-icon');
-            const orientationLandscapeIcon = document.getElementById('orientation-landscape-icon');
+
+            // Summary Tab Elements
+            const summaryFilterAssetCategory = document.getElementById('summary-filter-asset-category');
+            const summaryFilterAssetName = document.getElementById('summary-filter-asset-name');
+            const summaryDateButtons = document.getElementById('summary-date-buttons');
+            const summaryFilterStartDate = document.getElementById('summary-filter-start-date');
+            const summaryFilterEndDate = document.getElementById('summary-filter-end-date');
+            const summaryApplyFiltersBtn = document.getElementById('summary-apply-filters-btn');
+            const summaryResetFiltersBtn = document.getElementById('summary-reset-filters-btn');
+            const summaryTableBody = document.getElementById('summary-table-body');
+            const summaryTableFooter = document.getElementById('summary-table-footer');
             
             // --- Chart variables ---
-            let allocationChart, trendChart, gainLossChart;
+            let allocationChart, trendChart, gainLossChart, monthlyIncomeChart;
 
             // --- Custom Modals ---
             const alertModal = document.getElementById('alert-modal');
@@ -538,19 +718,18 @@
                     lastUpdated: null,
                     ...(Array.isArray(storedSettings) ? {} : storedSettings) // handle case where old data is an array
                 };
-                isPrivacyMode = localStorage.getItem('assetTrackerPrivacyMode') === 'true';
+                 isPrivacyMode = localStorage.getItem('assetTrackerPrivacyMode') === 'true';
                 updatePrivacyView();
-                const savedOrientation = localStorage.getItem('assetTrackerOrientation') || 'any';
-                const orientationIndex = ['any', 'portrait', 'landscape'].indexOf(savedOrientation);
-                setOrientation(orientationIndex);
                 updateRatesStatus();
             }
             
             function loadData() {
                  allAssets = getFromStorage(DATA_STORAGE_KEY, true) || [];
+                 allPassiveIncome = getFromStorage(PASSIVE_INCOME_STORAGE_KEY, true) || [];
                  if (allAssets.length === 0) {
                     seedInitialData();
                     allAssets = getFromStorage(DATA_STORAGE_KEY) || [];
+                    allPassiveIncome = getFromStorage(PASSIVE_INCOME_STORAGE_KEY, true) || [];
                 }
             }
             
@@ -560,18 +739,28 @@
                 
                 if (dashboardTabButton.classList.contains('active')) {
                      renderDashboard(allAssets, appSettings);
-                } else {
+                } else if(trackerTabButton.classList.contains('active')) {
                     renderGroupedAssets(allAssets, appSettings);
+                } else if(passiveIncomeTabButton.classList.contains('active')) {
+                    renderPassiveIncome(allPassiveIncome, appSettings);
+                } else if(summaryTabButton.classList.contains('active')) {
+                    renderSummaryTable();
                 }
             }
             
             // --- Tab Switching ---
             dashboardTabButton.addEventListener('click', () => switchTab('dashboard'));
             trackerTabButton.addEventListener('click', () => switchTab('tracker'));
+            passiveIncomeTabButton.addEventListener('click', () => switchTab('passive-income'));
+            summaryTabButton.addEventListener('click', () => switchTab('summary'));
+
 
             function switchTab(tabName) {
-                [dashboardContent, trackerContent].forEach(el => el.classList.add('hidden'));
-                [dashboardTabButton, trackerTabButton].forEach(el => el.classList.remove('active'));
+                currentTab = tabName;
+                [dashboardContent, trackerContent, passiveIncomeContent, summaryContent].forEach(el => el.classList.add('hidden'));
+                [dashboardTabButton, trackerTabButton, passiveIncomeTabButton, summaryTabButton].forEach(el => el.classList.remove('active'));
+                
+                addTransactionFab.classList.toggle('hidden', tabName === 'summary');
 
                 if (tabName === 'dashboard') {
                     dashboardContent.classList.remove('hidden');
@@ -580,15 +769,15 @@
                 } else if (tabName === 'tracker') {
                     trackerContent.classList.remove('hidden');
                     trackerTabButton.classList.add('active');
-                    
-                    const today = new Date();
-                    const twoMonthsAgo = new Date();
-                    twoMonthsAgo.setMonth(today.getMonth() - 2);
-
-                    filterStartDate.value = twoMonthsAgo.toISOString().split('T')[0];
-                    filterEndDate.value = today.toISOString().split('T')[0];
-                    
-                    applyAndRenderFilters();
+                    renderGroupedAssets(allAssets, appSettings);
+                } else if (tabName === 'passive-income') {
+                    passiveIncomeContent.classList.remove('hidden');
+                    passiveIncomeTabButton.classList.add('active');
+                    renderPassiveIncome(allPassiveIncome, appSettings);
+                } else if (tabName === 'summary') {
+                    summaryContent.classList.remove('hidden');
+                    summaryTabButton.classList.add('active');
+                    renderSummaryTable();
                 }
             }
 
@@ -774,17 +963,106 @@
                     assetList.appendChild(monthContainer);
                 }
             };
+
+            const renderPassiveIncome = (incomeToRender, settings) => {
+                passiveIncomeList.innerHTML = '';
+
+                // Update Monthly Total
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+                const monthlyTotal = incomeToRender
+                    .filter(income => {
+                        const incomeDate = new Date(income.date);
+                        return incomeDate >= startOfMonth && incomeDate <= endOfMonth;
+                    })
+                    .reduce((total, income) => {
+                        const convertedValue = convertCurrency(income.value, income.currency, settings.mainCurrency, settings.rates) || 0;
+                        return total + convertedValue;
+                    }, 0);
+                
+                passiveIncomeMonthLabelEl.textContent = `${now.toLocaleString('default', { month: 'long' })}'s Income`;
+                passiveIncomeTotalEl.textContent = formatCurrency(monthlyTotal, settings.mainCurrency);
+
+                if (incomeToRender.length === 0) {
+                    noPassiveIncomeMessage.classList.remove('hidden');
+                    passiveIncomeList.innerHTML = '';
+                    return;
+                }
+                noPassiveIncomeMessage.classList.add('hidden');
+
+                const groupedByMonth = incomeToRender.reduce((acc, income) => {
+                    const date = new Date(income.date + 'T00:00:00');
+                     if(isNaN(date.getTime())) return acc;
+                    const monthKey = new Date(date.getFullYear(), date.getMonth()).toISOString();
+                    acc[monthKey] = acc[monthKey] || [];
+                    acc[monthKey].push(income);
+                    return acc;
+                }, {});
+
+                const sortedMonths = Object.keys(groupedByMonth).sort((a, b) => new Date(b) - new Date(a));
+
+                sortedMonths.forEach(monthKey => {
+                    const monthName = new Date(monthKey).toLocaleString('default', { month: 'long', year: 'numeric' });
+                    const group = groupedByMonth[monthKey].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                    const monthContainer = document.createElement('div');
+                    monthContainer.className = 'bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md';
+                    monthContainer.innerHTML = `<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">${monthName}</h3>`;
+
+                    const incomeHtml = group.map(income => {
+                        const valueFormatted = formatCurrency(income.value, income.currency);
+                        const dateFormatted = new Date(income.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        return `
+                        <div data-id="${income.id}" class="income-item py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-semibold text-gray-800 dark:text-gray-100">${income.name}</p>
+                                    ${income.subAssetName ? `<p class="text-sm text-gray-500 dark:text-gray-400">${income.subAssetName}</p>` : ''}
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">${dateFormatted}</p>
+                                    ${income.description ? `<p class="mt-1 text-xs text-gray-600 dark:text-gray-300 italic">"${income.description}"</p>` : ''}
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold text-lg text-green-600">${valueFormatted}</p>
+                                    <div class="flex space-x-2 mt-2 justify-end">
+                                        <button class="edit-income-btn text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-medium py-1 px-2 rounded text-sm">Edit</button>
+                                        <button class="delete-income-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium py-1 px-2 rounded text-sm">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+
+                    monthContainer.innerHTML += `<div class="space-y-1">${incomeHtml}</div>`;
+                    passiveIncomeList.appendChild(monthContainer);
+                });
+            };
             
             const updateDatalists = (assets) => {
-                const uniqueNames = [...new Set(assets.map(asset => asset.name))].sort((a, b) => a.localeCompare(b));
+                const uniqueNames = [...new Set(assets.map(asset => asset.name))].sort();
                 if (assetDatalist) assetDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
+
+                if (incomeAssetNameModalSelect) {
+                    const existingValue = incomeAssetNameModalSelect.value;
+                    incomeAssetNameModalSelect.innerHTML = '<option value="" disabled>Select an existing asset</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join('');
+                    if (existingValue) {
+                        incomeAssetNameModalSelect.value = existingValue;
+                    } else {
+                        incomeAssetNameModalSelect.value = "";
+                    }
+                }
+
                 if (filterAssetName) {
                     filterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join('');
+                }
+                if(summaryFilterAssetName){
+                     summaryFilterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join('');
                 }
 
                 const defaultTxCategories = ['Market Value Update', 'Deposit', 'Withdrawal'];
                 const customTxCategories = assets.map(asset => asset.category).filter(Boolean);
-                const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])].sort((a, b) => a.localeCompare(b));
+                const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])].sort();
                 if (categoryDatalist) categoryDatalist.innerHTML = allTxCategories.map(cat => `<option value="${cat}"></option>`).join('');
                 if (filterCategory) {
                     filterCategory.innerHTML = '<option value="">All</option>' + allTxCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
@@ -794,6 +1072,9 @@
                 const customAssetCategories = assets.map(asset => asset.assetCategory).filter(Boolean);
                 const allAssetCategories = [...new Set([...defaultAssetCategories, ...customAssetCategories])];
                 if (assetTypeDatalist) assetTypeDatalist.innerHTML = allAssetCategories.map(cat => `<option value="${cat}"></option>`).join('');
+                if(summaryFilterAssetCategory){
+                    summaryFilterAssetCategory.innerHTML = '<option value="">All</option>' + allAssetCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+                }
 
             };
             
@@ -938,6 +1219,26 @@
                 const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
                 prevMonthLabel.textContent = `${prevMonthDate.toLocaleString('default', { month: 'long' })}'s Gain/Loss`;
                 renderGainLossDisplay(prevMonthlyGainLossAmountEl, prevMonthlyGainLossPercentageEl, prevMonthData.gainLoss, prevMonthData.percentage, mainCurrency, false);
+            
+                // AVG Monthly Income Calculation
+                const avgMonthlyIncomeEl = document.getElementById('avg-monthly-income');
+                if (allPassiveIncome.length > 0) {
+                    const sortedIncome = [...allPassiveIncome].sort((a,b) => new Date(a.date) - new Date(b.date));
+                    const firstIncomeDate = new Date(sortedIncome[0].date);
+                    const lastIncomeDate = new Date(sortedIncome[sortedIncome.length - 1].date);
+                    
+                    const monthDiff = (lastIncomeDate.getFullYear() - firstIncomeDate.getFullYear()) * 12 + (lastIncomeDate.getMonth() - firstIncomeDate.getMonth()) + 1;
+                    
+                    const totalIncome = allPassiveIncome.reduce((sum, income) => {
+                        const convertedValue = convertCurrency(income.value, income.currency, mainCurrency, settings.rates) || 0;
+                        return sum + convertedValue;
+                    }, 0);
+                    
+                    const avgIncome = monthDiff > 0 ? totalIncome / monthDiff : 0;
+                    avgMonthlyIncomeEl.textContent = formatCurrency(avgIncome, mainCurrency);
+                } else {
+                    avgMonthlyIncomeEl.textContent = '-';
+                }
             }
 
             function renderGainLossDisplay(amountEl, percentEl, amount, percentage, currency, isSmall) {
@@ -959,7 +1260,13 @@
             }
 
             // --- Transaction Modal & Form Logic ---
-            addTransactionFab.addEventListener('click', () => openTransactionModal());
+            addTransactionFab.addEventListener('click', () => {
+                if (currentTab === 'passive-income') {
+                    openPassiveIncomeModal();
+                } else if (currentTab === 'tracker') {
+                    openTransactionModal();
+                }
+            });
 
             assetNameModalInput.addEventListener('input', () => {
                 const currentName = assetNameModalInput.value.trim();
@@ -1145,7 +1452,7 @@
                     purchaseDateModalInput.value = asset.purchaseDate;
                     
                     const assetHistory = allAssets
-                        .filter(a => a.name === asset.name && new Date(a.purchaseDate) < new Date(asset.purchaseDate))
+                        .filter(a => a.name === asset.name && new Date(a.purchaseDate) < new Date(a.purchaseDate))
                         .sort((a,b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
                     const prevAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
                     const prevValue = prevAsset ? prevAsset.value : 0;
@@ -1185,6 +1492,114 @@
                 }
             }
             
+             // --- Passive Income Modal & Form Logic ---
+            addIncomeBtn.addEventListener('click', () => openPassiveIncomeModal());
+
+            incomeAssetNameModalSelect.addEventListener('change', (e) => {
+                const assetName = e.target.value;
+                const latestAsset = allAssets
+                    .filter(a => a.name === assetName)
+                    .sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))[0];
+
+                const incomeCurrencyInput = document.getElementById('income-currency-modal');
+                if (latestAsset) {
+                    incomeCurrencyInput.value = latestAsset.currency;
+                    incomeCurrencyInput.disabled = true;
+                } else {
+                    incomeCurrencyInput.value = '';
+                    incomeCurrencyInput.disabled = false;
+                }
+            });
+
+            passiveIncomeForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const name = document.getElementById('income-asset-name-modal').value.trim();
+                const subAssetName = document.getElementById('income-sub-asset-name-modal').value.trim();
+                const date = document.getElementById('income-date-modal').value;
+                const value = parseFloat(document.getElementById('income-value-modal').value);
+                const currency = document.getElementById('income-currency-modal').value.toUpperCase().trim();
+                const description = document.getElementById('income-description-modal').value.trim();
+                const id = document.getElementById('edit-income-id').value;
+                
+                if (!name) {
+                    showAlert("Please select an asset.", "Invalid Input");
+                    return;
+                }
+                if (!currency || currency.length !== 3) {
+                    showAlert("Please enter a valid 3-letter currency code (e.g., USD, EUR).", "Invalid Input");
+                    return;
+                }
+
+                if (isEditMode) {
+                    const index = allPassiveIncome.findIndex(i => i.id === id);
+                    if (index !== -1) {
+                        allPassiveIncome[index] = { ...allPassiveIncome[index], name, subAssetName, date, value, currency, description };
+                    }
+                } else {
+                    const newIncome = { id: crypto.randomUUID(), name, subAssetName, date, value, currency, description };
+                    allPassiveIncome.push(newIncome);
+                }
+
+                saveToStorage(PASSIVE_INCOME_STORAGE_KEY, allPassiveIncome);
+                renderPassiveIncome(allPassiveIncome, appSettings);
+                closePassiveIncomeModal();
+            });
+
+            function openPassiveIncomeModal(income = null) {
+                passiveIncomeForm.reset();
+                isEditMode = !!income;
+                document.getElementById('passive-income-modal-title').textContent = isEditMode ? 'Edit Passive Income' : 'Add Passive Income';
+                const incomeCurrencyInput = document.getElementById('income-currency-modal');
+                
+                if (income) {
+                    document.getElementById('edit-income-id').value = income.id;
+                    document.getElementById('income-asset-name-modal').value = income.name;
+                    document.getElementById('income-sub-asset-name-modal').value = income.subAssetName || '';
+                    document.getElementById('income-date-modal').value = income.date;
+                    document.getElementById('income-value-modal').value = income.value;
+                    incomeCurrencyInput.value = income.currency;
+                    incomeCurrencyInput.disabled = true;
+                    document.getElementById('income-description-modal').value = income.description;
+                } else {
+                     document.getElementById('income-date-modal').value = new Date().toISOString().split('T')[0];
+                     incomeCurrencyInput.disabled = false;
+                }
+                
+                passiveIncomeModal.classList.remove('hidden');
+            }
+
+            function closePassiveIncomeModal() {
+                passiveIncomeModal.classList.add('hidden');
+                isEditMode = false;
+            }
+            
+            cancelIncomeBtn.addEventListener('click', closePassiveIncomeModal);
+            passiveIncomeModal.addEventListener('click', (e) => { if (e.target === passiveIncomeModal) closePassiveIncomeModal(); });
+            
+            passiveIncomeList.addEventListener('click', (e) => {
+                const target = e.target;
+                const incomeItem = target.closest('.income-item');
+                if (!incomeItem) return;
+                const incomeId = incomeItem.getAttribute('data-id');
+
+                if (target.classList.contains('delete-income-btn')) deletePassiveIncome(incomeId);
+                if (target.classList.contains('edit-income-btn')) {
+                    const income = allPassiveIncome.find(i => i.id === incomeId);
+                    if (income) openPassiveIncomeModal(income);
+                }
+            });
+            
+            async function deletePassiveIncome(id) {
+                const confirmed = await showConfirm('Are you sure you want to delete this income entry?', 'Delete Income');
+                if (confirmed) {
+                    allPassiveIncome = allPassiveIncome.filter(i => i.id !== id);
+                    saveToStorage(PASSIVE_INCOME_STORAGE_KEY, allPassiveIncome);
+                    renderPassiveIncome(allPassiveIncome, appSettings);
+                }
+            }
+
+
             // --- Settings Modal ---
             function populateCurrencyDatalists() {
                 const optionsHtml = Object.keys(commonCurrencies)
@@ -1210,44 +1625,72 @@
             });
             
             // --- Import / Export ---
-            importCsvBtn.addEventListener('click', () => importCsvInput.click());
+            importDataBtn.addEventListener('click', () => importFileInput.click());
 
-            importCsvInput.addEventListener('change', (event) => {
+            importFileInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
 
                 const reader = new FileReader();
                 reader.onload = async (e) => {
-                    const text = e.target.result;
+                    const content = e.target.result;
                     try {
-                        const importedAssets = csvToArray(text);
-                        const replace = await showConfirm('Do you want to REPLACE your current data with the imported file? Pressing Cancel will MERGE the data instead.', 'Import Data');
-                        
-                        if(replace) {
-                            allAssets = importedAssets;
-                        } else {
-                            allAssets = [...allAssets, ...importedAssets];
+                        const zip = await JSZip.loadAsync(content);
+                        let importedAssets = null;
+                        let importedIncomes = null;
+
+                        if (zip.files['assets.csv']) {
+                            const assetsText = await zip.files['assets.csv'].async('string');
+                            importedAssets = csvToArray(assetsText);
                         }
-                        saveToStorage(DATA_STORAGE_KEY, allAssets);
+                        if (zip.files['income.csv']) {
+                            const incomeText = await zip.files['income.csv'].async('string');
+                            importedIncomes = csvToIncomeArray(incomeText);
+                        }
+
+                        if (importedAssets) {
+                            const replaceAssets = await showConfirm('Found asset data. Do you want to REPLACE your current assets with the imported file? Pressing Cancel will MERGE the data instead.', 'Import Assets');
+                            if (replaceAssets) {
+                                allAssets = importedAssets;
+                            } else {
+                                allAssets = [...allAssets, ...importedAssets];
+                            }
+                            saveToStorage(DATA_STORAGE_KEY, allAssets);
+                        }
+                        
+                        if (importedIncomes) {
+                            const replaceIncomes = await showConfirm('Found income data. Do you want to REPLACE your current income with the imported file? Pressing Cancel will MERGE the data instead.', 'Import Income');
+                            if (replaceIncomes) {
+                                allPassiveIncome = importedIncomes;
+                            } else {
+                                allPassiveIncome = [...allPassiveIncome, ...importedIncomes];
+                            }
+                             saveToStorage(PASSIVE_INCOME_STORAGE_KEY, allPassiveIncome);
+                        }
+
                         renderAll();
-                        showAlert('Data imported successfully!', 'Success');
+                        showAlert('Backup imported successfully!', 'Success');
                     } catch (err) {
-                        showAlert('Failed to import CSV. Please check the file format.', 'Import Error');
+                        showAlert('Failed to import backup. Please check the zip file format.', 'Import Error');
                         console.error(err);
                     }
                 };
-                reader.readAsText(file);
-                importCsvInput.value = '';
+                reader.readAsArrayBuffer(file);
+                importFileInput.value = '';
             });
 
-            function exportToCSV() {
-                if (allAssets.length === 0) {
+            function exportBackup() {
+                if (allAssets.length === 0 && allPassiveIncome.length === 0) {
                     showAlert('No data to export.');
                     return;
                 }
-                const headers = ['id','name','assetCategory','category','purchaseDate','value', 'currency', 'description','createdAt'];
-                const rows = allAssets.map(asset => 
-                    headers.map(header => {
+
+                const zip = new JSZip();
+
+                // Export Assets
+                const assetHeaders = ['id','name','assetCategory','category','purchaseDate','value', 'currency', 'description','createdAt'];
+                const assetRows = allAssets.map(asset => 
+                    assetHeaders.map(header => {
                         let cell = asset[header] === null || asset[header] === undefined ? '' : String(asset[header]);
                         if (/[",\n]/.test(cell)) {
                            cell = `"${cell.replace(/"/g, '""')}"`;
@@ -1255,86 +1698,77 @@
                         return cell;
                     }).join(',')
                 );
-                const csvContent = [headers.join(','), ...rows].join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a");
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", `asset_tracker_export_${new Date().toISOString().split('T')[0]}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                zip.file("assets.csv", [assetHeaders.join(','), ...assetRows].join('\n'));
+
+                // Export Income
+                const incomeHeaders = ['id', 'name', 'subAssetName', 'date', 'value', 'currency', 'description'];
+                 const incomeRows = allPassiveIncome.map(income => 
+                    incomeHeaders.map(header => {
+                        let cell = income[header] === null || income[header] === undefined ? '' : String(income[header]);
+                        if (/[",\n]/.test(cell)) {
+                           cell = `"${cell.replace(/"/g, '""')}"`;
+                        }
+                        return cell;
+                    }).join(',')
+                );
+                zip.file("income.csv", [incomeHeaders.join(','), ...incomeRows].join('\n'));
+
+                zip.generateAsync({type:"blob"}).then(function(content) {
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(content);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `asset_tracker_backup_${new Date().toISOString().split('T')[0]}.zip`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
             }
 
-            exportCsvBtn.addEventListener('click', exportToCSV);
+            exportDataBtn.addEventListener('click', exportBackup);
 
             function csvToArray(csv) {
                 const lines = csv.trim().replace(/\r\n/g, '\n').split('\n');
-                const headers = lines[0].trim().split(',').map(h => h.trim().toLowerCase().replace(/\s/g, ''));
-                const hasCurrency = headers.includes('currency');
-
+                if (lines.length < 2) return [];
+                const headers = lines[0].trim().split(',').map(h => h.trim());
+                
                 return lines.slice(1).map((line, rowIndex) => {
                     if (!line.trim()) return null;
-                    
-                    const values = [];
-                    let current = '';
-                    let inQuotes = false;
-                    for (let i = 0; i < line.length; i++) {
-                        const char = line[i];
-                        if (char === '"') {
-                            if (inQuotes && line[i+1] === '"') {
-                                current += '"'; // This is an escaped quote
-                                i++; 
-                            } else {
-                                inQuotes = !inQuotes;
-                            }
-                        } else if (char === ',' && !inQuotes) {
-                            values.push(current);
-                            current = '';
-                        } else {
-                            current += char;
-                        }
-                    }
-                    values.push(current); // Add the last value
-
-                    if (values.length > headers.length) {
-                        console.warn(`Row ${rowIndex + 2} has more columns than headers. Truncating.`);
-                        values.length = headers.length;
-                    }
-                    
+                    const values = line.split(','); // Simplified parsing, assumes no commas in values
                     const obj = {};
                     headers.forEach((header, i) => {
                        obj[header] = (values[i] || '').trim();
                     });
                     
-                    const purchaseDateStr = obj.purchasedate;
-                    const date = new Date(purchaseDateStr);
-                    if (!purchaseDateStr || isNaN(date.getTime())) {
-                        console.error(`Invalid or missing purchaseDate on row ${rowIndex + 2}, skipping:`, line);
-                        return null; 
-                    }
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-                    obj.purchaseDate = `${year}-${month}-${day}`;
-
                     obj.value = parseFloat(obj.value);
-                    if (typeof obj.value !== 'number' || isNaN(obj.value)) obj.value = 0;
-
-                    if (!hasCurrency || !obj.currency || obj.currency.length !== 3) {
-                        obj.currency = appSettings.mainCurrency; 
-                    }
+                    if (isNaN(obj.value)) obj.value = 0;
                     if (!obj.id) obj.id = crypto.randomUUID();
-                    if (!obj.createdAt) obj.createdAt = new Date().toISOString();
-                    obj.assetCategory = obj.assetcategory || 'Other';
+                    return obj;
+                }).filter(Boolean);
+            }
+
+            function csvToIncomeArray(csv) {
+                 const lines = csv.trim().replace(/\r\n/g, '\n').split('\n');
+                if (lines.length < 2) return [];
+                const headers = lines[0].trim().split(',').map(h => h.trim());
+
+                return lines.slice(1).map((line, rowIndex) => {
+                     if (!line.trim()) return null;
+                    const values = line.split(','); // Simplified parsing
+                    const obj = {};
+                    headers.forEach((header, i) => {
+                       obj[header] = (values[i] || '').trim();
+                    });
                     
+                    obj.value = parseFloat(obj.value);
+                    if (isNaN(obj.value)) obj.value = 0;
+                     if (!obj.id) obj.id = crypto.randomUUID();
                     return obj;
                 }).filter(Boolean);
             }
             
              // --- Filter Logic ---
-            function applyAndRenderFilters() {
+            applyFiltersBtn.addEventListener('click', () => {
                 const name = filterAssetName.value;
                 const category = filterCategory.value;
                 const startDate = filterStartDate.value;
@@ -1356,9 +1790,7 @@
                 }
                 
                 renderGroupedAssets(filteredAssets, appSettings);
-            }
-
-            applyFiltersBtn.addEventListener('click', applyAndRenderFilters);
+            });
 
             resetFiltersBtn.addEventListener('click', () => {
                 filterAssetName.value = '';
@@ -1380,7 +1812,211 @@
                 renderAssetBreakdown(assets, settings, mainCurrency);
                 renderTrendChart(assets, settings, isDark, mainCurrency, currentTimeline);
                 renderGainLossChart(assets, settings, isDark, mainCurrency, currentTimeline);
+                renderMonthlyIncomeChart(allPassiveIncome, settings, isDark, mainCurrency, currentTimeline);
             }
+
+            // --- Summary Tab Logic ---
+
+            function calculatePerformanceForPeriod(assetName, settings, startDate, endDate) {
+                const { mainCurrency, rates } = settings;
+
+                // 1. Get all transactions for the asset, sorted by date
+                const allAssetTransactions = allAssets
+                    .filter(a => a.name === assetName)
+                    .sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+
+                if (allAssetTransactions.length === 0) return null;
+
+                // 2. Determine start and end values
+                const txBeforeStart = startDate ? allAssetTransactions.filter(tx => new Date(tx.purchaseDate) < new Date(startDate)) : [];
+                const latestTxBeforeStart = txBeforeStart.length > 0 ? txBeforeStart[txBeforeStart.length - 1] : null;
+                const valueAtStartConverted = latestTxBeforeStart ? (convertCurrency(latestTxBeforeStart.value, latestTxBeforeStart.currency, mainCurrency, rates) || 0) : 0;
+
+                const txUntilEnd = endDate ? allAssetTransactions.filter(tx => new Date(tx.purchaseDate) <= new Date(endDate)) : allAssetTransactions;
+                const latestTxAtEnd = txUntilEnd.length > 0 ? txUntilEnd[txUntilEnd.length - 1] : null;
+                const valueAtEndConverted = latestTxAtEnd ? (convertCurrency(latestTxAtEnd.value, latestTxAtEnd.currency, mainCurrency, rates) || 0) : 0;
+
+                // 3. Calculate deposits and withdrawals within the period
+                const periodTransactions = allAssetTransactions.filter(tx => {
+                    const txDate = new Date(tx.purchaseDate);
+                    const startCheck = startDate ? txDate >= new Date(startDate) : true;
+                    const endCheck = endDate ? txDate <= new Date(endDate) : true;
+                    return startCheck && endCheck;
+                });
+
+                let totalDeposits = 0;
+                let totalWithdrawals = 0;
+
+                for (const currentTx of periodTransactions) {
+                    const allPrevTxs = allAssetTransactions.filter(tx => new Date(tx.purchaseDate) < new Date(currentTx.purchaseDate));
+                    const prevTx = allPrevTxs.length > 0 ? allPrevTxs[allPrevTxs.length - 1] : null;
+
+                    if (currentTx.category === 'Deposit') {
+                        const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value;
+                        const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, rates);
+                        if(convertedDeposit > 0) totalDeposits += convertedDeposit;
+                    } else if (currentTx.category === 'Withdrawal' && prevTx) {
+                        const withdrawalAmount = prevTx.value - currentTx.value;
+                        const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, rates);
+                        if (convertedWithdrawal > 0) totalWithdrawals += convertedWithdrawal;
+                    }
+                }
+                
+                // 4. Calculate Gain/Loss
+                const gainLossAmount = valueAtEndConverted - valueAtStartConverted - (totalDeposits - totalWithdrawals);
+                const basis = valueAtStartConverted + totalDeposits;
+                const gainLossPercentage = basis > 0 ? (gainLossAmount / basis) * 100 : 0;
+                
+                return {
+                    currentValue: valueAtEndConverted,
+                    totalDeposits,
+                    totalWithdrawals,
+                    gainLossAmount,
+                    gainLossPercentage
+                };
+            }
+
+            function generateSummaryData(filters) {
+                const { mainCurrency, rates } = appSettings;
+
+                // Get a list of all unique asset names from the entire history
+                let uniqueAssetNames = [...new Set(allAssets.map(a => a.name))];
+                
+                // Initial filtering based on category/name dropdowns
+                if (filters.assetName) {
+                    uniqueAssetNames = uniqueAssetNames.filter(name => name === filters.assetName);
+                }
+                if (filters.assetCategory) {
+                    uniqueAssetNames = uniqueAssetNames.filter(name => {
+                        const latestAsset = allAssets.filter(a => a.name === name).sort((a,b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))[0];
+                        return latestAsset && latestAsset.assetCategory === filters.assetCategory;
+                    });
+                }
+
+                // Calculate total portfolio value for allocation percentage, considering the end date of the filter
+                const totalPortfolioValue = uniqueAssetNames.reduce((total, name) => {
+                    const txUntilEnd = filters.endDate ? allAssets.filter(tx => tx.name === name && new Date(tx.purchaseDate) <= new Date(filters.endDate)) : allAssets.filter(tx => tx.name === name);
+                    if(txUntilEnd.length === 0) return total;
+                    
+                    const latestAsset = txUntilEnd.sort((a,b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))[0];
+                    
+                    return total + (convertCurrency(latestAsset.value, latestAsset.currency, mainCurrency, rates) || 0);
+                }, 0);
+
+                let summary = uniqueAssetNames.map(name => {
+                    // Calculate performance for the given period
+                    const performance = calculatePerformanceForPeriod(name, appSettings, filters.startDate, filters.endDate);
+
+                    if(!performance) return null; // No transactions for this asset in the entire history
+                    
+                    const assetIncomes = allPassiveIncome.filter(i => {
+                        const incomeDate = new Date(i.date);
+                        const startCheck = filters.startDate ? incomeDate >= new Date(filters.startDate) : true;
+                        const endCheck = filters.endDate ? incomeDate <= new Date(filters.endDate) : true;
+                        return i.name === name && startCheck && endCheck;
+                    });
+
+                    const totalDividend = assetIncomes.reduce((sum, income) => {
+                        return sum + (convertCurrency(income.value, income.currency, mainCurrency, rates) || 0);
+                    }, 0);
+                    
+                    const allocation = totalPortfolioValue > 0 ? (performance.currentValue / totalPortfolioValue) * 100 : 0;
+                    
+                    const latestAssetOverall = allAssets.filter(a => a.name === name).sort((a,b)=> new Date(b.purchaseDate) - new Date(a.purchaseDate))[0];
+                    
+                    return {
+                        assetName: name,
+                        assetCategory: latestAssetOverall.assetCategory || 'Other',
+                        allocation: allocation,
+                        totalDeposited: performance.totalDeposits,
+                        totalWithdrawn: performance.totalWithdrawals,
+                        gainLossAmount: performance.gainLossAmount,
+                        gainLossPercentage: performance.gainLossPercentage,
+                        totalDividend: totalDividend
+                    };
+                }).filter(Boolean); // remove nulls
+
+                return summary;
+            }
+
+            function renderSummaryTable() {
+                const filters = {
+                    assetCategory: summaryFilterAssetCategory.value,
+                    assetName: summaryFilterAssetName.value,
+                    startDate: summaryFilterStartDate.value,
+                    endDate: summaryFilterEndDate.value
+                };
+
+                const summaryData = generateSummaryData(filters);
+                
+                summaryTableBody.innerHTML = summaryData.map(d => {
+                    return `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${d.assetName}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${d.assetCategory}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${d.allocation.toFixed(2)}%</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatCurrency(d.totalDeposited, appSettings.mainCurrency)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatCurrency(d.totalWithdrawn, appSettings.mainCurrency)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${d.gainLossAmount >= 0 ? 'text-green-500' : 'text-red-500'}">${formatCurrency(d.gainLossAmount, appSettings.mainCurrency)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${d.gainLossPercentage >= 0 ? 'text-green-500' : 'text-red-500'}">${d.gainLossPercentage.toFixed(2)}%</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-500">${formatCurrency(d.totalDividend, appSettings.mainCurrency)}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                const totals = summaryData.reduce((acc, d) => {
+                    acc.totalDeposited += d.totalDeposited;
+                    acc.totalWithdrawn += d.totalWithdrawn;
+                    acc.gainLossAmount += d.gainLossAmount;
+                    acc.totalDividend += d.totalDividend;
+                    return acc;
+                }, { totalDeposited: 0, totalWithdrawn: 0, gainLossAmount: 0, totalDividend: 0 });
+
+                summaryTableFooter.innerHTML = `
+                    <tr>
+                        <th colspan="3" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Totals</th>
+                        <td class="px-6 py-4 text-right text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(totals.totalDeposited, appSettings.mainCurrency)}</td>
+                        <td class="px-6 py-4 text-right text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(totals.totalWithdrawn, appSettings.mainCurrency)}</td>
+                        <td class="px-6 py-4 text-right text-sm font-bold ${totals.gainLossAmount >= 0 ? 'text-green-600' : 'text-red-600'}">${formatCurrency(totals.gainLossAmount, appSettings.mainCurrency)}</td>
+                        <td colspan="1"></td>
+                        <td class="px-6 py-4 text-right text-sm font-bold text-blue-600">${formatCurrency(totals.totalDividend, appSettings.mainCurrency)}</td>
+                    </tr>
+                `;
+            }
+
+            summaryApplyFiltersBtn.addEventListener('click', renderSummaryTable);
+            summaryResetFiltersBtn.addEventListener('click', () => {
+                summaryFilterAssetCategory.value = '';
+                summaryFilterAssetName.value = '';
+                summaryFilterStartDate.value = '';
+                summaryFilterEndDate.value = '';
+                summaryDateButtons.querySelector('.active')?.classList.remove('active');
+                summaryDateButtons.querySelector('[data-span="ALL"]').classList.add('active');
+                renderSummaryTable();
+            });
+
+            summaryDateButtons.addEventListener('click', e => {
+                if (e.target.tagName === 'BUTTON') {
+                    const span = e.target.dataset.span;
+                    const now = new Date();
+                    let startDate = new Date();
+                    
+                    summaryDateButtons.querySelector('.active')?.classList.remove('active');
+                    e.target.classList.add('active');
+                    
+                    if (span === 'ALL') {
+                        summaryFilterStartDate.value = '';
+                        summaryFilterEndDate.value = '';
+                    } else {
+                        summaryFilterEndDate.value = now.toISOString().split('T')[0];
+                        if (span === '3M') startDate.setMonth(now.getMonth() - 3);
+                        if (span === '6M') startDate.setMonth(now.getMonth() - 6);
+                        if (span === '1Y') startDate.setFullYear(now.getFullYear() - 1);
+                        summaryFilterStartDate.value = startDate.toISOString().split('T')[0];
+                    }
+                    renderSummaryTable();
+                }
+            });
 
             function getChartColors(isDark) { return { grid: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)', ticks: isDark ? '#9ca3af' : '#6b7280', labels: isDark ? '#d1d5db' : '#374151', pie: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#6b7280', '#ec4899'] }; }
 
@@ -1486,14 +2122,20 @@
                     }
                 }
                 
+                const totalIncome = allPassiveIncome.reduce((sum, income) => {
+                    const convertedValue = convertCurrency(income.value, income.currency, mainCurrency, settings.rates) || 0;
+                    return sum + convertedValue;
+                }, 0);
+
                 document.getElementById('cash-flow-summary').innerHTML = `
                     <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Deposited</p><p class="text-xl font-semibold text-green-600">${formatCurrency(totalDeposits, mainCurrency)}</p></div>
-                    <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Withdrawn</p><p class="text-xl font-semibold text-red-500">${formatCurrency(totalWithdrawals, mainCurrency)}</p></div>`;
+                    <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Withdrawn</p><p class="text-xl font-semibold text-red-500">${formatCurrency(totalWithdrawals, mainCurrency)}</p></div>
+                    <div><p class="text-sm text-gray-500 dark:text-gray-400">Total Income Received</p><p class="text-xl font-semibold text-blue-600">${formatCurrency(totalIncome, mainCurrency)}</p></div>`;
             }
 
             function calculateAssetPerformance(transactions, settings, mainCurrency, nativeCurrencyValue = false) {
                 if (transactions.length === 0) {
-                    return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0, netCapital: 0 };
+                    return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0, totalDeposits: 0, totalWithdrawals: 0 };
                 }
 
                 const sortedTxs = [...transactions].sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
@@ -1523,7 +2165,7 @@
                 const gainLossAmount = currentValue - netCapital;
                 const gainLossPercentage = netCapital !== 0 ? (gainLossAmount / netCapital) * 100 : 0;
                 
-                return { currentValue, gainLossAmount, gainLossPercentage, netCapital };
+                return { currentValue, gainLossAmount, gainLossPercentage, netCapital, totalDeposits, totalWithdrawals };
             }
 
             function renderPerformanceGainLossHtml(amount, percentage, currency) {
@@ -1687,23 +2329,47 @@
                     case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break;
                     default: startDate = new Date(sortedAssets[0].purchaseDate); break;
                 }
-                
-                const monthlyGainLoss = {};
-                
-                const firstMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-                const lastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-                for (let d = new Date(firstMonth); d <= lastMonth; d.setMonth(d.getMonth() + 1)) {
-                    const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
-                    const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-                    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                    
-                    const data = calculateMonthlyGainLoss(assets, settings, startOfMonth, endOfMonth);
-                    monthlyGainLoss[monthKey] = data.gainLoss;
-                }
+                const dataPoints = {};
+                
+                const assetsInTimeline = sortedAssets.filter(tx => new Date(tx.purchaseDate) >= startDate);
+                
+                let cumulativeDeposits = 0;
+                let cumulativeWithdrawals = 0;
+                const valueHistory = {};
 
-                const labels = Object.keys(monthlyGainLoss).sort();
-                const data = labels.map(key => monthlyGainLoss[key]);
+                // Establish baseline before the start date
+                const assetsBeforeStart = sortedAssets.filter(tx => new Date(tx.purchaseDate) < startDate);
+                assetsBeforeStart.forEach(tx => {
+                     const prevTx = valueHistory[tx.name];
+                     if (tx.category === 'Deposit') {
+                         const depositAmount = prevTx ? (tx.value - prevTx.value) : tx.value;
+                         cumulativeDeposits += convertCurrency(depositAmount, tx.currency, mainCurrency, settings.rates) || 0;
+                     } else if (tx.category === 'Withdrawal' && prevTx) {
+                         const withdrawalAmount = prevTx.value - tx.value;
+                         cumulativeWithdrawals += convertCurrency(withdrawalAmount, tx.currency, mainCurrency, settings.rates) || 0;
+                     }
+                     valueHistory[tx.name] = tx;
+                });
+                
+                assetsInTimeline.forEach(tx => {
+                    const prevTx = valueHistory[tx.name];
+                    if (tx.category === 'Deposit') {
+                        const depositAmount = prevTx ? (tx.value - prevTx.value) : tx.value;
+                        cumulativeDeposits += convertCurrency(depositAmount, tx.currency, mainCurrency, settings.rates) || 0;
+                    } else if (tx.category === 'Withdrawal' && prevTx) {
+                        const withdrawalAmount = prevTx.value - tx.value;
+                        cumulativeWithdrawals += convertCurrency(withdrawalAmount, tx.currency, mainCurrency, settings.rates) || 0;
+                    }
+                    valueHistory[tx.name] = tx;
+
+                    const totalValue = Object.values(valueHistory).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0);
+                    const netCapital = cumulativeDeposits - cumulativeWithdrawals;
+                    dataPoints[tx.purchaseDate] = totalValue - netCapital;
+                });
+
+                const labels = Object.keys(dataPoints).sort((a, b) => new Date(a) - new Date(b));
+                const data = labels.map(label => dataPoints[label]);
                 const backgroundColors = data.map(value => value >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)');
 
                 const ctx = document.getElementById('gainLossChart').getContext('2d');
@@ -1711,7 +2377,7 @@
                 gainLossChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: labels.map(l => new Date(`${l}-02`).toLocaleString('default', { month: 'short', year: 'numeric' })),
+                        labels,
                         datasets: [{
                             label: 'Gain/Loss',
                             data,
@@ -1733,8 +2399,69 @@
                 });
             }
 
+            function renderMonthlyIncomeChart(income, settings, isDark, mainCurrency, timeline) {
+                const colors = getChartColors(isDark);
+                if(income.length === 0) return;
+
+                const sortedIncome = [...income].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                let startDate;
+                const now = new Date();
+                switch (timeline) {
+                    case '1M': startDate = new Date(new Date().setMonth(now.getMonth() - 1)); break;
+                    case '3M': startDate = new Date(new Date().setMonth(now.getMonth() - 3)); break;
+                    case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break;
+                    default: 
+                        if (sortedIncome.length > 0) {
+                           startDate = new Date(sortedIncome[0].date);
+                        } else {
+                            startDate = new Date();
+                        }
+                        break;
+                }
+
+                const incomeInTimeline = sortedIncome.filter(i => new Date(i.date) >= startDate);
+
+                const monthlyTotals = incomeInTimeline.reduce((acc, i) => {
+                    const monthKey = new Date(i.date).toLocaleString('default', { month: 'short', year: 'numeric' });
+                    const convertedValue = convertCurrency(i.value, i.currency, mainCurrency, settings.rates) || 0;
+                    acc[monthKey] = (acc[monthKey] || 0) + convertedValue;
+                    return acc;
+                }, {});
+
+                const labels = Object.keys(monthlyTotals);
+                const data = Object.values(monthlyTotals);
+
+                const ctx = document.getElementById('monthlyIncomeChart').getContext('2d');
+                if (monthlyIncomeChart) monthlyIncomeChart.destroy();
+                monthlyIncomeChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Passive Income',
+                            data,
+                            backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.ticks, callback: (v) => formatCurrency(v, mainCurrency, true) } },
+                            x: { grid: { display: false }, ticks: { color: colors.ticks } }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `Income: ${formatCurrency(c.parsed.y, mainCurrency)}` } }
+                        }
+                    }
+                });
+            }
+
 
             function seedInitialData() {
+                // Current date is mocked as Sep 27, 2025 for this sample data
                 const sampleTransactions = [
                     { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Deposit', purchaseDate: '2025-07-15', value: 3000, currency: 'USD', description: 'Initial investment'},
                     { id: crypto.randomUUID(), name: 'Bitcoin', assetCategory: 'Crypto', category: 'Deposit', purchaseDate: '2025-08-05', value: 3200, currency: 'USD', description: 'Added $200'},
@@ -1744,6 +2471,13 @@
                     { id: crypto.randomUUID(), name: 'House Fund', assetCategory: 'Cash', category: 'Deposit', purchaseDate: '2025-09-01', value: 5000, currency: 'SAR', description: 'Monthly Savings' }
                 ];
                 saveToStorage(DATA_STORAGE_KEY, sampleTransactions);
+
+                const sampleIncome = [
+                    { id: crypto.randomUUID(), name: 'Jollibee Food Corp.', subAssetName: '', date: '2025-09-20', value: 1500, currency: 'PHP', description: 'Q3 Dividend' },
+                    { id: crypto.randomUUID(), name: 'Bitcoin', subAssetName: 'Staking Rewards', date: '2025-09-01', value: 25, currency: 'USD', description: 'Monthly Staking' },
+                    { id: crypto.randomUUID(), name: 'Bitcoin', subAssetName: 'Staking Rewards', date: '2025-08-01', value: 24, currency: 'USD', description: 'Monthly Staking' },
+                 ];
+                 saveToStorage(PASSIVE_INCOME_STORAGE_KEY, sampleIncome);
             }
 
             // --- Privacy Mode ---
@@ -1763,45 +2497,6 @@
                 updatePrivacyView();
                 renderAll();
             });
-
-             // --- Orientation Lock ---
-            let currentOrientationIndex = 0;
-            const orientations = ['any', 'portrait', 'landscape'];
-
-            function setOrientation(index) {
-                const modes = ['any', 'portrait-primary', 'landscape-primary'];
-                const icons = [orientationAutoIcon, orientationPortraitIcon, orientationLandscapeIcon];
-                
-                currentOrientationIndex = index;
-                const mode = orientations[currentOrientationIndex];
-                localStorage.setItem('assetTrackerOrientation', mode);
-
-                // Update icon visibility
-                icons.forEach((icon, i) => {
-                    if (i === index) {
-                        icon.classList.remove('hidden');
-                    } else {
-                        icon.classList.add('hidden');
-                    }
-                });
-
-                // Apply orientation lock
-                if (screen.orientation && screen.orientation.lock) {
-                    if (mode === 'any') {
-                        screen.orientation.unlock();
-                    } else {
-                       screen.orientation.lock(modes[currentOrientationIndex]).catch(err => console.error(`Could not lock orientation: ${err}`));
-                    }
-                } else {
-                    console.warn('Screen Orientation API not supported.');
-                }
-            }
-
-            orientationToggleBtn.addEventListener('click', () => {
-                currentOrientationIndex = (currentOrientationIndex + 1) % orientations.length;
-                setOrientation(currentOrientationIndex);
-            });
-
 
             // --- App Startup ---
             initializeApp();
