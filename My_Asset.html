@@ -498,13 +498,27 @@
     <script>
         // STEP 1: PASTE YOUR FIREBASE CONFIG OBJECT HERE
         const firebaseConfig = {
-            apiKey: "PASTE_YOUR_API_KEY",
-            authDomain: "PASTE_YOUR_AUTH_DOMAIN",
-            projectId: "PASTE_YOUR_PROJECT_ID",
-            storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
-            messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID",
-            appId: "PASTE_YOUR_APP_ID"
+            apiKey: "PASTE_YOURS_HERE",
+            authDomain: "PASTE_YOURS_HERE",
+            projectId: "PASTE_YOURS_HERE",
+            storageBucket: "PASTE_YOURS_HERE",
+            messagingSenderId: "PASTE_YOURS_HERE",
+            appId: "PASTE_YOURS_HERE"
         };
+
+        // Initialize Firebase
+        const firebaseApp = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // STEP 2: Enable offline data persistence
+        db.enablePersistence().catch((err) => {
+            if (err.code == 'failed-precondition') {
+                console.warn('Multiple tabs open, persistence can only be enabled in one.');
+            } else if (err.code == 'unimplemented') {
+                console.warn('The current browser does not support all of the features required.');
+            }
+        });
 
         // Initialize Firebase
         const firebaseApp = firebase.initializeApp(firebaseConfig);
@@ -891,3 +905,4 @@
     </script>
 </body>
 </html>
+
