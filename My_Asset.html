@@ -2355,52 +2355,30 @@
                 let startDate;
                 const now = new Date();
                 switch (timeline) {
-                    case '1M': startDate = new Date(new Date().setMonth(now.getMonth() - 1)); break;
-                    case '3M': startDate = new Date(new Date().setMonth(now.getMonth() - 3)); break;
-                    case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break;
-                    default: startDate = parseDate(sortedAssets[0].purchaseDate); break;
+                    case '1M': startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); break;
+                    case '3M': startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1); break;
+                    case '1Y': startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1); break;
+                    default: startDate = parseDate(sortedAssets[0].purchaseDate) ? new Date(parseDate(sortedAssets[0].purchaseDate).getFullYear(), parseDate(sortedAssets[0].purchaseDate).getMonth(), 1) : now; break;
                 }
 
-                const dataPoints = {};
-                
-                const assetsInTimeline = sortedAssets.filter(tx => parseDate(tx.purchaseDate) >= startDate);
-                
-                let cumulativeDeposits = 0;
-                let cumulativeWithdrawals = 0;
-                const valueHistory = {};
+                const monthlyData = {};
+                let currentDate = new Date(startDate);
 
-                // Establish baseline before the start date
-                const assetsBeforeStart = sortedAssets.filter(tx => parseDate(tx.purchaseDate) < startDate);
-                assetsBeforeStart.forEach(tx => {
-                     const prevTx = valueHistory[tx.name];
-                     if (tx.category === 'Deposit') {
-                         const depositAmount = prevTx ? (tx.value - prevTx.value) : tx.value;
-                         cumulativeDeposits += convertCurrency(depositAmount, tx.currency, mainCurrency, settings.rates) || 0;
-                     } else if (tx.category === 'Withdrawal' && prevTx) {
-                         const withdrawalAmount = prevTx.value - tx.value;
-                         cumulativeWithdrawals += convertCurrency(withdrawalAmount, tx.currency, mainCurrency, settings.rates) || 0;
-                     }
-                     valueHistory[tx.name] = tx;
-                });
-                
-                assetsInTimeline.forEach(tx => {
-                    const prevTx = valueHistory[tx.name];
-                    if (tx.category === 'Deposit') {
-                        const depositAmount = prevTx ? (tx.value - prevTx.value) : tx.value;
-                        cumulativeDeposits += convertCurrency(depositAmount, tx.currency, mainCurrency, settings.rates) || 0;
-                    } else if (tx.category === 'Withdrawal' && prevTx) {
-                        const withdrawalAmount = prevTx.value - tx.value;
-                        cumulativeWithdrawals += convertCurrency(withdrawalAmount, tx.currency, mainCurrency, settings.rates) || 0;
-                    }
-                    valueHistory[tx.name] = tx;
+                while (currentDate <= now) {
+                    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
 
-                    const totalValue = Object.values(valueHistory).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0);
-                    const netCapital = cumulativeDeposits - cumulativeWithdrawals;
-                    dataPoints[tx.purchaseDate] = totalValue - netCapital;
-                });
+                    const monthlyPerformance = calculateMonthlyGainLoss(assets, settings, startOfMonth, endOfMonth);
 
-                const labels = Object.keys(dataPoints).sort((a, b) => parseDate(a) - parseDate(b));
-                const data = labels.map(label => dataPoints[label]);
+                    const monthKey = startOfMonth.toLocaleString('default', { month: 'short', year: 'numeric' });
+                    monthlyData[monthKey] = monthlyPerformance.gainLoss;
+
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                }
+
+
+                const labels = Object.keys(monthlyData);
+                const data = Object.values(monthlyData);
                 const backgroundColors = data.map(value => value >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)');
 
                 const ctx = document.getElementById('gainLossChart').getContext('2d');
@@ -2410,7 +2388,7 @@
                     data: {
                         labels,
                         datasets: [{
-                            label: 'Gain/Loss',
+                            label: 'Monthly Gain/Loss',
                             data,
                             backgroundColor: backgroundColors,
                         }]
