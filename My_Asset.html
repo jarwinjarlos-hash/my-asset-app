@@ -2545,6 +2545,46 @@
                 updatePrivacyView();
                 renderAll();
             });
+            
+            // --- Gesture Navigation ---
+            const mainContent = document.querySelector('main');
+            let touchstartX = 0;
+            let touchstartY = 0;
+            let touchendX = 0;
+            let touchendY = 0;
+
+            const tabs = ['dashboard', 'tracker', 'dividends', 'summary'];
+
+            mainContent.addEventListener('touchstart', e => {
+                touchstartX = e.changedTouches[0].screenX;
+                touchstartY = e.changedTouches[0].screenY;
+            }, { passive: true });
+
+            mainContent.addEventListener('touchend', e => {
+                touchendX = e.changedTouches[0].screenX;
+                touchendY = e.changedTouches[0].screenY;
+                handleSwipe();
+            });
+
+            function handleSwipe() {
+                const deltaX = touchendX - touchstartX;
+                const deltaY = touchendY - touchstartY;
+                
+                // Check if it's a horizontal swipe and not a vertical scroll
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+                    const currentIndex = tabs.indexOf(currentTab);
+                    
+                    if (deltaX < 0) { // Swipe Left (next tab)
+                        if (currentIndex < tabs.length - 1) {
+                            switchTab(tabs[currentIndex + 1]);
+                        }
+                    } else { // Swipe Right (previous tab)
+                        if (currentIndex > 0) {
+                            switchTab(tabs[currentIndex - 1]);
+                        }
+                    }
+                }
+            }
 
             // --- App Startup ---
             initializeApp();
