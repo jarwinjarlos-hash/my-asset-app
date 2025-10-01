@@ -39,11 +39,12 @@
         .sortable:hover .sort-indicator { opacity: 1; }
         .sortable.asc .sort-indicator::after { content: '▲'; font-size: 0.8em; opacity: 1; }
         .sortable.desc .sort-indicator::after { content: '▼'; font-size: 0.8em; opacity: 1; }
+        #app-loader { display: none; }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
 
-    <div id="auth-screen" class="min-h-screen flex items-center justify-center">
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
         <div class="max-w-md w-full bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
             <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">Asset Tracker</h2>
             <div id="auth-error" class="hidden bg-red-100 text-red-700 p-3 rounded mb-4 text-sm"></div>
@@ -55,7 +56,7 @@
                     </div>
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                        <input id="password" name="password" type="password" autocomplete="current-password" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+                        <input id="password" name="password" type="password" autocomplete="current-password" required minlength="6" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500">
                     </div>
                 </div>
                 <div class="flex items-center justify-between mt-6 space-x-2">
@@ -69,6 +70,14 @@
             </form>
         </div>
     </div>
+    
+    <div id="app-loader" class="min-h-screen flex items-center justify-center text-gray-500">
+        <svg class="animate-spin -ml-1 mr-3 h-10 w-10 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-xl">Loading your data...</span>
+    </div>
 
     <div id="app" class="h-screen flex-col max-w-7xl mx-auto hidden">
         
@@ -76,10 +85,10 @@
             <header class="pt-4 sm:pt-6 lg:pt-8 flex justify-between items-center">
                 <div>
                     <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Asset Tracker</h1>
-                    <p id="user-email" class="text-gray-500 dark:text-gray-400 mt-1">Your personal multi-currency portfolio.</p>
+                    <p id="user-email" class="text-gray-500 dark:text-gray-400 mt-1 text-xs sm:text-sm"></p>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button id="logout-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Log out">
+                     <button id="logout-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Log out" title="Log Out">
                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
                     </button>
                     <button id="privacy-toggle-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Toggle privacy mode">
@@ -108,201 +117,776 @@
             </div>
         </div> 
 
-        </div>
+        <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24">
+        
+            <div id="dashboard-content">
+                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+                     <div class="flex justify-between items-start">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
+                             <div class="col-span-1 sm:col-span-2 lg:col-span-4">
+                                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Asset Value</h2>
+                                <p id="total-value" class="text-3xl font-bold text-gray-900 dark:text-white">$0.00</p>
+                            </div>
+                            <div class="text-left sm:text-right">
+                                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Gain/Loss</h2>
+                                <p id="total-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                                <div id="total-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                            </div>
+                             <div class="text-left sm:text-right">
+                                   <h2 id="this-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Gain/Loss</h2>
+                                   <p id="monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                                   <div id="monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                               </div>
+                             <div class="text-left sm:text-right">
+                                   <h2 id="prev-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Previous Month's Gain/Loss</h2>
+                                   <p id="prev-monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                                   <div id="prev-monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                               </div>
+                               <div class="text-left sm:text-right">
+                                    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">AVG Monthly Dividend</h2>
+                                    <p id="avg-monthly-income" class="text-xl font-bold text-gray-900 dark:text-white">-</p>
+                                    <div class="text-sm font-medium text-gray-500 dark:text-gray-400">&nbsp;</div>
+                                </div>
+                        </div>
+                         <div id="rates-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
+                            <div class="flex items-center justify-end">
+                                <span id="online-indicator" class="h-2 w-2 rounded-full bg-gray-400 mr-1.5"></span>
+                                <span id="rates-last-updated">Checking rates...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 space-y-8">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                             <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Asset Allocation</h2>
+                                <div id="allocation-display-toggle" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                                    <button data-mode="amount" class="allocation-toggle-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">$</button>
+                                    <button data-mode="percent" class="allocation-toggle-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">%</button>
+                                </div>
+                            </div>
+                            <div class="h-64 flex items-center justify-center relative">
+                                <canvas id="allocationChart"></canvas>
+                            </div>
+                             <div id="allocation-legend" class="mt-4 space-y-2"></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Cash Flow</h2>
+                            <div id="cash-flow-summary" class="space-y-4"></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Asset Performance</h2>
+                            <div id="asset-breakdown" class="space-y-2">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Portfolio Value Trend</h2>
+                                <div id="trend-timeline-buttons" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                                    <button data-timeline="1M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1M</button>
+                                    <button data-timeline="3M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">3M</button>
+                                    <button data-timeline="1Y" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1Y</button>
+                                    <button data-timeline="ALL" class="timeline-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">ALL</button>
+                                </div>
+                            </div>
+                            <div class="h-96">
+                                 <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Historical Gain/Loss</h2>
+                                <div class="h-96">
+                                     <canvas id="gainLossChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monthly Dividends</h2>
+                                <div class="h-96">
+                                     <canvas id="monthlyIncomeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+            <div id="tracker-content" class="hidden">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Transaction History</h2>
+                <div id="filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label for="filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                            <select id="filter-asset-name" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
+                            <select id="filter-category" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                            <input type="date" id="filter-start-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                            <input type="date" id="filter-end-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button id="reset-filters-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Reset</button>
+                        <button id="apply-filters-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Apply Filters</button>
+                    </div>
+                </div>
+
+                <div id="asset-list" class="space-y-6">
+                </div>
+                 <div id="no-assets-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No transactions</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a new asset transaction.</p>
+                 </div>
+            </div>
+
+            <div id="dividends-content" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Dividends</h2>
+                    <button id="add-dividend-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Add Dividend
+                    </button>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+                    <h3 id="dividends-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Dividends</h3>
+                    <p id="dividends-total" class="text-4xl font-bold text-gray-900 dark:text-white">$0.00</p>
+                </div>
+
+                <div id="dividends-list" class="space-y-6">
+                    </div>
+                <div id="no-dividends-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25-2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m12 0V9" /></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No dividends recorded</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a dividend.</p>
+                </div>
+            </div>
+
+            <div id="summary-content" class="hidden">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Portfolio Summary</h2>
+                <div id="summary-filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="summary-filter-asset-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
+                            <select id="summary-filter-asset-category" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="summary-filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                            <select id="summary-filter-asset-name" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Span</label>
+                            <div id="summary-date-buttons" class="mt-1 flex space-x-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-lg">
+                                <button data-span="1M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1M</button>
+                                <button data-span="3M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">3M</button>
+                                <button data-span="6M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">6M</button>
+                                <button data-span="1Y" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1Y</button>
+                                <button data-span="ALL" class="summary-filter-btn active flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300">ALL</button>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                         <div>
+                            <label for="summary-filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                            <input type="date" id="summary-filter-start-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="summary-filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                            <input type="date" id="summary-filter-end-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                     </div>
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button id="summary-reset-filters-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Reset</button>
+                        <button id="summary-apply-filters-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Apply Filters</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="sortable px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="assetName">Asset Name<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="assetCategory">Asset Category<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="allocation">Allocation %<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalDeposited">Total Deposited<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalWithdrawn">Total Withdrawn<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="gainLossAmount">Gain/Loss<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="gainLossPercentage">Gain/Loss %<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalDividend">Total Dividend<span class="sort-indicator"></span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            </tbody>
+                         <tfoot id="summary-table-footer" class="bg-gray-50 dark:bg-gray-700">
+                            </tfoot>
+                    </table>
+                </div>
+            </div>
+            
+        </main>
+        
+        <button id="add-transaction-fab" class="fixed bottom-6 right-6 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-4 shadow-lg focus:outline-none z-40" aria-label="Add new transaction">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        </button>
+    </div>
+
+    <div id="transaction-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="transaction-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add Transaction</h3>
+            <form id="transaction-form">
+                <input type="hidden" id="edit-asset-id">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label for="asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                        <input type="text" id="asset-name-modal" list="asset-datalist" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        <datalist id="asset-datalist"></datalist>
+                    </div>
+                     <div id="asset-type-category-wrapper-modal" class="md:col-span-2 hidden">
+                        <label for="asset-type-category-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
+                        <input type="text" id="asset-type-category-modal" list="asset-type-datalist" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Stocks, Crypto">
+                        <datalist id="asset-type-datalist"></datalist>
+                    </div>
+                     <div class="md:col-span-2">
+                        <label for="asset-category-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
+                        <input type="text" id="asset-category-modal" list="category-datalist" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        <datalist id="category-datalist"></datalist>
+                    </div>
+                    <div>
+                        <label for="purchase-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                        <input type="date" id="purchase-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="asset-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value</label>
+                        <div class="relative mt-1">
+                            <input type="number" id="asset-value-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                             <div class="absolute inset-y-0 right-0 flex items-center">
+                                <input type="text" id="asset-currency-modal" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16" placeholder="USD">
+                            </div>
+                            <datalist id="currency-datalist"></datalist>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="asset-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                        <textarea id="asset-description-modal" rows="3" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button type="button" id="cancel-transaction-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="submit" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="dividend-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="dividend-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add Dividend</h3>
+            <form id="dividend-form">
+                <input type="hidden" id="edit-dividend-id">
+                <div class="space-y-4">
+                    <div>
+                        <label for="dividend-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link to Asset</label>
+                        <select id="dividend-asset-name-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                             <option value="" disabled selected>Select an existing asset</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="dividend-sub-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub-Asset Name (Optional)</label>
+                        <input type="text" id="dividend-sub-asset-name-modal" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Specific Bond ID, Rental Unit A">
+                    </div>
+                    <div>
+                        <label for="dividend-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Received</label>
+                        <input type="date" id="dividend-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="dividend-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                        <div class="relative mt-1">
+                            <input type="number" id="dividend-value-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <div class="absolute inset-y-0 right-0 flex items-center">
+                                <input type="text" id="dividend-currency-modal" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16 disabled:bg-gray-100 dark:disabled:bg-gray-700" placeholder="AUTO">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="dividend-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                        <textarea id="dividend-description-modal" rows="2" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Q3 Dividend"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button type="button" id="cancel-dividend-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="submit" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save Dividend</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Settings</h3>
+            <div class="space-y-6">
+                <div>
+                    <label for="main-currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Main Portfolio Currency</label>
+                    <select id="main-currency" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </select>
+                </div>
+                 <div>
+                     <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Management</h4>
+                     <div class="flex flex-col sm:flex-row gap-4">
+                         <button id="import-data-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
+                             <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                             Import Backup (.zip)
+                         </button>
+                         <input type="file" id="import-file-input" class="hidden" accept=".zip">
+                         <button id="export-data-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
+                             <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                             Export Backup (.zip)
+                         </button>
+                     </div>
+                </div>
+                <div id="rates-status-modal" class="text-sm text-gray-500 dark:text-gray-400"></div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-2">
+                <button type="button" id="cancel-settings-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Close</button>
+                <button type="button" id="save-settings-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="alert-modal-title" class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Alert</h3>
+            <p id="alert-modal-message" class="text-gray-600 dark:text-gray-300 mb-6"></p>
+            <div class="flex justify-end">
+                <button type="button" id="alert-modal-ok-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="confirm-modal-title" class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Confirmation</h3>
+            <p id="confirm-modal-message" class="text-gray-600 dark:text-gray-300 mb-6"></p>
+            <div class="flex justify-end space-x-2">
+                <button type="button" id="confirm-modal-cancel-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                <button type="button" id="confirm-modal-ok-btn" class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // PASTE YOUR FIREBASE CONFIG OBJECT HERE
-        // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDbZnuGZuYjLC9NKI457ghe3iPGRI9QMBU",
-  authDomain: "my-asset-tracker-f628d.firebaseapp.com",
-  projectId: "my-asset-tracker-f628d",
-  storageBucket: "my-asset-tracker-f628d.firebasestorage.app",
-  messagingSenderId: "977229082323",
-  appId: "1:977229082323:web:546bcd7624fec2435aae26",
-  measurementId: "G-K62121KCZ2"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+        // STEP 1: PASTE YOUR FIREBASE CONFIG OBJECT HERE
+        const firebaseConfig = {
+            apiKey: "PASTE_YOUR_API_KEY",
+            authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+            projectId: "PASTE_YOUR_PROJECT_ID",
+            storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+            messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID",
+            appId: "PASTE_YOUR_APP_ID"
+        };
 
         // Initialize Firebase
         const firebaseApp = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.getAuth(firebaseApp);
-        const db = firebase.getFirestore(firebaseApp);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        // Enable offline persistence
-        firebase.enablePersistence(db).catch((err) => {
+        // STEP 2: Enable offline data persistence
+        db.enablePersistence().catch((err) => {
             if (err.code == 'failed-precondition') {
-                console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+                console.warn('Multiple tabs open, persistence can only be enabled in one.');
             } else if (err.code == 'unimplemented') {
-                console.warn('The current browser does not support all of the features required to enable persistence.');
+                console.warn('The current browser does not support all of the features required.');
             }
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            // --- STATE & SETTINGS ---
+            // --- GLOBAL STATE ---
             let allAssets = [];
             let allDividends = [];
             let appSettings = {};
+            let currentUser = null;
             let isEditMode = false;
             let currentEditId = null;
+            let allocationDisplayMode = 'amount';
+            let isPrivacyMode = false;
             let currentTab = 'dashboard';
-            // ... all other state variables
-            let currentUser = null;
+            let summarySortState = { column: 'allocation', direction: 'desc' };
+            let allocationChart, trendChart, gainLossChart, monthlyIncomeChart;
+            const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
+            const commonCurrencies = { "USD": "United States Dollar", "EUR": "Euro", "JPY": "Japanese Yen", "GBP": "British Pound Sterling", "AUD": "Australian Dollar", "CAD": "Canadian Dollar", "CHF": "Swiss Franc", "CNY": "Chinese Yuan", "HKD": "Hong Kong Dollar", "NZD": "New Zealand Dollar", "SEK": "Swedish Krona", "KRW": "South Korean Won", "SGD": "Singapore Dollar", "NOK": "Norwegian Krone", "MXN": "Mexican Peso", "INR": "Indian Rupee", "RUB": "Russian Ruble", "ZAR": "South African Rand", "BRL": "Brazilian Real", "PHP": "Philippine Peso", "SAR": "Saudi Riyal" };
 
-            // --- AUTHENTICATION ---
+            // --- DOM ELEMENT REFERENCES ---
+            const docElement = document.documentElement;
             const authScreen = document.getElementById('auth-screen');
             const appScreen = document.getElementById('app');
+            const appLoader = document.getElementById('app-loader');
+            const mainContent = document.querySelector('main');
+
+            // Authentication elements
             const loginForm = document.getElementById('login-form');
             const signupBtn = document.getElementById('signup-btn');
-            const loginBtn = document.getElementById('login-btn');
             const logoutBtn = document.getElementById('logout-btn');
-            const authError = document.getElementById('auth-error');
+            const authErrorEl = document.getElementById('auth-error');
             const userEmailEl = document.getElementById('user-email');
 
-            // Listen for auth state changes
-            firebase.onAuthStateChanged(auth, (user) => {
+            // Header buttons
+            const privacyToggleBtn = document.getElementById('privacy-toggle-btn');
+            const settingsBtn = document.getElementById('settings-btn');
+            const themeToggleBtn = document.getElementById('theme-toggle');
+
+            // Tab buttons and content
+            const dashboardTabButton = document.getElementById('dashboard-tab-button');
+            const trackerTabButton = document.getElementById('tracker-tab-button');
+            const dividendsTabButton = document.getElementById('dividends-tab-button');
+            const summaryTabButton = document.getElementById('summary-tab-button');
+            const dashboardContent = document.getElementById('dashboard-content');
+            const trackerContent = document.getElementById('tracker-content');
+            const dividendsContent = document.getElementById('dividends-content');
+            const summaryContent = document.getElementById('summary-content');
+
+            // FAB
+            const addTransactionFab = document.getElementById('add-transaction-fab');
+            
+            // Transaction Modal
+            const transactionModal = document.getElementById('transaction-modal');
+            const transactionModalTitle = document.getElementById('transaction-modal-title');
+            const transactionForm = document.getElementById('transaction-form');
+            const editAssetIdInput = document.getElementById('edit-asset-id');
+            const assetNameModalInput = document.getElementById('asset-name-modal');
+            const assetDatalist = document.getElementById('asset-datalist');
+            const assetTypeCategoryWrapperModal = document.getElementById('asset-type-category-wrapper-modal');
+            const assetTypeCategoryModalInput = document.getElementById('asset-type-category-modal');
+            const assetTypeDatalist = document.getElementById('asset-type-datalist');
+            const assetCategoryModalInput = document.getElementById('asset-category-modal');
+            const categoryDatalist = document.getElementById('category-datalist');
+            const purchaseDateModalInput = document.getElementById('purchase-date-modal');
+            const assetValueModalInput = document.getElementById('asset-value-modal');
+            const assetCurrencyModalInput = document.getElementById('asset-currency-modal');
+            const currencyDatalist = document.getElementById('currency-datalist');
+            const assetDescriptionModalInput = document.getElementById('asset-description-modal');
+            const cancelTransactionBtn = document.getElementById('cancel-transaction-btn');
+
+            // Dividend Modal
+            const dividendModal = document.getElementById('dividend-modal');
+            const dividendModalTitle = document.getElementById('dividend-modal-title');
+            const dividendForm = document.getElementById('dividend-form');
+            const editDividendIdInput = document.getElementById('edit-dividend-id');
+            const dividendAssetNameModalSelect = document.getElementById('dividend-asset-name-modal');
+            const dividendSubAssetNameModalInput = document.getElementById('dividend-sub-asset-name-modal');
+            const dividendDateModalInput = document.getElementById('dividend-date-modal');
+            const dividendValueModalInput = document.getElementById('dividend-value-modal');
+            const dividendCurrencyModalInput = document.getElementById('dividend-currency-modal');
+            const dividendDescriptionModalInput = document.getElementById('dividend-description-modal');
+            const cancelDividendBtn = document.getElementById('cancel-dividend-btn');
+
+            // Settings Modal
+            const settingsModal = document.getElementById('settings-modal');
+            const mainCurrencySelect = document.getElementById('main-currency');
+            const importDataBtn = document.getElementById('import-data-btn');
+            const importFileInput = document.getElementById('import-file-input');
+            const exportDataBtn = document.getElementById('export-data-btn');
+            const ratesStatusModal = document.getElementById('rates-status-modal');
+            const cancelSettingsBtn = document.getElementById('cancel-settings-btn');
+            const saveSettingsBtn = document.getElementById('save-settings-btn');
+            
+            // Generic Modals
+            const alertModal = document.getElementById('alert-modal');
+            const alertModalTitle = document.getElementById('alert-modal-title');
+            const alertModalMessage = document.getElementById('alert-modal-message');
+            const alertModalOkBtn = document.getElementById('alert-modal-ok-btn');
+            const confirmModal = document.getElementById('confirm-modal');
+            const confirmModalTitle = document.getElementById('confirm-modal-title');
+            const confirmModalMessage = document.getElementById('confirm-modal-message');
+            const confirmModalOkBtn = document.getElementById('confirm-modal-ok-btn');
+            const confirmModalCancelBtn = document.getElementById('confirm-modal-cancel-btn');
+
+            // --- AUTHENTICATION ---
+            const showAuthError = (message) => {
+                authErrorEl.textContent = message;
+                authErrorEl.classList.remove('hidden');
+            };
+
+            auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     currentUser = user;
                     authScreen.classList.add('hidden');
-                    appScreen.style.display = 'flex'; // Use flex to match original layout
-                    userEmailEl.textContent = `Logged in as: ${user.email}`;
-                    initializeApp();
+                    appLoader.style.display = 'flex';
+                    appScreen.style.display = 'none';
+                    
+                    userEmailEl.textContent = user.email;
+                    await initializeApp();
+
+                    appLoader.style.display = 'none';
+                    appScreen.style.display = 'flex';
                 } else {
                     currentUser = null;
                     authScreen.classList.remove('hidden');
+                    appLoader.style.display = 'none';
                     appScreen.style.display = 'none';
-                    // Clear local data on logout
                     allAssets = [];
                     allDividends = [];
-                    renderAll();
                 }
             });
 
-            const showAuthError = (message) => {
-                authError.textContent = message;
-                authError.classList.remove('hidden');
-            };
-
-            signupBtn.addEventListener('click', async () => {
+            signupBtn.addEventListener('click', () => {
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
-                authError.classList.add('hidden');
-                try {
-                    await firebase.createUserWithEmailAndPassword(auth, email, password);
-                    loginForm.reset();
-                } catch (error) {
-                    showAuthError(error.message);
-                }
+                authErrorEl.classList.add('hidden');
+                auth.createUserWithEmailAndPassword(email, password)
+                    .catch(error => showAuthError(error.message));
             });
 
-            loginForm.addEventListener('submit', async (e) => {
+            loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
-                authError.classList.add('hidden');
-                try {
-                    await firebase.signInWithEmailAndPassword(auth, email, password);
-                    loginForm.reset();
-                } catch (error) {
-                    showAuthError(error.message);
-                }
+                authErrorEl.classList.add('hidden');
+                auth.signInWithEmailAndPassword(email, password)
+                    .catch(error => showAuthError(error.message));
             });
             
             logoutBtn.addEventListener('click', () => {
-                firebase.signOut(auth);
+                auth.signOut();
             });
 
-            // --- REWRITTEN CORE APP LOGIC ---
+            // --- CORE APP LOGIC ---
             async function initializeApp() {
-                // Settings can still be local if you want (e.g., theme preference)
-                loadSettings(); 
-                
-                // Load data from Firestore
-                await loadData(); 
-
-                populateCurrencyDatalists();
-                renderAll(); 
-                
-                await updateExchangeRates();
-                window.addEventListener('online', updateExchangeRates);
-                window.addEventListener('offline', updateRatesStatus);
+                loadSettings();
+                await loadDataFromFirestore();
+                renderAll();
+                updateExchangeRates();
             }
 
-            async function loadData() {
+            async function loadDataFromFirestore() {
                 if (!currentUser) return;
                 try {
-                    const assetsQuery = firebase.query(firebase.collection(db, `users/${currentUser.uid}/assets`));
-                    const assetsSnapshot = await firebase.getDocs(assetsQuery);
+                    const assetsSnapshot = await db.collection('users').doc(currentUser.uid).collection('assets').orderBy('purchaseDate', 'desc').get();
                     allAssets = assetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                    const dividendsQuery = firebase.query(firebase.collection(db, `users/${currentUser.uid}/dividends`));
-                    const dividendsSnapshot = await firebase.getDocs(dividendsQuery);
+                    const dividendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('dividends').orderBy('date', 'desc').get();
                     allDividends = dividendsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
                 } catch (error) {
-                    console.error("Error loading data from Firestore:", error);
-                    showAlert("Could not load your cloud data. Please check your connection.", "Sync Error");
+                    console.error("Error loading data:", error);
+                    showAlert("Could not load cloud data.", "Sync Error");
                 }
             }
-
-            // --- MODIFIED TRANSACTION/DIVIDEND HANDLING ---
-            // Example for adding a transaction. You'd need to modify delete/edit similarly.
+            
+            // --- DATA MODIFICATION (CREATE, UPDATE, DELETE) ---
             transactionForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!currentUser) return;
 
-                // All your existing form validation logic remains here...
                 const name = assetNameModalInput.value.trim();
-                // ... get all other form values
+                const currency = assetCurrencyModalInput.value.toUpperCase().trim();
+                const category = assetCategoryModalInput.value.trim();
+                const transactionAmount = parseFloat(assetValueModalInput.value);
 
-                if (isEditMode) {
-                    // EDIT LOGIC: Update document in Firestore
-                    const docRef = firebase.doc(db, `users/${currentUser.uid}/assets`, currentEditId);
-                    try {
-                        // Create the updated asset object from your form
-                        const updatedAsset = { /* ... your asset data ... */ };
-                        await firebase.updateDoc(docRef, updatedAsset);
-                    } catch (error) {
-                        console.error("Error updating document: ", error);
-                    }
-                } else {
-                    // ADD LOGIC: Add a new document to Firestore
-                    const assetCollection = firebase.collection(db, `users/${currentUser.uid}/assets`);
-                    try {
-                        // Create the new transaction object from your form
-                        const newTransaction = { /* ... your asset data ... */ };
-                        await firebase.addDoc(assetCollection, newTransaction);
-                    } catch (error) {
-                        console.error("Error adding document: ", error);
-                    }
+                if (!currency || currency.length !== 3) {
+                    showAlert("Please enter a valid 3-letter currency code (e.g., USD, EUR).", "Invalid Input");
+                    return;
                 }
+
+                const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
+                const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
                 
-                await loadData(); // Reload data from Firestore
-                renderAll();
-                closeTransactionModal();
+                let assetCategoryValue = latestAsset ? latestAsset.assetCategory : assetTypeCategoryModalInput.value.trim();
+
+                const previousValue = latestAsset ? latestAsset.value : 0;
+                let newAssetValue;
+                if (category === 'Deposit') newAssetValue = previousValue + transactionAmount;
+                else if (category === 'Withdrawal') newAssetValue = previousValue - transactionAmount;
+                else newAssetValue = transactionAmount;
+
+                const dataObject = {
+                    name: name,
+                    assetCategory: assetCategoryValue,
+                    category: category,
+                    purchaseDate: purchaseDateModalInput.value,
+                    value: newAssetValue,
+                    currency: currency,
+                    description: assetDescriptionModalInput.value.trim(),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                try {
+                    if (isEditMode) {
+                        // Note: A full implementation would require recalculating subsequent transactions.
+                        // This simplified version just updates the single record.
+                        const docRef = db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId);
+                        await docRef.update(dataObject);
+                    } else {
+                        await db.collection('users').doc(currentUser.uid).collection('assets').add(dataObject);
+                    }
+                    await loadDataFromFirestore();
+                    renderAll();
+                    closeTransactionModal();
+                } catch (error) {
+                    console.error("Error saving transaction: ", error);
+                    showAlert("Failed to save transaction to the cloud.");
+                }
             });
 
-            // You would need to apply similar async/await and Firestore logic to:
-            // - deleteAsset() -> firebase.deleteDoc()
-            // - The dividend form submission -> addDoc/updateDoc on the 'dividends' collection
-            // - deleteDividend() -> firebase.deleteDoc()
+            dividendForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentUser) return;
+                
+                const dataObject = {
+                    name: dividendAssetNameModalSelect.value.trim(),
+                    subAssetName: dividendSubAssetNameModalInput.value.trim(),
+                    date: dividendDateModalInput.value,
+                    value: parseFloat(dividendValueModalInput.value),
+                    currency: dividendCurrencyModalInput.value.toUpperCase().trim(),
+                    description: dividendDescriptionModalInput.value.trim()
+                };
+                
+                try {
+                    if (isEditMode) {
+                        const docRef = db.collection('users').doc(currentUser.uid).collection('dividends').doc(currentEditId);
+                        await docRef.update(dataObject);
+                    } else {
+                        await db.collection('users').doc(currentUser.uid).collection('dividends').add(dataObject);
+                    }
+                    await loadDataFromFirestore();
+                    renderAll();
+                    closeDividendModal();
+                } catch (error) {
+                    console.error("Error saving dividend: ", error);
+                    showAlert("Failed to save dividend to the cloud.");
+                }
+            });
 
-            // ... ALL YOUR OTHER FUNCTIONS (renderAll, switchTab, formatCurrency, charts, etc.) remain largely the same.
-            // They don't need to know *where* the data comes from, they just render the `allAssets` and `allDividends` arrays.
+            async function deleteAsset(id) {
+                const confirmed = await showConfirm('Delete this transaction from the cloud? This cannot be undone.', 'Delete Transaction');
+                if (confirmed && currentUser) {
+                    try {
+                        await db.collection('users').doc(currentUser.uid).collection('assets').doc(id).delete();
+                        await loadDataFromFirestore();
+                        renderAll();
+                    } catch (error) {
+                        console.error("Error deleting asset:", error);
+                        showAlert("Failed to delete asset from the cloud.");
+                    }
+                }
+            }
+
+            async function deleteDividend(id) {
+                const confirmed = await showConfirm('Delete this dividend from the cloud?', 'Delete Dividend');
+                if (confirmed && currentUser) {
+                    try {
+                        await db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).delete();
+                        await loadDataFromFirestore();
+                        renderAll();
+                    } catch (error) {
+                        console.error("Error deleting dividend:", error);
+                        showAlert("Failed to delete dividend from the cloud.");
+                    }
+                }
+            }
+            
+            // --- ALL PREVIOUS FUNCTIONS (UNCHANGED) ---
+            // These functions operate on the global `allAssets` and `allDividends` arrays,
+            // which are now populated from Firestore. Their internal logic does not need to change.
+
+            function renderAll() {
+                // This function is the main entry point for updating the UI
+                const currentTimeline = document.querySelector('#trend-timeline-buttons .active')?.dataset.timeline || 'ALL';
+                if (currentTab === 'dashboard') { renderDashboard(allAssets, appSettings, currentTimeline); }
+                else if(currentTab === 'tracker') { renderGroupedAssets(allAssets, appSettings); }
+                else if(currentTab === 'dividends') { renderDividends(allDividends, appSettings); }
+                else if(currentTab === 'summary') { renderSummaryTable(); }
+            }
+
+            function loadSettings() {
+                // Settings remain local to the device
+                const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
+                const storedSettings = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || '{}');
+                appSettings = { mainCurrency: 'USD', rates: {}, lastUpdated: null, ...storedSettings };
+                isPrivacyMode = localStorage.getItem('assetTrackerPrivacyMode') === 'true';
+                updatePrivacyView();
+            }
+            
+            function saveSettings() {
+                 const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
+                 localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings));
+            }
+
+            function renderDashboard(assets, settings, timeline) {
+                if (!settings.rates) return;
+                const isDark = docElement.classList.contains('dark');
+                const mainCurrency = settings.mainCurrency;
+                
+                // You will need to re-add the HTML for dashboard content into the main HTML body
+                mainContent.innerHTML = document.getElementById('dashboard-template').innerHTML;
+                
+                updateTotalValue(assets, settings);
+                renderAllocationChart(assets, settings, isDark, mainCurrency);
+                renderCashFlowSummary(assets, settings, mainCurrency);
+                renderAssetBreakdown(assets, settings, mainCurrency);
+                renderTrendChart(assets, settings, isDark, mainCurrency, timeline);
+                renderGainLossChart(assets, settings, isDark, mainCurrency, timeline);
+                renderMonthlyIncomeChart(allDividends, settings, isDark, mainCurrency, timeline);
+                
+                // Re-add event listeners for dashboard-specific buttons
+                document.getElementById('trend-timeline-buttons').addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        document.querySelector('#trend-timeline-buttons .active').classList.remove('active');
+                        e.target.classList.add('active');
+                        renderAll();
+                    }
+                });
+                document.getElementById('allocation-display-toggle').addEventListener('click', (e) => {
+                    // Logic for toggling allocation display
+                });
+            }
+
+            function switchTab(tabName) {
+                currentTab = tabName;
+                const tabButtons = [dashboardTabButton, trackerTabButton, dividendsTabButton, summaryTabButton];
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                
+                if (tabName === 'dashboard') dashboardTabButton.classList.add('active');
+                if (tabName === 'tracker') trackerTabButton.classList.add('active');
+                if (tabName === 'dividends') dividendsTabButton.classList.add('active');
+                if (tabName === 'summary') summaryTabButton.classList.add('active');
+                
+                addTransactionFab.classList.toggle('hidden', tabName === 'summary' || tabName === 'dividends');
+                renderAll();
+            }
+
+            // ... Paste ALL your other functions here:
+            // renderGroupedAssets, renderDividends, renderSummaryTable,
+            // updateTotalValue, all chart functions, all calculation functions,
+            // all modal opening/closing functions, theme toggler, etc.
+            // For example:
+            function parseDate(dateString) {
+                // ... implementation
+            }
+            function formatCurrency(amount, currency) {
+                // ... implementation
+            }
+            // and so on for every function you had before.
+
         });
     </script>
 </body>
