@@ -1,495 +1,4 @@
-<!DOCTYPE html>
-<html lang="en" class="">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asset Tracker (Cloud Sync)</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#3b82f6"/>
-    <link rel="apple-touch-icon" href="https://placehold.co/192x192/3b82f6/FFFFFF?text=AT">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        'primary': {
-                            '50': '#eff6ff', '100': '#dbeafe', '200': '#bfdbfe', '300': '#93c5fd', '400': '#60a5fa', '500': '#3b82f6', '600': '#2563eb', '700': '#1d4ed8', '800': '#1e40af', '900': '#1e3a8a'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .modal { transition: opacity 0.25s ease; }
-        .modal-content { transition: transform 0.25s ease; }
-        .tab-button.active { border-color: #2563eb; color: #2563eb; }
-        .dark .tab-button.active { border-color: #60a5fa; color: #60a5fa; }
-        .toggle-icon { transition: transform 0.2s ease-in-out; }
-        .rotate-90 { transform: rotate(90deg); }
-        .summary-filter-btn.active { background-color: #3b82f6; color: white; }
-        .sortable { cursor: pointer; position: relative; }
-        .sortable .sort-indicator { display: inline-block; width: 1em; margin-left: 0.25rem; color: #9ca3af; opacity: 0.5; transition: opacity 0.2s ease-in-out; }
-        .sortable:hover .sort-indicator { opacity: 1; }
-        .sortable.asc .sort-indicator::after { content: '▲'; font-size: 0.8em; opacity: 1; }
-        .sortable.desc .sort-indicator::after { content: '▼'; font-size: 0.8em; opacity: 1; }
-    </style>
-</head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 h-screen overflow-hidden">
-
-    <div id="auth-screen" class="h-full flex items-center justify-center p-4">
-        <div class="p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-sm w-full">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Asset Tracker</h1>
-                <p id="auth-title" class="text-gray-500 dark:text-gray-400 mt-2">Sign in to your account</p>
-            </div>
-            <form id="auth-form" class="space-y-6">
-                <div>
-                    <label for="auth-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
-                    <div class="mt-1">
-                        <input id="auth-email" name="email" type="email" autocomplete="email" required class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                    </div>
-                </div>
-                <div>
-                    <label for="auth-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                    <div class="mt-1">
-                        <input id="auth-password" name="password" type="password" autocomplete="current-password" required class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                    </div>
-                </div>
-                <div id="signin-actions">
-                    <button type="submit" name="signin" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">Sign in</button>
-                    <p class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-                        No account?
-                        <a href="#" id="show-signup" class="font-medium text-primary-600 hover:text-primary-500">Create one</a>
-                    </p>
-                </div>
-                <div id="signup-actions" class="hidden">
-                    <button type="submit" name="signup" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Create Account</button>
-                    <p class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-                        Already have an account?
-                        <a href="#" id="show-signin" class="font-medium text-primary-600 hover:text-primary-500">Sign in</a>
-                    </p>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="app-loader" class="h-full flex items-center justify-center" style="display: none;">
-        <svg class="animate-spin h-10 w-10 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-    </div>
-    
-    <div id="app-screen" class="h-full flex flex-col max-w-7xl mx-auto" style="display: none;">
-        <div class="flex-shrink-0 px-4 sm:px-6 lg:px-8">
-            <header class="pt-4 sm:pt-6 lg:pt-8 flex justify-between items-center">
-                <div>
-                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Asset Tracker</h1>
-                    <p class="text-gray-500 dark:text-gray-400 mt-1">Your personal multi-currency portfolio.</p>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <div id="user-info" class="flex items-center space-x-3 mr-2" style="display: none;">
-                       <span id="user-email" class="text-sm text-gray-600 dark:text-gray-300 hidden sm:inline"></span>
-                       <button id="signout-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2" aria-label="Sign Out">
-                           <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12" /></svg>
-                       </button>
-                    </div>
-                    <button id="privacy-toggle-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle privacy mode">
-                        <svg id="privacy-on-icon" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        <svg id="privacy-off-icon" class="h-6 w-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243L6.228 6.228" /></svg>
-                    </button>
-                    <button id="settings-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Open settings">
-                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-1.007 1.11-1.226l.28-.08c.568-.168 1.17.22 1.338.79l.08.28c.168.568-.22 1.17-.79 1.338l-.28.08c-.542.09-1.007.56-1.226 1.11l-.08.28c-.168.568-.79 1.008-1.338.84l-.28-.08c-.568-.168-.96-.79-.79-1.338l.08-.28zM14.25 5.16c.324-.972 1.26-1.63 2.28-1.63.02 0 .04 0 .06 0a2.25 2.25 0 012.25 2.25c0 .02 0 .04 0 .06 0 1.02-.658 1.956-1.63 2.28l-.28.08c-.568-.168-1.17-.22-1.338-.79l-.08-.28c-.168-.568.22-1.17.79-1.338l.28-.08zm-5.25-.16a2.25 2.25 0 10-3.182-3.182 2.25 2.25 0 003.182 3.182zM12 15a3 3 0 100-6 3 3 0 000 6z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-3.314-2.686-6-6-6s-6 2.686-6 6s2.686 6 6 6s6-2.686 6-6zM8.25 20.25a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182zM12 21a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 20.25a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182zM12 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" /></svg>
-                    </button>
-                    <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle theme">
-                        <svg id="theme-toggle-dark-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                        <svg id="theme-toggle-light-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-3.536a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.464-3.536a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zm1.414-7.071a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM3 10a1 1 0 01-1-1 1 1 0 011-1h1a1 1 0 110 2H3z"></path></svg>
-                    </button>
-                </div>
-            </header>
-            <div class="mt-4">
-                <div class="border-b border-gray-200 dark:border-gray-700">
-                    <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
-                        <button id="dashboard-tab-button" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent">Dashboard</button>
-                        <button id="tracker-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">Tracker</button>
-                        <button id="dividends-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">Dividends</button>
-                        <button id="summary-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">Summary</button>
-                    </nav>
-                </div>
-            </div>
-        </div>
-        <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24">
-            <div id="dashboard-content">
-                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
-                     <div class="flex justify-between items-start">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
-                             <div class="col-span-1 sm:col-span-2 lg:col-span-4">
-                                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Asset Value</h2>
-                                <p id="total-value" class="text-3xl font-bold text-gray-900 dark:text-white">$0.00</p>
-                            </div>
-                            <div class="text-left sm:text-right">
-                                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Gain/Loss</h2>
-                                <p id="total-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
-                                <div id="total-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
-                            </div>
-                             <div class="text-left sm:text-right">
-                                   <h2 id="this-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Gain/Loss</h2>
-                                   <p id="monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
-                                   <div id="monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
-                               </div>
-                             <div class="text-left sm:text-right">
-                                   <h2 id="prev-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Previous Month's Gain/Loss</h2>
-                                   <p id="prev-monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
-                                   <div id="prev-monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
-                               </div>
-                               <div class="text-left sm:text-right">
-                                    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">AVG Monthly Dividend</h2>
-                                    <p id="avg-monthly-income" class="text-xl font-bold text-gray-900 dark:text-white">-</p>
-                                    <div class="text-sm font-medium text-gray-500 dark:text-gray-400">&nbsp;</div>
-                                </div>
-                        </div>
-                         <div id="rates-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
-                            <div class="flex items-center justify-end">
-                                <span id="online-indicator" class="h-2 w-2 rounded-full bg-gray-400 mr-1.5"></span>
-                                <span id="rates-last-updated">Checking rates...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-1 space-y-8">
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                             <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Asset Allocation</h2>
-                                <div id="allocation-display-toggle" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-                                    <button data-mode="amount" class="allocation-toggle-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">$</button>
-                                    <button data-mode="percent" class="allocation-toggle-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">%</button>
-                                </div>
-                            </div>
-                            <div class="h-64 flex items-center justify-center relative">
-                                <canvas id="allocationChart"></canvas>
-                            </div>
-                             <div id="allocation-legend" class="mt-4 space-y-2"></div>
-                        </div>
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                            <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Cash Flow</h2>
-                            <div id="cash-flow-summary" class="space-y-4"></div>
-                        </div>
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                            <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Asset Performance</h2>
-                            <div id="asset-breakdown" class="space-y-2">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-2 space-y-8">
-                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                            <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Portfolio Value Trend</h2>
-                                <div id="trend-timeline-buttons" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-                                    <button data-timeline="1M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1M</button>
-                                    <button data-timeline="3M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">3M</button>
-                                    <button data-timeline="1Y" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1Y</button>
-                                    <button data-timeline="ALL" class="timeline-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">ALL</button>
-                                </div>
-                            </div>
-                            <div class="h-96">
-                                 <canvas id="trendChart"></canvas>
-                            </div>
-                        </div>
-                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Historical Gain/Loss</h2>
-                                <div class="h-96">
-                                     <canvas id="gainLossChart"></canvas>
-                                </div>
-                            </div>
-                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monthly Dividends</h2>
-                                <div class="h-96">
-                                     <canvas id="monthlyIncomeChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="tracker-content" class="hidden">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Transaction History</h2>
-                <div id="filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                            <label for="filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
-                            <select id="filter-asset-name" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                                <option value="">All</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="filter-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
-                            <select id="filter-category" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                                <option value="">All</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
-                            <input type="date" id="filter-start-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
-                            <input type="date" id="filter-end-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        </div>
-                    </div>
-                    <div class="mt-4 flex justify-end gap-2">
-                        <button id="reset-filters-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Reset</button>
-                        <button id="apply-filters-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Apply Filters</button>
-                    </div>
-                </div>
-                <div id="asset-list" class="space-y-6"></div>
-                 <div id="no-assets-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No transactions</h3>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a new asset transaction.</p>
-                 </div>
-            </div>
-            <div id="dividends-content" class="hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Dividends</h2>
-                    <button id="add-dividend-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        Add Dividend
-                    </button>
-                </div>
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
-                    <h3 id="dividends-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Dividends</h3>
-                    <p id="dividends-total" class="text-4xl font-bold text-gray-900 dark:text-white">$0.00</p>
-                </div>
-                <div id="dividends-list" class="space-y-6"></div>
-                <div id="no-dividends-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25-2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m12 0V9" /></svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No dividends recorded</h3>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a dividend.</p>
-                </div>
-            </div>
-            <div id="summary-content" class="hidden">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Portfolio Summary</h2>
-                <div id="summary-filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="summary-filter-asset-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
-                            <select id="summary-filter-asset-category" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                                <option value="">All</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="summary-filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
-                            <select id="summary-filter-asset-name" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                                <option value="">All</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Span</label>
-                            <div id="summary-date-buttons" class="mt-1 flex space-x-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-lg">
-                                <button data-span="1M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1M</button>
-                                <button data-span="3M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">3M</button>
-                                <button data-span="6M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">6M</button>
-                                <button data-span="1Y" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1Y</button>
-                                <button data-span="ALL" class="summary-filter-btn active flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300">ALL</button>
-                            </div>
-                        </div>
-                    </div>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                         <div>
-                            <label for="summary-filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
-                            <input type="date" id="summary-filter-start-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="summary-filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
-                            <input type="date" id="summary-filter-end-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        </div>
-                     </div>
-                    <div class="mt-4 flex justify-end gap-2">
-                        <button id="summary-reset-filters-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Reset</button>
-                        <button id="summary-apply-filters-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Apply Filters</button>
-                    </div>
-                </div>
-                <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-md">
-                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                                <th scope="col" class="sortable px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="assetName">Asset Name<span class="sort-indicator"></span></th>
-                                <th scope="col" class="sortable px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="assetCategory">Asset Category<span class="sort-indicator"></span></th>
-                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="allocation">Allocation %<span class="sort-indicator"></span></th>
-                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalDeposited">Total Deposited<span class="sort-indicator"></span></th>
-                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalWithdrawn">Total Withdrawn<span class="sort-indicator"></span></th>
-                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="gainLossAmount">Gain/Loss<span class="sort-indicator"></span></th>
-                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="gainLossPercentage">Gain/Loss %<span class="sort-indicator"></span></th>
-                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalDividend">Total Dividend<span class="sort-indicator"></span></th>
-                            </tr>
-                        </thead>
-                        <tbody id="summary-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
-                         <tfoot id="summary-table-footer" class="bg-gray-50 dark:bg-gray-700"></tfoot>
-                    </table>
-                </div>
-            </div>
-        </main> 
-    </div>
-    
-    <button id="add-transaction-fab" class="fixed bottom-6 right-6 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 z-40" aria-label="Add new transaction">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-    </button>
-    
-    <div id="transaction-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
-            <h3 id="transaction-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add Transaction</h3>
-            <form id="transaction-form">
-                <input type="hidden" id="edit-asset-id">
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2">
-                        <label for="asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
-                        <input type="text" id="asset-name-modal" list="asset-datalist" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        <datalist id="asset-datalist"></datalist>
-                    </div>
-                     <div id="asset-type-category-wrapper-modal" class="md:col-span-2 hidden">
-                        <label for="asset-type-category-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
-                        <input type="text" id="asset-type-category-modal" list="asset-type-datalist" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Stocks, Crypto">
-                        <datalist id="asset-type-datalist"></datalist>
-                    </div>
-                     <div class="md:col-span-2">
-                        <label for="asset-category-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
-                        <input type="text" id="asset-category-modal" list="category-datalist" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        <datalist id="category-datalist"></datalist>
-                    </div>
-                    <div>
-                        <label for="purchase-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
-                        <input type="date" id="purchase-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="asset-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value</label>
-                        <div class="relative mt-1">
-                            <input type="number" id="asset-value-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                             <div class="absolute inset-y-0 right-0 flex items-center">
-                                <input type="text" id="asset-currency-modal" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16" placeholder="USD">
-                            </div>
-                            <datalist id="currency-datalist"></datalist>
-                        </div>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="asset-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
-                        <textarea id="asset-description-modal" rows="3" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"></textarea>
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end space-x-2">
-                    <button type="button" id="cancel-transaction-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
-                    <button type="submit" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save Transaction</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="dividend-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
-            <h3 id="dividend-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add Dividend</h3>
-            <form id="dividend-form">
-                <input type="hidden" id="edit-dividend-id">
-                <div class="space-y-4">
-                    <div>
-                        <label for="dividend-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link to Asset</label>
-                        <select id="dividend-asset-name-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                             <option value="" disabled selected>Select an existing asset</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="dividend-sub-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub-Asset Name (Optional)</label>
-                        <input type="text" id="dividend-sub-asset-name-modal" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Specific Bond ID, Rental Unit A">
-                    </div>
-                    <div>
-                        <label for="dividend-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Received</label>
-                        <input type="date" id="dividend-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                    </div>
-                    <div>
-                        <label for="dividend-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
-                        <div class="relative mt-1">
-                            <input type="number" id="dividend-value-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                            <div class="absolute inset-y-0 right-0 flex items-center">
-                                <input type="text" id="dividend-currency-modal" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16 disabled:bg-gray-100 dark:disabled:bg-gray-700" placeholder="AUTO">
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="dividend-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
-                        <textarea id="dividend-description-modal" rows="2" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Q3 Dividend"></textarea>
-                    </div>
-                </div>
-                <div class="mt-6 flex justify-end space-x-2">
-                    <button type="button" id="cancel-dividend-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
-                    <button type="submit" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save Dividend</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
-            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Settings</h3>
-            <div class="space-y-6">
-                <div>
-                    <label for="main-currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Main Portfolio Currency</label>
-                    <select id="main-currency" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                    </select>
-                </div>
-                 <div>
-                     <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Management</h4>
-                     <div class="flex flex-col sm:flex-row gap-4">
-                         <button id="import-data-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
-                             <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                             Import Backup (.zip)
-                         </button>
-                         <input type="file" id="import-file-input" class="hidden" accept=".zip">
-                         <button id="export-data-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
-                             <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                             Export Backup (.zip)
-                         </button>
-                     </div>
-                </div>
-                <div id="rates-status-modal" class="text-sm text-gray-500 dark:text-gray-400"></div>
-            </div>
-            <div class="mt-6 flex justify-end space-x-2">
-                <button type="button" id="cancel-settings-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Close</button>
-                <button type="button" id="save-settings-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="alert-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-white dark:bg-gray-800">
-            <h3 id="alert-modal-title" class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Alert</h3>
-            <p id="alert-modal-message" class="text-gray-600 dark:text-gray-300 mb-6"></p>
-            <div class="flex justify-end">
-                <button type="button" id="alert-modal-ok-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="confirm-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
-        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
-            <h3 id="confirm-modal-title" class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Confirmation</h3>
-            <p id="confirm-modal-message" class="text-gray-600 dark:text-gray-300 mb-6"></p>
-            <div class="flex justify-end space-x-2">
-                <button type="button" id="confirm-modal-cancel-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
-                <button type="button" id="confirm-modal-ok-btn" class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-    <script>
+<script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- Firebase Configuration ---
             const firebaseConfig = {
@@ -514,8 +23,8 @@
 
             // --- Global App State and Settings ---
             const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
-            let allAssets = [], allDividends = [], appSettings = {}, isEditMode = false, currentEditId = null;
-            let allocationDisplayMode = 'amount', isPrivacyMode = false, currentTab = 'dashboard';
+            let allAssets = [], allDividends = [], appSettings = {};
+            let isEditMode = false, currentEditId = null, allocationDisplayMode = 'amount', isPrivacyMode = false, currentTab = 'dashboard';
             let summarySortState = { column: 'allocation', direction: 'desc' };
             const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
             const commonCurrencies = { "USD": "United States Dollar", "EUR": "Euro", "JPY": "Japanese Yen", "GBP": "British Pound Sterling", "AUD": "Australian Dollar", "CAD": "Canadian Dollar", "CHF": "Swiss Franc", "CNY": "Chinese Yuan", "HKD": "Hong Kong Dollar", "NZD": "New Zealand Dollar", "SEK": "Swedish Krona", "KRW": "South Korean Won", "SGD": "Singapore Dollar", "NOK": "Norwegian Krone", "MXN": "Mexican Peso", "INR": "Indian Rupee", "RUB": "Russian Ruble", "ZAR": "South African Rand", "BRL": "Brazilian Real", "PHP": "Philippine Peso", "SAR": "Saudi Riyal" };
@@ -534,158 +43,60 @@
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                 localStorage.setItem('theme', newTheme);
                 applyTheme(newTheme);
-                if(currentTab === 'dashboard') { renderDashboard(allAssets, appSettings); }
+                attemptRender(); // MODIFIED: Call the gatekeeper function
             };
             themeToggleBtn.addEventListener('click', toggleTheme);
             const initialTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             applyTheme(initialTheme);
 
             // --- DOM Elements ---
-            const dashboardTabButton = document.getElementById('dashboard-tab-button');
-            const trackerTabButton = document.getElementById('tracker-tab-button');
-            const dividendsTabButton = document.getElementById('dividends-tab-button');
-            const summaryTabButton = document.getElementById('summary-tab-button');
-            const dashboardContent = document.getElementById('dashboard-content');
-            const trackerContent = document.getElementById('tracker-content');
-            const dividendsContent = document.getElementById('dividends-content');
-            const summaryContent = document.getElementById('summary-content');
-            const transactionModal = document.getElementById('transaction-modal');
-            const transactionModalTitle = document.getElementById('transaction-modal-title');
-            const transactionForm = document.getElementById('transaction-form');
-            const assetNameModalInput = document.getElementById('asset-name-modal');
-            const assetCurrencyModalInput = document.getElementById('asset-currency-modal');
-            const assetTypeCategoryWrapperModal = document.getElementById('asset-type-category-wrapper-modal');
-            const assetTypeCategoryModalInput = document.getElementById('asset-type-category-modal');
-            const assetTypeDatalist = document.getElementById('asset-type-datalist');
-            const assetCategoryModalInput = document.getElementById('asset-category-modal');
-            const purchaseDateModalInput = document.getElementById('purchase-date-modal');
-            const assetValueModalInput = document.getElementById('asset-value-modal');
-            const assetDescriptionModalInput = document.getElementById('asset-description-modal');
-            const cancelTransactionBtn = document.getElementById('cancel-transaction-btn');
-            const addTransactionFab = document.getElementById('add-transaction-fab');
-            const assetList = document.getElementById('asset-list');
-            const noAssetsMessage = document.getElementById('no-assets-message');
-            const settingsBtn = document.getElementById('settings-btn');
-            const settingsModal = document.getElementById('settings-modal');
-            const saveSettingsBtn = document.getElementById('save-settings-btn');
-            const cancelSettingsBtn = document.getElementById('cancel-settings-btn');
-            const mainCurrencySelect = document.getElementById('main-currency');
-            const assetDatalist = document.getElementById('asset-datalist');
-            const currencyDatalist = document.getElementById('currency-datalist');
-            const categoryDatalist = document.getElementById('category-datalist');
-            const totalValueEl = document.getElementById('total-value');
-            const totalGainLossAmountEl = document.getElementById('total-gain-loss-amount');
-            const totalGainLossPercentageEl = document.getElementById('total-gain-loss-percentage');
-            const monthlyGainLossAmountEl = document.getElementById('monthly-gain-loss-amount');
-            const monthlyGainLossPercentageEl = document.getElementById('monthly-gain-loss-percentage');
-            const prevMonthlyGainLossAmountEl = document.getElementById('prev-monthly-gain-loss-amount');
-            const prevMonthlyGainLossPercentageEl = document.getElementById('prev-monthly-gain-loss-percentage');
-            const thisMonthLabel = document.getElementById('this-month-label');
-            const prevMonthLabel = document.getElementById('prev-month-label');
-            const addDividendBtn = document.getElementById('add-dividend-btn');
-            const dividendModal = document.getElementById('dividend-modal');
-            const dividendForm = document.getElementById('dividend-form');
-            const cancelDividendBtn = document.getElementById('cancel-dividend-btn');
-            const dividendsList = document.getElementById('dividends-list');
-            const noDividendsMessage = document.getElementById('no-dividends-message');
-            const dividendsTotalEl = document.getElementById('dividends-total');
-            const dividendsMonthLabelEl = document.getElementById('dividends-month-label');
-            const dividendAssetNameModalSelect = document.getElementById('dividend-asset-name-modal');
+            // (All your original DOM element selections are unchanged)
+            const dashboardTabButton = document.getElementById('dashboard-tab-button'), trackerTabButton = document.getElementById('tracker-tab-button'), dividendsTabButton = document.getElementById('dividends-tab-button'), summaryTabButton = document.getElementById('summary-tab-button');
+            const dashboardContent = document.getElementById('dashboard-content'), trackerContent = document.getElementById('tracker-content'), dividendsContent = document.getElementById('dividends-content'), summaryContent = document.getElementById('summary-content');
+            const transactionModal = document.getElementById('transaction-modal'), transactionModalTitle = document.getElementById('transaction-modal-title'), transactionForm = document.getElementById('transaction-form');
+            const assetNameModalInput = document.getElementById('asset-name-modal'), assetCurrencyModalInput = document.getElementById('asset-currency-modal'), assetTypeCategoryWrapperModal = document.getElementById('asset-type-category-wrapper-modal'), assetTypeCategoryModalInput = document.getElementById('asset-type-category-modal'), assetTypeDatalist = document.getElementById('asset-type-datalist'), assetCategoryModalInput = document.getElementById('asset-category-modal'), purchaseDateModalInput = document.getElementById('purchase-date-modal'), assetValueModalInput = document.getElementById('asset-value-modal'), assetDescriptionModalInput = document.getElementById('asset-description-modal'), cancelTransactionBtn = document.getElementById('cancel-transaction-btn');
+            const addTransactionFab = document.getElementById('add-transaction-fab'), assetList = document.getElementById('asset-list'), noAssetsMessage = document.getElementById('no-assets-message');
+            const settingsBtn = document.getElementById('settings-btn'), settingsModal = document.getElementById('settings-modal'), saveSettingsBtn = document.getElementById('save-settings-btn'), cancelSettingsBtn = document.getElementById('cancel-settings-btn'), mainCurrencySelect = document.getElementById('main-currency');
+            const assetDatalist = document.getElementById('asset-datalist'), currencyDatalist = document.getElementById('currency-datalist'), categoryDatalist = document.getElementById('category-datalist');
+            const totalValueEl = document.getElementById('total-value'), totalGainLossAmountEl = document.getElementById('total-gain-loss-amount'), totalGainLossPercentageEl = document.getElementById('total-gain-loss-percentage'), monthlyGainLossAmountEl = document.getElementById('monthly-gain-loss-amount'), monthlyGainLossPercentageEl = document.getElementById('monthly-gain-loss-percentage'), prevMonthlyGainLossAmountEl = document.getElementById('prev-monthly-gain-loss-amount'), prevMonthlyGainLossPercentageEl = document.getElementById('prev-monthly-gain-loss-percentage'), thisMonthLabel = document.getElementById('this-month-label'), prevMonthLabel = document.getElementById('prev-month-label');
+            const addDividendBtn = document.getElementById('add-dividend-btn'), dividendModal = document.getElementById('dividend-modal'), dividendForm = document.getElementById('dividend-form'), cancelDividendBtn = document.getElementById('cancel-dividend-btn'), dividendsList = document.getElementById('dividends-list'), noDividendsMessage = document.getElementById('no-dividends-message'), dividendsTotalEl = document.getElementById('dividends-total'), dividendsMonthLabelEl = document.getElementById('dividends-month-label'), dividendAssetNameModalSelect = document.getElementById('dividend-asset-name-modal');
             const assetBreakdownContainer = document.getElementById('asset-breakdown');
-            const importDataBtn = document.getElementById('import-data-btn');
-            const importFileInput = document.getElementById('import-file-input');
-            const exportDataBtn = document.getElementById('export-data-btn');
-            const allocationDisplayToggle = document.getElementById('allocation-display-toggle');
-            const privacyToggleBtn = document.getElementById('privacy-toggle-btn');
-            const privacyOnIcon = document.getElementById('privacy-on-icon');
-            const privacyOffIcon = document.getElementById('privacy-off-icon');
-            const filterAssetName = document.getElementById('filter-asset-name');
-            const filterCategory = document.getElementById('filter-category');
-            const filterStartDate = document.getElementById('filter-start-date');
-            const filterEndDate = document.getElementById('filter-end-date');
-            const applyFiltersBtn = document.getElementById('apply-filters-btn');
-            const resetFiltersBtn = document.getElementById('reset-filters-btn');
-            const summaryFilterAssetCategory = document.getElementById('summary-filter-asset-category');
-            const summaryFilterAssetName = document.getElementById('summary-filter-asset-name');
-            const summaryDateButtons = document.getElementById('summary-date-buttons');
-            const summaryFilterStartDate = document.getElementById('summary-filter-start-date');
-            const summaryFilterEndDate = document.getElementById('summary-filter-end-date');
-            const summaryApplyFiltersBtn = document.getElementById('summary-apply-filters-btn');
-            const summaryResetFiltersBtn = document.getElementById('summary-reset-filters-btn');
-            const summaryTableBody = document.getElementById('summary-table-body');
-            const summaryTableFooter = document.getElementById('summary-table-footer');
-            const summaryTableHeader = document.querySelector('#summary-content thead');
+            const importDataBtn = document.getElementById('import-data-btn'), importFileInput = document.getElementById('import-file-input'), exportDataBtn = document.getElementById('export-data-btn');
+            const allocationDisplayToggle = document.getElementById('allocation-display-toggle'), privacyToggleBtn = document.getElementById('privacy-toggle-btn'), privacyOnIcon = document.getElementById('privacy-on-icon'), privacyOffIcon = document.getElementById('privacy-off-icon');
+            const filterAssetName = document.getElementById('filter-asset-name'), filterCategory = document.getElementById('filter-category'), filterStartDate = document.getElementById('filter-start-date'), filterEndDate = document.getElementById('filter-end-date'), applyFiltersBtn = document.getElementById('apply-filters-btn'), resetFiltersBtn = document.getElementById('reset-filters-btn');
+            const summaryFilterAssetCategory = document.getElementById('summary-filter-asset-category'), summaryFilterAssetName = document.getElementById('summary-filter-asset-name'), summaryDateButtons = document.getElementById('summary-date-buttons'), summaryFilterStartDate = document.getElementById('summary-filter-start-date'), summaryFilterEndDate = document.getElementById('summary-filter-end-date'), summaryApplyFiltersBtn = document.getElementById('summary-apply-filters-btn'), summaryResetFiltersBtn = document.getElementById('summary-reset-filters-btn');
+            const summaryTableBody = document.getElementById('summary-table-body'), summaryTableFooter = document.getElementById('summary-table-footer'), summaryTableHeader = document.querySelector('#summary-content thead');
             let allocationChart, trendChart, gainLossChart, monthlyIncomeChart;
-            const alertModal = document.getElementById('alert-modal');
-            const alertModalTitle = document.getElementById('alert-modal-title');
-            const alertModalMessage = document.getElementById('alert-modal-message');
-            const alertModalOkBtn = document.getElementById('alert-modal-ok-btn');
-            const confirmModal = document.getElementById('confirm-modal');
-            const confirmModalTitle = document.getElementById('confirm-modal-title');
-            const confirmModalMessage = document.getElementById('confirm-modal-message');
-            const confirmModalOkBtn = document.getElementById('confirm-modal-ok-btn');
-            const confirmModalCancelBtn = document.getElementById('confirm-modal-cancel-btn');
+            const alertModal = document.getElementById('alert-modal'), alertModalTitle = document.getElementById('alert-modal-title'), alertModalMessage = document.getElementById('alert-modal-message'), alertModalOkBtn = document.getElementById('alert-modal-ok-btn');
+            const confirmModal = document.getElementById('confirm-modal'), confirmModalTitle = document.getElementById('confirm-modal-title'), confirmModalMessage = document.getElementById('confirm-modal-message'), confirmModalOkBtn = document.getElementById('confirm-modal-ok-btn'), confirmModalCancelBtn = document.getElementById('confirm-modal-cancel-btn');
             let confirmResolve = null;
-            const authScreen = document.getElementById('auth-screen');
-            const appLoader = document.getElementById('app-loader');
-            const appScreen = document.getElementById('app-screen');
-            const authForm = document.getElementById('auth-form');
-            const authTitle = document.getElementById('auth-title');
-            const authEmailInput = document.getElementById('auth-email');
-            const authPasswordInput = document.getElementById('auth-password');
-            const signinActions = document.getElementById('signin-actions');
-            const signupActions = document.getElementById('signup-actions');
-            const showSignupLink = document.getElementById('show-signup');
-            const showSigninLink = document.getElementById('show-signin');
-            const signOutBtn = document.getElementById('signout-btn');
-            const userEmailEl = document.getElementById('user-email');
-            const userInfoEl = document.getElementById('user-info');
+            const authScreen = document.getElementById('auth-screen'), appLoader = document.getElementById('app-loader'), appScreen = document.getElementById('app-screen');
+            const authForm = document.getElementById('auth-form'), authTitle = document.getElementById('auth-title'), authEmailInput = document.getElementById('auth-email'), authPasswordInput = document.getElementById('auth-password');
+            const signinActions = document.getElementById('signin-actions'), signupActions = document.getElementById('signup-actions'), showSignupLink = document.getElementById('show-signup'), showSigninLink = document.getElementById('show-signin');
+            const signOutBtn = document.getElementById('signout-btn'), userEmailEl = document.getElementById('user-email'), userInfoEl = document.getElementById('user-info');
 
             // --- Custom Modals ---
-            function showAlert(message, title = 'Info') {
-                alertModalTitle.textContent = title;
-                alertModalMessage.textContent = message;
-                alertModal.classList.remove('hidden');
-            }
+            function showAlert(message, title = 'Info') { alertModalTitle.textContent = title; alertModalMessage.textContent = message; alertModal.classList.remove('hidden'); }
             function closeAlert() { alertModal.classList.add('hidden'); }
             alertModalOkBtn.addEventListener('click', closeAlert);
             alertModal.addEventListener('click', (e) => { if (e.target === alertModal) closeAlert(); });
-
-            function showConfirm(message, title = 'Are you sure?') {
-                return new Promise(resolve => {
-                    confirmModalTitle.textContent = title;
-                    confirmModalMessage.textContent = message;
-                    confirmModal.classList.remove('hidden');
-                    confirmResolve = resolve;
-                });
-            }
-            function closeConfirm(resolution) {
-                confirmModal.classList.add('hidden');
-                if (confirmResolve) { confirmResolve(resolution); confirmResolve = null; }
-            }
+            function showConfirm(message, title = 'Are you sure?') { return new Promise(resolve => { confirmModalTitle.textContent = title; confirmModalMessage.textContent = message; confirmModal.classList.remove('hidden'); confirmResolve = resolve; }); }
+            function closeConfirm(resolution) { confirmModal.classList.add('hidden'); if (confirmResolve) { confirmResolve(resolution); confirmResolve = null; } }
             confirmModalOkBtn.addEventListener('click', () => closeConfirm(true));
             confirmModalCancelBtn.addEventListener('click', () => closeConfirm(false));
             confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(false); });
-
-            function parseDate(dateString) {
-                if (!dateString) return null;
-                if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return new Date(dateString + 'T00:00:00');
-                if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) {
-                     const [month, day, year] = dateString.split('/');
-                     const date = new Date(year, month - 1, day);
-                     if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) return date;
-                }
-                const fallbackDate = new Date(dateString);
-                if (!isNaN(fallbackDate.getTime())) return fallbackDate;
-                return null;
-            }
+            function parseDate(dateString) { if (!dateString) return null; if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return new Date(dateString + 'T00:00:00'); if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) { const [month, day, year] = dateString.split('/'); const date = new Date(year, month - 1, day); if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) return date; } const fallbackDate = new Date(dateString); if (!isNaN(fallbackDate.getTime())) return fallbackDate; return null; }
 
             // --- Main Authentication Flow ---
             let currentUser = null, assetsListener = null, dividendsListener = null;
+            let initialAssetsLoaded = false, initialDividendsLoaded = false; // NEW: Flags to track initial load
 
             auth.onAuthStateChanged(user => {
                 if (assetsListener) assetsListener();
                 if (dividendsListener) dividendsListener();
+
+                initialAssetsLoaded = false; // NEW: Reset flags on auth change
+                initialDividendsLoaded = false;
 
                 if (user) {
                     currentUser = user;
@@ -695,72 +106,51 @@
                     userEmailEl.textContent = user.email;
                     userInfoEl.style.display = 'flex';
 
+                    // MODIFIED: Firestore listeners now update state and call the gatekeeper function
                     const assetsCollection = db.collection('users').doc(currentUser.uid).collection('assets').orderBy('purchaseDate', 'desc');
                     assetsListener = assetsCollection.onSnapshot(snapshot => {
                         allAssets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        renderAll();
-                        appLoader.style.display = 'none';
-                        appScreen.style.display = 'flex';
+                        initialAssetsLoaded = true;
+                        attemptRender();
                     }, error => { console.error("Error fetching assets: ", error); showAlert("Could not sync assets.", "Sync Error"); });
 
                     const dividendsCollection = db.collection('users').doc(currentUser.uid).collection('dividends').orderBy('date', 'desc');
                     dividendsListener = dividendsCollection.onSnapshot(snapshot => {
                         allDividends = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        renderAll();
+                        initialDividendsLoaded = true;
+                        attemptRender();
                     }, error => { console.error("Error fetching dividends: ", error); });
 
                     loadSettings();
                     populateCurrencyDatalists();
-                    updateExchangeRates();
+                    updateExchangeRates(); // This will also call attemptRender() when it's done
                     window.addEventListener('online', updateExchangeRates);
                     window.addEventListener('offline', updateRatesStatus);
-
                 } else {
                     currentUser = null;
-                    authScreen.style.display = 'flex';
-                    appLoader.style.display = 'none';
-                    appScreen.style.display = 'none';
+                    authScreen.style.display = 'flex'; appLoader.style.display = 'none'; appScreen.style.display = 'none';
                     userInfoEl.style.display = 'none';
-                    allAssets = [];
-                    allDividends = [];
+                    allAssets = []; allDividends = [];
                 }
             });
             
-            authForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = authEmailInput.value;
-                const password = authPasswordInput.value;
-                const action = e.submitter.name;
-                
-                appLoader.style.display = 'flex';
-                authScreen.style.display = 'none';
-
-                try {
-                    if (action === 'signup') {
-                        await auth.createUserWithEmailAndPassword(email, password);
-                    } else if (action === 'signin') {
-                        await auth.signInWithEmailAndPassword(email, password);
-                    }
-                } catch (error) {
-                    showAlert(error.message, "Authentication Failed");
-                    appLoader.style.display = 'none';
-                    authScreen.style.display = 'flex';
-                }
-            });
-            
+            authForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = authEmailInput.value; const password = authPasswordInput.value; const action = e.submitter.name; appLoader.style.display = 'flex'; authScreen.style.display = 'none'; try { if (action === 'signup') { await auth.createUserWithEmailAndPassword(email, password); } else if (action === 'signin') { await auth.signInWithEmailAndPassword(email, password); } } catch (error) { showAlert(error.message, "Authentication Failed"); appLoader.style.display = 'none'; authScreen.style.display = 'flex'; } });
             showSignupLink.addEventListener('click', (e) => { e.preventDefault(); signinActions.classList.add('hidden'); signupActions.classList.remove('hidden'); authTitle.textContent = 'Create a new account'; });
             showSigninLink.addEventListener('click', (e) => { e.preventDefault(); signupActions.classList.add('hidden'); signinActions.classList.remove('hidden'); authTitle.textContent = 'Sign in to your account'; });
             signOutBtn.addEventListener('click', () => { auth.signOut(); });
-
-            // --- Core App Logic & Render Functions ---
-            function loadSettings() {
-                const storedSettings = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || '{}');
-                appSettings = { mainCurrency: 'USD', rates: {}, lastUpdated: null, ...storedSettings };
-                isPrivacyMode = localStorage.getItem('assetTrackerPrivacyMode') === 'true';
-                updatePrivacyView();
-                updateRatesStatus();
-            }
             
+            // NEW: Gatekeeper function to prevent rendering before all data is ready
+            function attemptRender() {
+                // Only render if we are logged in, have loaded rates, and have done the initial fetch from Firestore
+                if (currentUser && appSettings.rates && Object.keys(appSettings.rates).length > 0 && initialAssetsLoaded && initialDividendsLoaded) {
+                    if (appScreen.style.display === 'none') {
+                        appLoader.style.display = 'none';
+                        appScreen.style.display = 'flex';
+                    }
+                    renderAll();
+                }
+            }
+
             function renderAll() {
                 updateDatalists(allAssets);
                 updateTotalValue(allAssets, appSettings);
@@ -768,6 +158,48 @@
                 else if(currentTab === 'tracker') { renderGroupedAssets(allAssets, appSettings); } 
                 else if(currentTab === 'dividends') { renderDividends(allDividends, appSettings); } 
                 else if(currentTab === 'summary') { renderSummaryTable(); }
+            }
+
+            // MODIFIED: updateExchangeRates now calls the gatekeeper function
+            async function updateExchangeRates() {
+                const onlineIndicator = document.getElementById('online-indicator');
+                const ratesLastUpdated = document.getElementById('rates-last-updated');
+                const ratesStatusModal = document.getElementById('rates-status-modal');
+                if (!navigator.onLine) { updateRatesStatus(); return; }
+                ratesLastUpdated.textContent = 'Fetching latest rates...';
+                if(ratesStatusModal) ratesStatusModal.textContent = 'Fetching latest rates...';
+                onlineIndicator.className = 'h-2 w-2 rounded-full bg-yellow-500 mr-1.5';
+                try {
+                    const response = await fetch(CURRENCY_API_URL);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json();
+                    if (data.result === 'success') {
+                        appSettings.rates = data.rates;
+                        appSettings.lastUpdated = new Date().toISOString();
+                        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings));
+                        attemptRender(); // MODIFIED
+                    } else { throw new Error(`API error: ${data['error-type']}`); }
+                } catch (error) { 
+                    console.error('Failed to fetch exchange rates:', error); 
+                    showAlert(`Could not fetch the latest currency rates. The app will use the last known rates. \nError: ${error.message}`, 'Connection Error');
+                    // If fetching fails, still try to render with old rates if they exist
+                    attemptRender(); // MODIFIED
+                } finally { 
+                    updateRatesStatus(); 
+                    // REMOVED renderAll() from here
+                }
+            }
+            
+            // --- ALL OTHER ORIGINAL FUNCTIONS ARE PRESERVED BELOW ---
+            // (The code below is your original app logic, which is now called correctly by the new functions above)
+            
+            function loadSettings() {
+                const storedSettingsData = localStorage.getItem(SETTINGS_STORAGE_KEY);
+                const storedSettings = storedSettingsData ? JSON.parse(storedSettingsData) : {};
+                appSettings = { mainCurrency: 'USD', rates: {}, lastUpdated: null, ...storedSettings };
+                isPrivacyMode = localStorage.getItem('assetTrackerPrivacyMode') === 'true';
+                updatePrivacyView();
+                updateRatesStatus();
             }
             
             dashboardTabButton.addEventListener('click', () => switchTab('dashboard'));
@@ -786,27 +218,6 @@
                 else if (tabName === 'summary') { summaryContent.classList.remove('hidden'); summaryTabButton.classList.add('active'); renderSummaryTable(); }
             }
 
-            async function updateExchangeRates() {
-                const onlineIndicator = document.getElementById('online-indicator');
-                const ratesLastUpdated = document.getElementById('rates-last-updated');
-                const ratesStatusModal = document.getElementById('rates-status-modal');
-                if (!navigator.onLine) { updateRatesStatus(); return; }
-                ratesLastUpdated.textContent = 'Fetching latest rates...';
-                if(ratesStatusModal) ratesStatusModal.textContent = 'Fetching latest rates...';
-                onlineIndicator.className = 'h-2 w-2 rounded-full bg-yellow-500 mr-1.5';
-                try {
-                    const response = await fetch(CURRENCY_API_URL);
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const data = await response.json();
-                    if (data.result === 'success') {
-                        appSettings.rates = data.rates;
-                        appSettings.lastUpdated = new Date().toISOString();
-                        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings));
-                    } else { throw new Error(`API error: ${data['error-type']}`); }
-                } catch (error) { console.error('Failed to fetch exchange rates:', error); showAlert(`Could not fetch the latest currency rates. The app will use the last known rates. \nError: ${error.message}`, 'Connection Error');
-                } finally { updateRatesStatus(); renderAll(); }
-            }
-            
             function convertCurrency(amount, from, to, rates) {
                 if (!from || !to) return amount;
                 from = from.toUpperCase(); to = to.toUpperCase();
@@ -818,7 +229,7 @@
 
             function formatCurrency(amount, currencyCode, compact = false) {
                  if (isPrivacyMode) return '*****';
-                 if (typeof amount !== 'number') return '-';
+                 if (typeof amount !== 'number' || isNaN(amount)) return '-';
                  const finalCurrencyCode = (currencyCode && typeof currencyCode === 'string' && currencyCode.length === 3) ? currencyCode : appSettings.mainCurrency;
                  const options = { style: 'currency', currency: finalCurrencyCode };
                  if (compact) { options.notation = 'compact'; options.compactDisplay = 'short'; }
@@ -840,8 +251,8 @@
                     const statusText = `Rates updated: ${new Date(appSettings.lastUpdated).toLocaleString()}`;
                     ratesLastUpdated.textContent = statusText; if(ratesStatusModal) ratesStatusModal.textContent = statusText;
                  } else {
-                     onlineIndicator.className = 'h-2 w-2 rounded-full bg-red-500 mr-1.5';
-                     const statusText = 'Error fetching rates.';
+                     onlineIndicator.className = 'h-2 w-2 rounded-full bg-yellow-500 mr-1.5';
+                     const statusText = 'Awaiting rate data...';
                      ratesLastUpdated.textContent = statusText; if(ratesStatusModal) ratesStatusModal.textContent = statusText;
                  }
             }
@@ -1004,12 +415,12 @@
                 let finalTransactionData;
 
                 if (isEditMode) {
-                    // NOTE: Editing historical data is complex. This simplified logic updates the single record.
-                    // Recalculating the entire asset history from this point forward is non-trivial.
+                    const originalAsset = allAssets.find(a=>a.id === currentEditId);
                     finalTransactionData = {
                         name: name, category: category, purchaseDate: purchaseDateModalInput.value, currency: currency, description: assetDescriptionModalInput.value.trim(),
-                        assetCategory: assetTypeCategoryModalInput.value.trim() || allAssets.find(a=>a.id === currentEditId)?.assetCategory || 'Other',
-                        value: transactionAmount // In edit mode, we assume the user is correcting the value/amount of THIS transaction.
+                        assetCategory: assetTypeCategoryModalInput.value.trim() || originalAsset?.assetCategory || 'Other',
+                        value: transactionAmount,
+                        createdAt: originalAsset?.createdAt || new Date().toISOString()
                     };
                 } else {
                     const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
@@ -1029,7 +440,7 @@
                 }
                 
                 try {
-                    if (isEditMode) { await db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId).update(finalTransactionData); } 
+                    if (isEditMode) { await db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId).set(finalTransactionData); } 
                     else { await db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData); }
                     closeTransactionModal();
                 } catch (error) { console.error("Error saving transaction: ", error); showAlert("Failed to save transaction to the cloud."); }
