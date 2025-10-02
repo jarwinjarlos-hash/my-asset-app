@@ -848,8 +848,25 @@
                 const netCapital = totalDeposits - totalWithdrawals;
                 const gainLoss = currentTotalValue - netCapital;
                 if (netCapital > 0 || currentTotalValue > 0) { const percentage = netCapital !== 0 ? (gainLoss / netCapital) * 100 : 0; renderGainLossDisplay(totalGainLossAmountEl, totalGainLossPercentageEl, gainLoss, percentage, mainCurrency, false); } else { totalGainLossAmountEl.textContent = '-'; totalGainLossPercentageEl.textContent = '-'; }
-                const now = new Date(); const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1); const thisMonthData = calculateMonthlyGainLoss(assets, settings, startOfThisMonth, new Date(now.getTime() + 86400000)); thisMonthLabel.textContent = `${now.toLocaleString('default', { month: 'long' })}'s Gain/Loss`; renderGainLossDisplay(monthlyGainLossAmountEl, monthlyGainLossPercentageEl, thisMonthData.gainLoss, thisMonthData.percentage, mainCurrency, false);
-                const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); const endOfPrevMonth = startOfThisMonth; const prevMonthData = calculateMonthlyGainLoss(assets, settings, startOfPrevMonth, endOfPrevMonth); const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); prevMonthLabel.textContent = `${prevMonthDate.toLocaleString('default', { month: 'long' })}'s Gain/Loss`; renderGainLossDisplay(prevMonthlyGainLossAmountEl, prevMonthlyGainLossPercentageEl, prevMonthData.gainLoss, prevMonthData.percentage, mainCurrency, false);
+                
+                // --- Monthly Gain/Loss Calculations (Corrected) ---
+                const now = new Date();
+                
+                // This Month (from the 1st up to today)
+                const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1); // Exclusive boundary (start of tomorrow)
+                const thisMonthData = calculateMonthlyGainLoss(assets, settings, startOfThisMonth, endOfToday);
+                thisMonthLabel.textContent = `${now.toLocaleString('default', { month: 'long' })}'s Gain/Loss`;
+                renderGainLossDisplay(monthlyGainLossAmountEl, monthlyGainLossPercentageEl, thisMonthData.gainLoss, thisMonthData.percentage, mainCurrency, false);
+
+                // Previous Full Month (1st to last day)
+                const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 1); // Exclusive boundary (this is the same as startOfThisMonth)
+                const prevMonthData = calculateMonthlyGainLoss(assets, settings, startOfPrevMonth, endOfPrevMonth);
+                const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                prevMonthLabel.textContent = `${prevMonthDate.toLocaleString('default', { month: 'long' })}'s Gain/Loss`;
+                renderGainLossDisplay(prevMonthlyGainLossAmountEl, prevMonthlyGainLossPercentageEl, prevMonthData.gainLoss, prevMonthData.percentage, mainCurrency, false);
+                
                 const avgMonthlyIncomeEl = document.getElementById('avg-monthly-income');
                 if (allDividends.length > 0) {
                     const sortedIncome = [...allDividends].sort((a,b) => parseDate(a.date) - parseDate(b.date)); const firstIncomeDate = parseDate(sortedIncome[0].date); const lastIncomeDate = parseDate(sortedIncome[sortedIncome.length - 1].date); const monthDiff = (lastIncomeDate.getFullYear() - firstIncomeDate.getFullYear()) * 12 + (lastIncomeDate.getMonth() - firstIncomeDate.getMonth()) + 1;
@@ -1095,3 +1112,4 @@
     </script>
 </body>
 </html>
+
