@@ -916,8 +916,13 @@
                         createdAt: originalAsset?.createdAt || new Date().toISOString()
                     };
                 } else {
-                    const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
+                    const newTxDate = parseDate(purchaseDateModalInput.value);
+                    const assetHistory = allAssets
+                        .filter(a => a.name === name && parseDate(a.purchaseDate) < newTxDate)
+                        .sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
+
                     const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
+                    
                     if (!latestAsset && (category === 'Withdrawal' || category === 'Transfer')) { return showAlert('First transaction must be a "Deposit" or "Market Value Update".', 'Invalid Transaction'); }
                     
                     let assetCategoryValue = latestAsset ? latestAsset.assetCategory : assetTypeCategoryModalInput.value.trim();
@@ -1112,5 +1117,6 @@
     </script>
 </body>
 </html>
+
 
 
