@@ -907,14 +907,45 @@
 
                 let finalTransactionData;
 
-                if (isEditMode) {
-                    const originalAsset = allAssets.find(a=>a.id === currentEditId);
-                    finalTransactionData = {
-                        name: name, category: category, purchaseDate: purchaseDateModalInput.value, currency: currency, description: assetDescriptionModalInput.value.trim(),
-                        assetCategory: assetTypeCategoryModalInput.value.trim() || originalAsset?.assetCategory || 'Other',
-                        value: transactionAmount,
-                        createdAt: originalAsset?.createdAt || new Date().toISOString()
-                    };
+                // CORRECTED EDIT LOGIC
+if (isEditMode) {
+    const originalAsset = allAssets.find(a => a.id === currentEditId);
+    const editedTxDate = parseDate(purchaseDateModalInput.value);
+
+    // Find the last transaction *before* the one being edited
+    const assetHistory = allAssets
+        .filter(a => a.name === name && a.id !== currentEditId && parseDate(a.purchaseDate) < editedTxDate)
+        .sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
+
+    const latestAssetBeforeEdit = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
+    const previousValue = latestAssetBeforeEdit ? latestAssetBeforeEdit.value : 0;
+
+    // Recalculate the running balance for the edited transaction
+    let newAssetValue;
+    if (category === 'Deposit') {
+        newAssetValue = previousValue + transactionAmount;
+    } else if (category === 'Withdrawal') {
+        if (transactionAmount > previousValue) { return showAlert('Withdrawal cannot be greater than value.', 'Invalid Amount'); }
+        newAssetValue = previousValue - transactionAmount;
+    } else { // For Market Value Update, etc.
+        newAssetValue = transactionAmount;
+    }
+
+    finalTransactionData = {
+        name: name,
+        category: category,
+        purchaseDate: purchaseDateModalInput.value,
+        currency: currency,
+        description: assetDescriptionModalInput.value.trim(),
+        assetCategory: assetTypeCategoryModalInput.value.trim() || originalAsset?.assetCategory || 'Other',
+        value: newAssetValue, // Now saves the correctly calculated running balance
+        createdAt: originalAsset?.createdAt || new Date().toISOString()
+    };
+    
+    // IMPORTANT: This fix does not automatically update transactions AFTER the edited one.
+    // This is a known limitation that requires manually re-saving subsequent transactions.
+
+};
                 } else {
                     const newTxDate = parseDate(purchaseDateModalInput.value);
                     const assetHistory = allAssets
@@ -1117,6 +1148,7 @@
     </script>
 </body>
 </html>
+
 
 
 
