@@ -1,3 +1,4 @@
+<!-- =================== PART 1 OF 3 START =================== -->
 <!DOCTYPE html>
 <html lang="en" class="">
 <head>
@@ -160,6 +161,8 @@
                         </div>
                     </div>
                 </div>
+<!-- =================== PART 1 OF 3 END ===================== -->
+<!-- =================== PART 2 OF 3 START =================== -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-1 space-y-8">
                         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
@@ -342,6 +345,8 @@
     </button>
     
     <div id="transaction-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+<!-- =================== PART 2 OF 3 END ===================== -->
+<!-- =================== PART 3 OF 3 START =================== -->
         <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
             <h3 id="transaction-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add Transaction</h3>
             <form id="transaction-form">
@@ -367,7 +372,7 @@
                         <input type="date" id="purchase-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                     </div>
                     <div>
-                        <label for="asset-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value</label>
+                        <label for="asset-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value / Amount</label>
                         <div class="relative mt-1">
                             <input type="number" id="asset-value-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
                              <div class="absolute inset-y-0 right-0 flex items-center">
@@ -633,6 +638,53 @@
                 }
             }
 
+            // --- START: CODE CORRECTION ---
+            /**
+             * Recalculates the entire history for a given asset name after a change.
+             * This is the core function to ensure data integrity.
+             * @param {string} assetName The name of the asset to recalculate.
+             * @param {firebase.firestore.Firestore} db The Firestore instance.
+             * @param {string} userId The current user's ID.
+             */
+            async function recalculateAssetHistory(assetName, db, userId) {
+                if (!assetName || !db || !userId) return;
+
+                const assetQuery = db.collection('users').doc(userId).collection('assets')
+                    .where('name', '==', assetName)
+                    .orderBy('purchaseDate', 'asc');
+                    
+                const snapshot = await assetQuery.get();
+                const transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                if (transactions.length === 0) return;
+
+                const batch = db.batch();
+                let previousValue = 0;
+
+                for (const tx of transactions) {
+                    let newAssetValue;
+                    const transactionAmount = Number(tx.transactionAmount) || 0;
+
+                    if (tx.category === 'Deposit') {
+                        newAssetValue = previousValue + transactionAmount;
+                    } else if (tx.category === 'Withdrawal') {
+                        newAssetValue = previousValue - transactionAmount;
+                    } else { // 'Market Value Update' or other types where value is explicitly set
+                        newAssetValue = Number(tx.value); 
+                    }
+
+                    if (tx.value !== newAssetValue) {
+                        const docRef = db.collection('users').doc(userId).collection('assets').doc(tx.id);
+                        batch.update(docRef, { value: newAssetValue });
+                    }
+                    previousValue = newAssetValue;
+                }
+
+                await batch.commit();
+            }
+            // --- END: CODE CORRECTION ---
+
+
             function renderAll() {
                 updateDatalists(allAssets);
                 updateTotalValue(allAssets, appSettings);
@@ -806,7 +858,6 @@
                 if(summaryFilterAssetCategory){ summaryFilterAssetCategory.innerHTML = '<option value="">All</option>' + allAssetCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); }
             };
             
-            // CORRECTED: Monthly Gain/Loss Calculation
             function calculateMonthlyGainLoss(assets, settings, periodStartDate, periodEndDate) {
                 const mainCurrency = settings.mainCurrency;
                 const txBeforeStart = assets.filter(tx => parseDate(tx.purchaseDate) < periodStartDate);
@@ -840,7 +891,6 @@
                 return { gainLoss, percentage };
             }
             
-            // CORRECTED: Total Value & Gain/Loss Calculation
             const updateTotalValue = (assets, settings) => {
                  const mainCurrency = settings.mainCurrency;
                 if(assets.length === 0 || !settings.rates || Object.keys(settings.rates).length === 0) { 
@@ -890,103 +940,105 @@
             }
 
             addTransactionFab.addEventListener('click', () => { if (currentTab === 'dividends') { openDividendModal(); } else { openTransactionModal(); } });
+            
             assetNameModalInput.addEventListener('input', () => {
-                const currentName = assetNameModalInput.value.trim(); const existingAsset = allAssets.find(a => a.name === currentName);
-                if (existingAsset) { assetTypeCategoryWrapperModal.classList.add('hidden'); assetTypeCategoryModalInput.required = false; assetCurrencyModalInput.value = existingAsset.currency; assetCurrencyModalInput.disabled = true; } 
-                else { assetTypeCategoryWrapperModal.classList.remove('hidden'); assetTypeCategoryModalInput.required = true; assetCurrencyModalInput.disabled = false; }
+                const currentName = assetNameModalInput.value.trim(); 
+                const existingAsset = allAssets.find(a => a.name === currentName);
+                if (isEditMode) return; 
+
+                if (existingAsset) { 
+                    assetTypeCategoryWrapperModal.classList.add('hidden'); 
+                    assetTypeCategoryModalInput.required = false; 
+                    assetCurrencyModalInput.value = existingAsset.currency; 
+                    assetCurrencyModalInput.disabled = true; 
+                } else { 
+                    assetTypeCategoryWrapperModal.classList.remove('hidden'); 
+                    assetTypeCategoryModalInput.required = true; 
+                    assetCurrencyModalInput.disabled = false; 
+                }
             });
+            
             assetCategoryModalInput.addEventListener('input', () => {
-                const category = assetCategoryModalInput.value.trim(); const valueLabel = document.querySelector('label[for="asset-value-modal"]'); if(!valueLabel) return;
-                if (category === 'Deposit' || category === 'Withdrawal') { valueLabel.textContent = 'Amount'; } else { valueLabel.textContent = 'Value'; }
+                const category = assetCategoryModalInput.value.trim(); 
+                const valueLabel = document.querySelector('label[for="asset-value-modal"]'); 
+                if(!valueLabel) return;
+                if (category === 'Deposit' || category === 'Withdrawal') { 
+                    valueLabel.textContent = 'Amount'; 
+                } else { 
+                    valueLabel.textContent = 'Value'; 
+                }
             });
 
+            // CORRECTED: This function now triggers the recalculation cascade for robust data integrity.
             transactionForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!currentUser) return showAlert("You must be signed in to save data.");
-                
+
                 const name = assetNameModalInput.value.trim();
                 const currency = assetCurrencyModalInput.value.toUpperCase().trim();
                 const category = assetCategoryModalInput.value.trim();
                 const inputAmount = parseFloat(assetValueModalInput.value);
 
-                if (!currency || currency.length !== 3) { return showAlert("Please enter a valid 3-letter currency code (e.g., USD, EUR).", "Invalid Input"); }
+                if (!name || !category || !currency || currency.length !== 3) {
+                    return showAlert("Asset Name, Transaction Category, and a valid 3-letter Currency are required.", "Invalid Input");
+                }
+                 if (isNaN(inputAmount) || inputAmount < 0) {
+                    return showAlert("Please enter a valid, non-negative number for the value/amount.", "Invalid Input");
+                }
 
-                let finalTransactionData;
                 const purchaseDate = purchaseDateModalInput.value;
                 const description = assetDescriptionModalInput.value.trim();
-
-                const assetHistory = allAssets
-                    .filter(a => a.name === name && parseDate(a.purchaseDate) < parseDate(purchaseDate))
-                    .sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-                const latestAssetBefore = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
-
-                if (isEditMode) {
-                    const originalAsset = allAssets.find(a => a.id === currentEditId);
-                    if (!originalAsset) return showAlert("Error: Could not find original transaction to edit.");
-                    
-                    const prevAssetInHistory = allAssets
-                        .filter(a => a.name === name && a.id !== currentEditId && parseDate(a.purchaseDate) < parseDate(purchaseDate))
-                        .sort((a,b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0] || null;
-
-                    const previousValue = prevAssetInHistory ? prevAssetInHistory.value : 0;
-                    let newAssetValue;
-                    let transactionAmountForRecord = 0;
-
-                    if (category === 'Deposit') {
-                        newAssetValue = previousValue + inputAmount;
-                        transactionAmountForRecord = inputAmount;
-                    } else if (category === 'Withdrawal') {
-                        newAssetValue = previousValue - inputAmount;
-                        transactionAmountForRecord = inputAmount;
-                    } else { 
-                        newAssetValue = inputAmount;
-                    }
-
-                    finalTransactionData = {
-                        ...originalAsset,
-                        name, category, purchaseDate, currency, description,
-                        assetCategory: assetTypeCategoryModalInput.value.trim() || originalAsset.assetCategory || 'Other',
-                        value: newAssetValue,
-                        transactionAmount: transactionAmountForRecord,
-                    };
-                } else { 
-                    const previousValue = latestAssetBefore ? latestAssetBefore.value : 0;
-                    if (!latestAssetBefore && (category === 'Withdrawal' || category === 'Transfer')) { return showAlert('First transaction must be a "Deposit" or "Market Value Update".', 'Invalid Transaction'); }
-                    
-                    let assetCategoryValue = latestAssetBefore ? latestAssetBefore.assetCategory : assetTypeCategoryModalInput.value.trim();
-                    if (!assetCategoryValue) { return showAlert('Asset Category is required for new assets.', 'Invalid Input'); }
-
-                    let newAssetValue;
-                    let transactionAmountForRecord = 0;
-
-                    if (category === 'Deposit') {
-                        newAssetValue = previousValue + inputAmount;
-                        transactionAmountForRecord = inputAmount;
-                    } else if (category === 'Withdrawal') {
-                        if (inputAmount > previousValue) { return showAlert('Withdrawal cannot be greater than current value.', 'Invalid Amount'); }
-                        newAssetValue = previousValue - inputAmount;
-                        transactionAmountForRecord = inputAmount;
-                    } else {
-                        newAssetValue = inputAmount;
-                    }
-                    
-                    finalTransactionData = { 
-                        name, assetCategory: assetCategoryValue, category, purchaseDate, 
-                        value: newAssetValue, 
-                        currency, description, 
-                        transactionAmount: transactionAmountForRecord,
-                        createdAt: new Date().toISOString() 
-                    };
-                }
                 
+                let transactionData; 
+                let transactionAmountForRecord = 0;
+                let valueForRecord = 0;
+
+                 if (category === 'Deposit' || category === 'Withdrawal') {
+                    transactionAmountForRecord = inputAmount;
+                } else { // Handles "Market Value Update" and any other category
+                    valueForRecord = inputAmount;
+                }
+
                 try {
                     if (isEditMode) {
-                        await db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId).set(finalTransactionData);
-                    } else { 
-                        await db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData); 
+                        const docRef = db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId);
+                        const originalAsset = allAssets.find(a => a.id === currentEditId);
+                        if (!originalAsset) return showAlert("Error: Could not find original transaction to edit.");
+                        
+                        // When editing, we only update the fields that define this specific event.
+                        // The `value` field for Deposit/Withdrawal is controlled by the recalculation.
+                        transactionData = {
+                            name, category, purchaseDate, currency, description,
+                            assetCategory: assetTypeCategoryModalInput.value.trim() || originalAsset.assetCategory || 'Other',
+                            value: (category === 'Market Value Update') ? valueForRecord : originalAsset.value, // Only set value directly if it's a market update
+                            transactionAmount: transactionAmountForRecord,
+                        };
+                        await docRef.update(transactionData);
+                    } else {
+                        const assetCategoryValue = assetTypeCategoryModalInput.value.trim();
+                        const existingAsset = allAssets.find(a => a.name === name);
+                        if (!existingAsset && !assetCategoryValue) {
+                            return showAlert('Asset Category is required for new assets.', 'Invalid Input');
+                        }
+                        transactionData = {
+                            name,
+                            assetCategory: existingAsset ? existingAsset.assetCategory : assetCategoryValue,
+                            category, purchaseDate,
+                             // For new entries, `value` will be set by recalculation, except for market updates.
+                            value: (category === 'Market Value Update') ? valueForRecord : 0, 
+                            currency: existingAsset ? existingAsset.currency : currency,
+                            description,
+                            transactionAmount: transactionAmountForRecord,
+                            createdAt: new Date().toISOString()
+                        };
+                        await db.collection('users').doc(currentUser.uid).collection('assets').add(transactionData);
                     }
+                    await recalculateAssetHistory(name, db, currentUser.uid);
                     closeTransactionModal();
-                } catch (error) { console.error("Error saving transaction: ", error); showAlert("Failed to save transaction to the cloud."); }
+                } catch (error) {
+                    console.error("Error saving transaction: ", error);
+                    showAlert(`Failed to save transaction: ${error.message}`);
+                }
             });
 
             assetList.addEventListener('click', (e) => {
@@ -1004,8 +1056,8 @@
                 currentEditId = asset ? asset.id : null;
                 transactionModalTitle.textContent = isEditMode ? 'Edit Transaction' : 'Add Transaction';
                 assetNameModalInput.disabled = isEditMode;
-                assetCurrencyModalInput.disabled = isEditMode;
-                assetTypeCategoryWrapperModal.classList.add('hidden');
+                assetCurrencyModalInput.disabled = true; // Always disable currency initially
+                assetTypeCategoryWrapperModal.classList.add('hidden'); // Hide category by default
                 
                 const valueLabel = document.querySelector('label[for="asset-value-modal"]');
 
@@ -1025,8 +1077,10 @@
                     assetCurrencyModalInput.value = asset.currency; 
                     assetDescriptionModalInput.value = asset.description || '';
                 } else { 
+                    // Logic for adding a new transaction
                     purchaseDateModalInput.value = new Date().toISOString().split('T')[0]; 
                     if(valueLabel) valueLabel.textContent = 'Value'; 
+                    assetCurrencyModalInput.disabled = false; // Enable for new assets
                 }
                 transactionModal.classList.remove('hidden');
             }
@@ -1035,11 +1089,28 @@
             cancelTransactionBtn.addEventListener('click', closeTransactionModal);
             transactionModal.addEventListener('click', (e) => { if (e.target === transactionModal) closeTransactionModal(); });
 
+            // CORRECTED: This function now triggers the recalculation cascade.
             async function deleteAsset(id) {
-                const confirmed = await showConfirm('Delete this transaction from the cloud? This action cannot be undone.', 'Delete Transaction');
-                if(confirmed && currentUser){
-                    try { await db.collection('users').doc(currentUser.uid).collection('assets').doc(id).delete(); } 
-                    catch(error) { console.error("Error deleting asset:", error); showAlert("Failed to delete transaction."); }
+                const confirmed = await showConfirm('Delete this transaction? This will recalculate the asset history and cannot be undone.', 'Delete Transaction');
+                if (confirmed && currentUser) {
+                    try {
+                        const assetToDelete = allAssets.find(a => a.id === id);
+                        if (!assetToDelete) throw new Error("Transaction not found.");
+                        
+                        const assetName = assetToDelete.name;
+
+                        await db.collection('users').doc(currentUser.uid).collection('assets').doc(id).delete();
+                        
+                        // If there are no transactions left for this asset, we don't need to recalculate.
+                        const remainingAssets = allAssets.filter(a => a.name === assetName && a.id !== id);
+                        if (remainingAssets.length > 0) {
+                           await recalculateAssetHistory(assetName, db, currentUser.uid);
+                        }
+
+                    } catch (error) {
+                        console.error("Error deleting asset:", error);
+                        showAlert("Failed to delete transaction.");
+                    }
                 }
             }
             
@@ -1066,7 +1137,7 @@
             function openDividendModal(dividend = null) {
                 dividendForm.reset(); isEditMode = !!dividend; document.getElementById('dividend-modal-title').textContent = isEditMode ? 'Edit Dividend' : 'Add Dividend'; const dividendCurrencyInput = document.getElementById('dividend-currency-modal');
                 if (dividend) { document.getElementById('edit-dividend-id').value = dividend.id; document.getElementById('dividend-asset-name-modal').value = dividend.name; document.getElementById('dividend-sub-asset-name-modal').value = dividend.subAssetName || ''; document.getElementById('dividend-date-modal').value = dividend.date; document.getElementById('dividend-value-modal').value = dividend.value; dividendCurrencyInput.value = dividend.currency; dividendCurrencyInput.disabled = true; document.getElementById('dividend-description-modal').value = dividend.description; } 
-                else { document.getElementById('dividend-date-modal').value = new Date().toISOString().split('T')[0]; dividendCurrencyInput.disabled = false; }
+                else { document.getElementById('edit-dividend-id').value = ''; document.getElementById('dividend-date-modal').value = new Date().toISOString().split('T')[0]; dividendCurrencyInput.disabled = false; }
                 dividendModal.classList.remove('hidden');
             }
 
@@ -1141,7 +1212,6 @@
                 renderSummaryTable();
             });
             
-            // CORRECTED: Performance Calculation for Summary
             function calculatePerformanceForPeriod(assetName, settings, startDate, endDate) {
                 const { mainCurrency, rates } = settings;
                 const allAssetTransactions = allAssets.filter(a => a.name === assetName).sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
@@ -1192,7 +1262,6 @@
             function renderAllocationChart(assets, settings, isDark, mainCurrency) { const colors = getChartColors(isDark); const latestAssets = {}; assets.forEach(asset => { if (!latestAssets[asset.name] || parseDate(asset.purchaseDate) >= parseDate(latestAssets[asset.name].purchaseDate)) { latestAssets[asset.name] = asset; } }); const allocation = Object.values(latestAssets).reduce((acc, asset) => { const category = asset.assetCategory || 'Other'; const convertedValue = convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0; acc[category] = (acc[category] || 0) + convertedValue; return acc; }, {}); const labels = Object.keys(allocation); const data = Object.values(allocation); const total = data.reduce((a, b) => a + b, 0); const ctx = document.getElementById('allocationChart').getContext('2d'); if (allocationChart) allocationChart.destroy(); allocationChart = new Chart(ctx, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors.pie, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => { if (isPrivacyMode) return '*****'; const value = c.raw; if (allocationDisplayMode === 'percent') { const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0; return `${c.label}: ${percentage}%`; } return `${c.label}: ${formatCurrency(value, mainCurrency)}`; } } } } } }); document.getElementById('allocation-legend').innerHTML = labels.map((label, i) => { const value = data[i]; let displayValue; if(allocationDisplayMode === 'percent'){ const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0; displayValue = isPrivacyMode ? `**.**%` : `${percentage}%`; } else { displayValue = formatCurrency(value, mainCurrency); } return `<div class="flex items-center justify-between text-sm"><div class="flex items-center"><span class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors.pie[i % colors.pie.length]}"></span><span class="text-gray-700 dark:text-gray-300">${label}</span></div><span class="font-medium text-gray-900 dark:text-white">${displayValue}</span></div>` }).join(''); }
             allocationDisplayToggle.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON') { const newMode = e.target.dataset.mode; if(newMode === allocationDisplayMode) return; allocationDisplayMode = newMode; const btnContainer = e.target.parentElement; btnContainer.querySelector('.active')?.classList.remove('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white'); e.target.classList.add('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white'); renderAllocationChart(allAssets, appSettings, docElement.classList.contains('dark'), appSettings.mainCurrency); } });
             
-            // CORRECTED: Cash Flow Summary Calculation
             function renderCashFlowSummary(assets, settings, mainCurrency) {
                 let totalDeposits = 0, totalWithdrawals = 0;
                 assets.forEach(tx => {
@@ -1208,7 +1277,6 @@
                 document.getElementById('cash-flow-summary').innerHTML = `<div><p class="text-sm text-gray-500 dark:text-gray-400">Total Deposited</p><p class="text-xl font-semibold text-green-600">${formatCurrency(totalDeposits, mainCurrency)}</p></div><div><p class="text-sm text-gray-500 dark:text-gray-400">Total Withdrawn</p><p class="text-xl font-semibold text-red-500">${formatCurrency(totalWithdrawals, mainCurrency)}</p></div><div><p class="text-sm text-gray-500 dark:text-gray-400">Total Dividends Received</p><p class="text-xl font-semibold text-blue-600">${formatCurrency(totalDividends, mainCurrency)}</p></div>`;
             }
 
-            // CORRECTED: Individual Asset Performance Calculation
             function calculateAssetPerformance(transactions, settings, mainCurrency, nativeCurrencyValue = false) {
                 if (transactions.length === 0) { return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0, totalDeposits: 0, totalWithdrawals: 0, netCapital: 0 }; }
                 const sortedTxs = [...transactions].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
@@ -1248,4 +1316,4 @@
     </script>
 </body>
 </html>
-
+<!-- =================== PART 3 OF 3 END ===================== -->
