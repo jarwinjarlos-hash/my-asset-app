@@ -488,6 +488,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- Firebase Configuration ---
@@ -640,6 +641,7 @@
                 else if(currentTab === 'dividends') { renderDividends(allDividends, appSettings); } 
                 else if(currentTab === 'summary') { renderSummaryTable(); }
             }
+
             async function updateExchangeRates() {
                 const onlineIndicator = document.getElementById('online-indicator');
                 const ratesLastUpdated = document.getElementById('rates-last-updated');
@@ -846,25 +848,8 @@
                 const netCapital = totalDeposits - totalWithdrawals;
                 const gainLoss = currentTotalValue - netCapital;
                 if (netCapital > 0 || currentTotalValue > 0) { const percentage = netCapital !== 0 ? (gainLoss / netCapital) * 100 : 0; renderGainLossDisplay(totalGainLossAmountEl, totalGainLossPercentageEl, gainLoss, percentage, mainCurrency, false); } else { totalGainLossAmountEl.textContent = '-'; totalGainLossPercentageEl.textContent = '-'; }
-                
-                // --- Monthly Gain/Loss Calculations (Corrected) ---
-                const now = new Date();
-                
-                // This Month (from the 1st up to today)
-                const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1); // Exclusive boundary (start of tomorrow)
-                const thisMonthData = calculateMonthlyGainLoss(assets, settings, startOfThisMonth, endOfToday);
-                thisMonthLabel.textContent = `${now.toLocaleString('default', { month: 'long' })}'s Gain/Loss`;
-                renderGainLossDisplay(monthlyGainLossAmountEl, monthlyGainLossPercentageEl, thisMonthData.gainLoss, thisMonthData.percentage, mainCurrency, false);
-
-                // Previous Full Month (1st to last day)
-                const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 1); // Exclusive boundary (this is the same as startOfThisMonth)
-                const prevMonthData = calculateMonthlyGainLoss(assets, settings, startOfPrevMonth, endOfPrevMonth);
-                const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                prevMonthLabel.textContent = `${prevMonthDate.toLocaleString('default', { month: 'long' })}'s Gain/Loss`;
-                renderGainLossDisplay(prevMonthlyGainLossAmountEl, prevMonthlyGainLossPercentageEl, prevMonthData.gainLoss, prevMonthData.percentage, mainCurrency, false);
-                
+                const now = new Date(); const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1); const thisMonthData = calculateMonthlyGainLoss(assets, settings, startOfThisMonth, new Date(now.getTime() + 86400000)); thisMonthLabel.textContent = `${now.toLocaleString('default', { month: 'long' })}'s Gain/Loss`; renderGainLossDisplay(monthlyGainLossAmountEl, monthlyGainLossPercentageEl, thisMonthData.gainLoss, thisMonthData.percentage, mainCurrency, false);
+                const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); const endOfPrevMonth = startOfThisMonth; const prevMonthData = calculateMonthlyGainLoss(assets, settings, startOfPrevMonth, endOfPrevMonth); const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); prevMonthLabel.textContent = `${prevMonthDate.toLocaleString('default', { month: 'long' })}'s Gain/Loss`; renderGainLossDisplay(prevMonthlyGainLossAmountEl, prevMonthlyGainLossPercentageEl, prevMonthData.gainLoss, prevMonthData.percentage, mainCurrency, false);
                 const avgMonthlyIncomeEl = document.getElementById('avg-monthly-income');
                 if (allDividends.length > 0) {
                     const sortedIncome = [...allDividends].sort((a,b) => parseDate(a.date) - parseDate(b.date)); const firstIncomeDate = parseDate(sortedIncome[0].date); const lastIncomeDate = parseDate(sortedIncome[sortedIncome.length - 1].date); const monthDiff = (lastIncomeDate.getFullYear() - firstIncomeDate.getFullYear()) * 12 + (lastIncomeDate.getMonth() - firstIncomeDate.getMonth()) + 1;
@@ -884,8 +869,8 @@
             addTransactionFab.addEventListener('click', () => { if (currentTab === 'dividends') { openDividendModal(); } else { openTransactionModal(); } });
             assetNameModalInput.addEventListener('input', () => {
                 const currentName = assetNameModalInput.value.trim(); const existingAsset = allAssets.find(a => a.name === currentName);
-                if (existingAsset) { assetTypeCategoryWrapperModal.classList.add('hidden'); assetTypeCategoryModalInput.required = false; assetCurrencyModalInput.value = existingAsset.currency; assetCurrencyModalInput.readOnly = true; } 
-                else { assetTypeCategoryWrapperModal.classList.remove('hidden'); assetTypeCategoryModalInput.required = true; assetCurrencyModalInput.readOnly = false; }
+                if (existingAsset) { assetTypeCategoryWrapperModal.classList.add('hidden'); assetTypeCategoryModalInput.required = false; assetCurrencyModalInput.value = existingAsset.currency; assetCurrencyModalInput.disabled = true; } 
+                else { assetTypeCategoryWrapperModal.classList.remove('hidden'); assetTypeCategoryModalInput.required = true; assetCurrencyModalInput.disabled = false; }
             });
             assetCategoryModalInput.addEventListener('input', () => {
                 const category = assetCategoryModalInput.value.trim(); const valueLabel = document.querySelector('label[for="asset-value-modal"]'); if(!valueLabel) return;
@@ -906,44 +891,16 @@
                 let finalTransactionData;
 
                 if (isEditMode) {
-                    const originalAsset = allAssets.find(a => a.id === currentEditId);
-                    const editedTxDate = parseDate(purchaseDateModalInput.value);
-
-                    const assetHistory = allAssets
-                        .filter(a => a.name === name && a.id !== currentEditId && parseDate(a.purchaseDate) < editedTxDate)
-                        .sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-
-                    const latestAssetBeforeEdit = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
-                    const previousValue = latestAssetBeforeEdit ? latestAssetBeforeEdit.value : 0;
-
-                    let newAssetValue;
-                    if (category === 'Deposit') {
-                        newAssetValue = previousValue + transactionAmount;
-                    } else if (category === 'Withdrawal') {
-                        if (transactionAmount > previousValue) { return showAlert('Withdrawal cannot be greater than value.', 'Invalid Amount'); }
-                        newAssetValue = previousValue - transactionAmount;
-                    } else {
-                        newAssetValue = transactionAmount;
-                    }
-
+                    const originalAsset = allAssets.find(a=>a.id === currentEditId);
                     finalTransactionData = {
-                        name: name,
-                        category: category,
-                        purchaseDate: purchaseDateModalInput.value,
-                        currency: currency,
-                        description: assetDescriptionModalInput.value.trim(),
+                        name: name, category: category, purchaseDate: purchaseDateModalInput.value, currency: currency, description: assetDescriptionModalInput.value.trim(),
                         assetCategory: assetTypeCategoryModalInput.value.trim() || originalAsset?.assetCategory || 'Other',
-                        value: newAssetValue,
+                        value: transactionAmount,
                         createdAt: originalAsset?.createdAt || new Date().toISOString()
                     };
                 } else {
-                    const newTxDate = parseDate(purchaseDateModalInput.value);
-                    const assetHistory = allAssets
-                        .filter(a => a.name === name && parseDate(a.purchaseDate) < newTxDate)
-                        .sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-
+                    const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                     const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
-                    
                     if (!latestAsset && (category === 'Withdrawal' || category === 'Transfer')) { return showAlert('First transaction must be a "Deposit" or "Market Value Update".', 'Invalid Transaction'); }
                     
                     let assetCategoryValue = latestAsset ? latestAsset.assetCategory : assetTypeCategoryModalInput.value.trim();
@@ -979,36 +936,16 @@
                 isEditMode = !!asset;
                 currentEditId = asset ? asset.id : null;
                 transactionModalTitle.textContent = isEditMode ? 'Edit Transaction' : 'Add Transaction';
-                
-                assetNameModalInput.readOnly = isEditMode; 
-                assetCurrencyModalInput.readOnly = isEditMode;
-                assetTypeCategoryWrapperModal.classList.add('hidden');
-
+                assetNameModalInput.disabled = isEditMode; assetCurrencyModalInput.disabled = isEditMode; assetTypeCategoryWrapperModal.classList.add('hidden');
                 const valueLabel = document.querySelector('label[for="asset-value-modal"]');
                 if (asset) {
-                    assetNameModalInput.value = asset.name; 
-                    assetCategoryModalInput.value = asset.category || ''; 
-                    purchaseDateModalInput.value = asset.purchaseDate;
-                    
+                    assetNameModalInput.value = asset.name; assetCategoryModalInput.value = asset.category || ''; purchaseDateModalInput.value = asset.purchaseDate;
                     const assetHistory = allAssets.filter(a => a.name === asset.name && parseDate(a.purchaseDate) < parseDate(asset.purchaseDate)).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-                    const prevAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null; 
-                    const prevValue = prevAsset ? prevAsset.value : 0;
-                    
-                    if(asset.category === 'Deposit' || asset.category === 'Withdrawal') { 
-                        assetValueModalInput.value = Math.abs(asset.value - prevValue); 
-                        if(valueLabel) valueLabel.textContent = 'Amount'; 
-                    } else { 
-                        assetValueModalInput.value = asset.value; 
-                        if(valueLabel) valueLabel.textContent = 'Value'; 
-                    }
-                    assetCurrencyModalInput.value = asset.currency; 
-                    assetDescriptionModalInput.value = asset.description || '';
-                } else { 
-                    purchaseDateModalInput.value = new Date().toISOString().split('T')[0]; 
-                    if(valueLabel) valueLabel.textContent = 'Value'; 
-                    assetNameModalInput.readOnly = false;
-                    assetCurrencyModalInput.readOnly = false;
-                }
+                    const prevAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null; const prevValue = prevAsset ? prevAsset.value : 0;
+                    if(asset.category === 'Deposit' || asset.category === 'Withdrawal') { assetValueModalInput.value = Math.abs(asset.value - prevValue); if(valueLabel) valueLabel.textContent = 'Amount'; } 
+                    else { assetValueModalInput.value = asset.value; if(valueLabel) valueLabel.textContent = 'Value'; }
+                    assetCurrencyModalInput.value = asset.currency; assetDescriptionModalInput.value = asset.description || '';
+                } else { purchaseDateModalInput.value = new Date().toISOString().split('T')[0]; if(valueLabel) valueLabel.textContent = 'Value'; }
                 transactionModal.classList.remove('hidden');
             }
             
@@ -1028,8 +965,8 @@
             dividendAssetNameModalSelect.addEventListener('change', (e) => {
                 const assetName = e.target.value; const latestAsset = allAssets.filter(a => a.name === assetName).sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0];
                 const dividendCurrencyInput = document.getElementById('dividend-currency-modal');
-                if (latestAsset) { dividendCurrencyInput.value = latestAsset.currency; dividendCurrencyInput.readOnly = true; } 
-                else { dividendCurrencyInput.value = ''; dividendCurrencyInput.readOnly = false; }
+                if (latestAsset) { dividendCurrencyInput.value = latestAsset.currency; dividendCurrencyInput.disabled = true; } 
+                else { dividendCurrencyInput.value = ''; dividendCurrencyInput.disabled = false; }
             });
 
             dividendForm.addEventListener('submit', async (e) => {
@@ -1046,8 +983,8 @@
 
             function openDividendModal(dividend = null) {
                 dividendForm.reset(); isEditMode = !!dividend; document.getElementById('dividend-modal-title').textContent = isEditMode ? 'Edit Dividend' : 'Add Dividend'; const dividendCurrencyInput = document.getElementById('dividend-currency-modal');
-                if (dividend) { document.getElementById('edit-dividend-id').value = dividend.id; document.getElementById('dividend-asset-name-modal').value = dividend.name; document.getElementById('dividend-sub-asset-name-modal').value = dividend.subAssetName || ''; document.getElementById('dividend-date-modal').value = dividend.date; document.getElementById('dividend-value-modal').value = dividend.value; dividendCurrencyInput.value = dividend.currency; dividendCurrencyInput.readOnly = true; document.getElementById('dividend-description-modal').value = dividend.description; } 
-                else { document.getElementById('dividend-date-modal').value = new Date().toISOString().split('T')[0]; dividendCurrencyInput.readOnly = false; }
+                if (dividend) { document.getElementById('edit-dividend-id').value = dividend.id; document.getElementById('dividend-asset-name-modal').value = dividend.name; document.getElementById('dividend-sub-asset-name-modal').value = dividend.subAssetName || ''; document.getElementById('dividend-date-modal').value = dividend.date; document.getElementById('dividend-value-modal').value = dividend.value; dividendCurrencyInput.value = dividend.currency; dividendCurrencyInput.disabled = true; document.getElementById('dividend-description-modal').value = dividend.description; } 
+                else { document.getElementById('dividend-date-modal').value = new Date().toISOString().split('T')[0]; dividendCurrencyInput.disabled = false; }
                 dividendModal.classList.remove('hidden');
             }
 
@@ -1137,7 +1074,7 @@
             function calculateAssetPerformance(transactions, settings, mainCurrency, nativeCurrencyValue = false) { if (transactions.length === 0) { return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0, totalDeposits: 0, totalWithdrawals: 0 }; } const sortedTxs = [...transactions].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); const latestTx = sortedTxs[sortedTxs.length - 1]; const currentValue = nativeCurrencyValue ? latestTx.value : (convertCurrency(latestTx.value, latestTx.currency, mainCurrency, settings.rates) || 0); let totalDeposits = 0; let totalWithdrawals = 0; for (let i = 0; i < sortedTxs.length; i++) { const currentTx = sortedTxs[i]; const prevTx = i > 0 ? sortedTxs[i - 1] : null; if (currentTx.category === 'Deposit') { const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value; const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, settings.rates); if(convertedDeposit > 0) totalDeposits += convertedDeposit; } else if (currentTx.category === 'Withdrawal' && prevTx) { const withdrawalAmount = prevTx.value - currentTx.value; const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, settings.rates); if (convertedWithdrawal > 0) totalWithdrawals += convertedWithdrawal; } } const netCapital = totalDeposits - totalWithdrawals; const gainLossAmount = currentValue - netCapital; const gainLossPercentage = netCapital !== 0 ? (gainLossAmount / netCapital) * 100 : 0; return { currentValue, gainLossAmount, gainLossPercentage, netCapital, totalDeposits, totalWithdrawals }; }
             function renderPerformanceGainLossHtml(amount, percentage, currency) { if(isNaN(amount) || isNaN(percentage)) return '<div>-</div>'; const isGain = amount >= 0, colorClass = isGain ? 'text-green-500' : 'text-red-500'; return `<div class="text-right"><p class="font-semibold ${colorClass}">${formatCurrency(amount, currency)}</p><p class="text-xs ${colorClass}">${isPrivacyMode ? '(**.**%)' : `(${percentage.toFixed(2)}%)`}</p></div>`; }
             function renderAssetBreakdown(assets, settings, mainCurrency) { assetBreakdownContainer.innerHTML = ''; if(assets.length === 0) return; const groupedByName = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {}); const assetPerformances = Object.values(groupedByName).map(txs => { const latestTx = txs.sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; const performance = calculateAssetPerformance(txs, settings, mainCurrency); const nativePerformance = calculateAssetPerformance(txs, settings, mainCurrency, true); return { name: latestTx.name, currency: latestTx.currency, assetCategory: latestTx.assetCategory, nativeValue: nativePerformance.currentValue, ...performance }; }); const performanceByCategory = assetPerformances.reduce((acc, assetPerf) => { const category = assetPerf.assetCategory || 'Other'; if(!acc[category]){ acc[category] = { assets: [], totalValue: 0, totalGainLoss: 0, totalNetCapital: 0 }; } acc[category].assets.push(assetPerf); acc[category].totalValue += assetPerf.currentValue; acc[category].totalGainLoss += assetPerf.gainLossAmount; acc[category].totalNetCapital += assetPerf.netCapital; return acc; }, {}); for (const category in performanceByCategory) { const categoryData = performanceByCategory[category]; const categoryPercentage = categoryData.totalNetCapital !== 0 ? (categoryData.totalGainLoss / categoryData.totalNetCapital) * 100 : 0; const categoryDiv = document.createElement('div'); categoryDiv.className = 'border-t border-gray-200 dark:border-gray-700 py-2'; categoryDiv.innerHTML = `<div class="asset-category-row flex justify-between items-center cursor-pointer p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"><div class="flex items-center"><svg class="toggle-icon w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg><span class="font-semibold text-gray-800 dark:text-gray-100">${category}</span></div><div class="text-right"><p class="font-bold text-gray-900 dark:text-white">${formatCurrency(categoryData.totalValue, mainCurrency)}</p>${renderPerformanceGainLossHtml(categoryData.totalGainLoss, categoryPercentage, mainCurrency)}</div></div><div class="asset-list-nested hidden pl-6 pt-2 space-y-2">${categoryData.assets.map(asset => `<div class="flex justify-between items-center text-sm"><div class="flex items-center"><p class="text-gray-600 dark:text-gray-300">${asset.name} <span class="text-xs text-gray-400 dark:text-gray-500">${asset.currency}</span></p><button data-asset-name="${asset.name}" class="quick-add-btn ml-2 text-primary-500 hover:text-primary-700 dark:hover:text-primary-300 p-1 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button></div><div class="text-right"><p class="font-medium text-gray-800 dark:text-gray-100">${formatCurrency(asset.nativeValue, asset.currency)}</p>${renderPerformanceGainLossHtml(asset.gainLossAmount, asset.gainLossPercentage, mainCurrency)}</div></div>`).join('')}</div>`; assetBreakdownContainer.appendChild(categoryDiv); } }
-            assetBreakdownContainer.addEventListener('click', (e) => { const categoryRow = e.target.closest('.asset-category-row'); if (categoryRow) { categoryRow.nextElementSibling.classList.toggle('hidden'); categoryRow.querySelector('.toggle-icon').classList.toggle('rotate-90'); } const quickAddBtn = e.target.closest('.quick-add-btn'); if (quickAddBtn) { const assetName = quickAddBtn.dataset.assetName; const asset = allAssets.find(a => a.name === assetName); if (asset) { openTransactionModal(); assetNameModalInput.value = asset.name; assetNameModalInput.readOnly = true; assetCurrencyModalInput.value = asset.currency; assetCurrencyModalInput.readOnly = true; assetTypeCategoryWrapperModal.classList.add('hidden'); } } });
+            assetBreakdownContainer.addEventListener('click', (e) => { const categoryRow = e.target.closest('.asset-category-row'); if (categoryRow) { categoryRow.nextElementSibling.classList.toggle('hidden'); categoryRow.querySelector('.toggle-icon').classList.toggle('rotate-90'); } const quickAddBtn = e.target.closest('.quick-add-btn'); if (quickAddBtn) { const assetName = quickAddBtn.dataset.assetName; const asset = allAssets.find(a => a.name === assetName); if (asset) { openTransactionModal(); assetNameModalInput.value = asset.name; assetNameModalInput.disabled = true; assetCurrencyModalInput.value = asset.currency; assetCurrencyModalInput.disabled = true; assetTypeCategoryWrapperModal.classList.add('hidden'); } } });
             document.getElementById('trend-timeline-buttons').addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON') { const btnContainer = e.target.parentElement; btnContainer.querySelector('.active')?.classList.remove('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white'); e.target.classList.add('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white'); renderDashboard(allAssets, appSettings); } });
             function renderTrendChart(assets, settings, isDark, mainCurrency, timeline) { const colors = getChartColors(isDark); const sortedAssets = [...assets].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); if (sortedAssets.length === 0) return; let startDate; const now = new Date(); switch (timeline) { case '1M': startDate = new Date(new Date().setMonth(now.getMonth() - 1)); break; case '3M': startDate = new Date(new Date().setMonth(now.getMonth() - 3)); break; case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break; default: startDate = parseDate(sortedAssets[0].purchaseDate); break; } const dataPoints = {}; const assetValues = {}; sortedAssets.filter(tx => parseDate(tx.purchaseDate) < startDate).forEach(tx => assetValues[tx.name] = tx); const initialTotal = Object.values(assetValues).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0); if (Object.keys(assetValues).length > 0) { dataPoints[new Date(startDate.getTime() - 86400000).toISOString().split('T')[0]] = initialTotal; } sortedAssets.filter(tx => parseDate(tx.purchaseDate) >= startDate).forEach(tx => { assetValues[tx.name] = tx; const totalValue = Object.values(assetValues).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0); dataPoints[tx.purchaseDate] = totalValue; }); const labels = Object.keys(dataPoints).sort((a, b) => parseDate(a) - parseDate(b)); const data = labels.map(label => dataPoints[label]); const ctx = document.getElementById('trendChart').getContext('2d'); if (trendChart) trendChart.destroy(); trendChart = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: 'Portfolio Value', data, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', tension: 0.1, pointRadius: 0, pointHoverRadius: 5, pointHitRadius: 10 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false, grid: { color: colors.grid }, ticks: { color: colors.ticks, callback: (v) => formatCurrency(v, mainCurrency, true) } }, x: { grid: { color: colors.grid }, ticks: { color: colors.ticks } } }, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `${c.dataset.label || ''}: ${formatCurrency(c.parsed.y, mainCurrency)}` } } } } }); }
             function renderGainLossChart(assets, settings, isDark, mainCurrency, timeline) { const colors = getChartColors(isDark); const sortedAssets = [...assets].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); if (sortedAssets.length === 0) return; let startDate; const now = new Date(); switch (timeline) { case '1M': startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); break; case '3M': startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1); break; case '1Y': startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1); break; default: startDate = parseDate(sortedAssets[0].purchaseDate) ? new Date(parseDate(sortedAssets[0].purchaseDate).getFullYear(), parseDate(sortedAssets[0].purchaseDate).getMonth(), 1) : now; break; } const monthlyData = {}; let currentDate = new Date(startDate); while (currentDate <= now) { const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1); const monthlyPerformance = calculateMonthlyGainLoss(assets, settings, startOfMonth, endOfMonth); const monthKey = startOfMonth.toLocaleString('default', { month: 'short', year: 'numeric' }); monthlyData[monthKey] = monthlyPerformance.gainLoss; currentDate.setMonth(currentDate.getMonth() + 1); } const labels = Object.keys(monthlyData); const data = Object.values(monthlyData); const backgroundColors = data.map(value => value >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)'); const ctx = document.getElementById('gainLossChart').getContext('2d'); if (gainLossChart) gainLossChart.destroy(); gainLossChart = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: 'Monthly Gain/Loss', data, backgroundColor: backgroundColors, }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.ticks, callback: (v) => formatCurrency(v, mainCurrency, true) } }, x: { grid: { display: false }, ticks: { color: colors.ticks } } }, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `Gain/Loss: ${formatCurrency(c.parsed.y, mainCurrency)}` } } } } }); }
