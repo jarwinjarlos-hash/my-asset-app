@@ -640,6 +640,526 @@
                 else if(currentTab === 'dividends') { renderDividends(allDividends, appSettings); } 
                 else if(currentTab === 'summary') { renderSummaryTable(); }
             }
+
+        <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24">
+            <div id="dashboard-content">
+                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+                     <div class="flex justify-between items-start">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
+                             <div class="col-span-1 sm:col-span-2 lg:col-span-4">
+                                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Asset Value</h2>
+                                <p id="total-value" class="text-3xl font-bold text-gray-900 dark:text-white">$0.00</p>
+                            </div>
+                            <div class="text-left sm:text-right">
+                                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Gain/Loss</h2>
+                                <p id="total-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                                <div id="total-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                            </div>
+                             <div class="text-left sm:text-right">
+                                   <h2 id="this-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Gain/Loss</h2>
+                                   <p id="monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                                   <div id="monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                               </div>
+                             <div class="text-left sm:text-right">
+                                   <h2 id="prev-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Previous Month's Gain/Loss</h2>
+                                   <p id="prev-monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                                   <div id="prev-monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                               </div>
+                               <div class="text-left sm:text-right">
+                                    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">AVG Monthly Dividend</h2>
+                                    <p id="avg-monthly-income" class="text-xl font-bold text-gray-900 dark:text-white">-</p>
+                                    <div class="text-sm font-medium text-gray-500 dark:text-gray-400">&nbsp;</div>
+                                </div>
+                        </div>
+                         <div id="rates-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
+                            <div class="flex items-center justify-end">
+                                <span id="online-indicator" class="h-2 w-2 rounded-full bg-gray-400 mr-1.5"></span>
+                                <span id="rates-last-updated">Checking rates...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 space-y-8">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                             <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Asset Allocation</h2>
+                                <div id="allocation-display-toggle" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                                    <button data-mode="amount" class="allocation-toggle-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">$</button>
+                                    <button data-mode="percent" class="allocation-toggle-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">%</button>
+                                </div>
+                            </div>
+                            <div class="h-64 flex items-center justify-center relative">
+                                <canvas id="allocationChart"></canvas>
+                            </div>
+                             <div id="allocation-legend" class="mt-4 space-y-2"></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Cash Flow</h2>
+                            <div id="cash-flow-summary" class="space-y-4"></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Asset Performance</h2>
+                            <div id="asset-breakdown" class="space-y-2">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Portfolio Value Trend</h2>
+                                <div id="trend-timeline-buttons" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                                    <button data-timeline="1M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1M</button>
+                                    <button data-timeline="3M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">3M</button>
+                                    <button data-timeline="1Y" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1Y</button>
+                                    <button data-timeline="ALL" class="timeline-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">ALL</button>
+                                </div>
+                            </div>
+                            <div class="h-96">
+                                 <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Historical Gain/Loss</h2>
+                                <div class="h-96">
+                                     <canvas id="gainLossChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monthly Dividends</h2>
+                                <div class="h-96">
+                                     <canvas id="monthlyIncomeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tracker-content" class="hidden">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Transaction History</h2>
+                <div id="filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label for="filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                            <select id="filter-asset-name" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
+                            <select id="filter-category" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                            <input type="date" id="filter-start-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                            <input type="date" id="filter-end-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button id="reset-filters-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Reset</button>
+                        <button id="apply-filters-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Apply Filters</button>
+                    </div>
+                </div>
+                <div id="asset-list" class="space-y-6"></div>
+                 <div id="no-assets-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No transactions</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a new asset transaction.</p>
+                 </div>
+            </div>
+            <div id="dividends-content" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Dividends</h2>
+                    <button id="add-dividend-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Add Dividend
+                    </button>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
+                    <h3 id="dividends-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Dividends</h3>
+                    <p id="dividends-total" class="text-4xl font-bold text-gray-900 dark:text-white">$0.00</p>
+                </div>
+                <div id="dividends-list" class="space-y-6"></div>
+                <div id="no-dividends-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-12 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25-2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m12 0V9" /></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No dividends recorded</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by adding a dividend.</p>
+                </div>
+            </div>
+            <div id="summary-content" class="hidden">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Portfolio Summary</h2>
+                <div id="summary-filter-container" class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="summary-filter-asset-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
+                            <select id="summary-filter-asset-category" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="summary-filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                            <select id="summary-filter-asset-name" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                <option value="">All</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Span</label>
+                            <div id="summary-date-buttons" class="mt-1 flex space-x-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-lg">
+                                <button data-span="1M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1M</button>
+                                <button data-span="3M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">3M</button>
+                                <button data-span="6M" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">6M</button>
+                                <button data-span="1Y" class="summary-filter-btn flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">1Y</button>
+                                <button data-span="ALL" class="summary-filter-btn active flex-1 px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300">ALL</button>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                         <div>
+                            <label for="summary-filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                            <input type="date" id="summary-filter-start-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="summary-filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                            <input type="date" id="summary-filter-end-date" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        </div>
+                     </div>
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button id="summary-reset-filters-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Reset</button>
+                        <button id="summary-apply-filters-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Apply Filters</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="sortable px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="assetName">Asset Name<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="assetCategory">Asset Category<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="allocation">Allocation %<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalDeposited">Total Deposited<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalWithdrawn">Total Withdrawn<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="gainLossAmount">Gain/Loss<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="gainLossPercentage">Gain/Loss %<span class="sort-indicator"></span></th>
+                                <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalDividend">Total Dividend<span class="sort-indicator"></span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                         <tfoot id="summary-table-footer" class="bg-gray-50 dark:bg-gray-700"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </main> 
+    </div>
+    
+    <button id="add-transaction-fab" class="fixed bottom-6 right-6 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 z-40" aria-label="Add new transaction">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+    </button>
+    
+    <div id="transaction-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="transaction-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add Transaction</h3>
+            <form id="transaction-form">
+                <input type="hidden" id="edit-asset-id">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label for="asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                        <input type="text" id="asset-name-modal" list="asset-datalist" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        <datalist id="asset-datalist"></datalist>
+                    </div>
+                     <div id="asset-type-category-wrapper-modal" class="md:col-span-2 hidden">
+                        <label for="asset-type-category-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
+                        <input type="text" id="asset-type-category-modal" list="asset-type-datalist" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Stocks, Crypto">
+                        <datalist id="asset-type-datalist"></datalist>
+                    </div>
+                     <div class="md:col-span-2">
+                        <label for="asset-category-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
+                        <input type="text" id="asset-category-modal" list="category-datalist" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                        <datalist id="category-datalist"></datalist>
+                    </div>
+                    <div>
+                        <label for="purchase-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                        <input type="date" id="purchase-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="asset-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value</label>
+                        <div class="relative mt-1">
+                            <input type="number" id="asset-value-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                             <div class="absolute inset-y-0 right-0 flex items-center">
+                                <input type="text" id="asset-currency-modal" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16" placeholder="USD">
+                            </div>
+                            <datalist id="currency-datalist"></datalist>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="asset-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                        <textarea id="asset-description-modal" rows="3" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button type="button" id="cancel-transaction-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="submit" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="dividend-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="dividend-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add Dividend</h3>
+            <form id="dividend-form">
+                <input type="hidden" id="edit-dividend-id">
+                <div class="space-y-4">
+                    <div>
+                        <label for="dividend-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link to Asset</label>
+                        <select id="dividend-asset-name-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                             <option value="" disabled selected>Select an existing asset</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="dividend-sub-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub-Asset Name (Optional)</label>
+                        <input type="text" id="dividend-sub-asset-name-modal" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Specific Bond ID, Rental Unit A">
+                    </div>
+                    <div>
+                        <label for="dividend-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Received</label>
+                        <input type="date" id="dividend-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="dividend-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                        <div class="relative mt-1">
+                            <input type="number" id="dividend-value-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <div class="absolute inset-y-0 right-0 flex items-center">
+                                <input type="text" id="dividend-currency-modal" list="currency-datalist" maxlength="3" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm uppercase w-16 disabled:bg-gray-100 dark:disabled:bg-gray-700" placeholder="AUTO">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="dividend-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                        <textarea id="dividend-description-modal" rows="2" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Q3 Dividend"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button type="button" id="cancel-dividend-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="submit" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save Dividend</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Settings</h3>
+            <div class="space-y-6">
+                <div>
+                    <label for="main-currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Main Portfolio Currency</label>
+                    <select id="main-currency" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </select>
+                </div>
+                 <div>
+                     <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Management</h4>
+                     <div class="flex flex-col sm:flex-row gap-4">
+                         <button id="import-data-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
+                             <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                             Import Backup (.zip)
+                         </button>
+                         <input type="file" id="import-file-input" class="hidden" accept=".zip">
+                         <button id="export-data-btn" class="inline-flex w-full sm:w-auto justify-center items-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">
+                             <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                             Export Backup (.zip)
+                         </button>
+                     </div>
+                </div>
+                <div id="rates-status-modal" class="text-sm text-gray-500 dark:text-gray-400"></div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-2">
+                <button type="button" id="cancel-settings-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Close</button>
+                <button type="button" id="save-settings-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-md shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="alert-modal-title" class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Alert</h3>
+            <p id="alert-modal-message" class="text-gray-600 dark:text-gray-300 mb-6"></p>
+            <div class="flex justify-end">
+                <button type="button" id="alert-modal-ok-btn" class="py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-800">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="confirm-modal-title" class="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Confirmation</h3>
+            <p id="confirm-modal-message" class="text-gray-600 dark:text-gray-300 mb-6"></p>
+            <div class="flex justify-end space-x-2">
+                <button type="button" id="confirm-modal-cancel-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                <button type="button" id="confirm-modal-ok-btn" class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Firebase Configuration ---
+            const firebaseConfig = {
+              apiKey: "AIzaSyDbZnuGZuYjLC9NKI457ghe3iPGRI9QMBU",
+              authDomain: "my-asset-tracker-f628d.firebaseapp.com",
+              projectId: "my-asset-tracker-f628d",
+              storageBucket: "my-asset-tracker-f628d.firebasestorage.app",
+              messagingSenderId: "977229082323",
+              appId: "1:977229082323:web:546bcd7624fec2435aae26",
+              measurementId: "G-K62121KCZ2"
+            };
+
+            // --- Initialize Firebase Services ---
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            const db = firebase.firestore();
+            const analytics = firebase.analytics();
+            db.enablePersistence().catch((err) => {
+                if (err.code == 'failed-precondition') { console.warn('Multiple tabs open, persistence can only be enabled in one.'); } 
+                else if (err.code == 'unimplemented') { console.warn('Browser does not support all features for offline persistence.'); }
+            });
+
+            // --- Global App State and Settings ---
+            const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
+            let allAssets = [], allDividends = [], appSettings = {};
+            let isEditMode = false, currentEditId = null, allocationDisplayMode = 'amount', isPrivacyMode = false, currentTab = 'dashboard';
+            let summarySortState = { column: 'allocation', direction: 'desc' };
+            const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
+            const commonCurrencies = { "USD": "United States Dollar", "EUR": "Euro", "JPY": "Japanese Yen", "GBP": "British Pound Sterling", "AUD": "Australian Dollar", "CAD": "Canadian Dollar", "CHF": "Swiss Franc", "CNY": "Chinese Yuan", "HKD": "Hong Kong Dollar", "NZD": "New Zealand Dollar", "SEK": "Swedish Krona", "KRW": "South Korean Won", "SGD": "Singapore Dollar", "NOK": "Norwegian Krone", "MXN": "Mexican Peso", "INR": "Indian Rupee", "RUB": "Russian Ruble", "ZAR": "South African Rand", "BRL": "Brazilian Real", "PHP": "Philippine Peso", "SAR": "Saudi Riyal" };
+
+            // --- Theme Switcher ---
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+            const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+            const docElement = document.documentElement;
+            const applyTheme = (theme) => {
+                if (theme === 'dark') { docElement.classList.add('dark'); themeToggleLightIcon.classList.add('hidden'); themeToggleDarkIcon.classList.remove('hidden'); } 
+                else { docElement.classList.remove('dark'); themeToggleDarkIcon.classList.add('hidden'); themeToggleLightIcon.classList.remove('hidden'); }
+            };
+            const toggleTheme = () => {
+                const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+                attemptRender();
+            };
+            themeToggleBtn.addEventListener('click', toggleTheme);
+            const initialTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(initialTheme);
+
+            // --- DOM Elements ---
+            const dashboardTabButton = document.getElementById('dashboard-tab-button'), trackerTabButton = document.getElementById('tracker-tab-button'), dividendsTabButton = document.getElementById('dividends-tab-button'), summaryTabButton = document.getElementById('summary-tab-button');
+            const dashboardContent = document.getElementById('dashboard-content'), trackerContent = document.getElementById('tracker-content'), dividendsContent = document.getElementById('dividends-content'), summaryContent = document.getElementById('summary-content');
+            const transactionModal = document.getElementById('transaction-modal'), transactionModalTitle = document.getElementById('transaction-modal-title'), transactionForm = document.getElementById('transaction-form');
+            const assetNameModalInput = document.getElementById('asset-name-modal'), assetCurrencyModalInput = document.getElementById('asset-currency-modal'), assetTypeCategoryWrapperModal = document.getElementById('asset-type-category-wrapper-modal'), assetTypeCategoryModalInput = document.getElementById('asset-type-category-modal'), assetTypeDatalist = document.getElementById('asset-type-datalist'), assetCategoryModalInput = document.getElementById('asset-category-modal'), purchaseDateModalInput = document.getElementById('purchase-date-modal'), assetValueModalInput = document.getElementById('asset-value-modal'), assetDescriptionModalInput = document.getElementById('asset-description-modal'), cancelTransactionBtn = document.getElementById('cancel-transaction-btn');
+            const addTransactionFab = document.getElementById('add-transaction-fab'), assetList = document.getElementById('asset-list'), noAssetsMessage = document.getElementById('no-assets-message');
+            const settingsBtn = document.getElementById('settings-btn'), settingsModal = document.getElementById('settings-modal'), saveSettingsBtn = document.getElementById('save-settings-btn'), cancelSettingsBtn = document.getElementById('cancel-settings-btn'), mainCurrencySelect = document.getElementById('main-currency');
+            const assetDatalist = document.getElementById('asset-datalist'), currencyDatalist = document.getElementById('currency-datalist'), categoryDatalist = document.getElementById('category-datalist');
+            const totalValueEl = document.getElementById('total-value'), totalGainLossAmountEl = document.getElementById('total-gain-loss-amount'), totalGainLossPercentageEl = document.getElementById('total-gain-loss-percentage'), monthlyGainLossAmountEl = document.getElementById('monthly-gain-loss-amount'), monthlyGainLossPercentageEl = document.getElementById('monthly-gain-loss-percentage'), prevMonthlyGainLossAmountEl = document.getElementById('prev-monthly-gain-loss-amount'), prevMonthlyGainLossPercentageEl = document.getElementById('prev-monthly-gain-loss-percentage'), thisMonthLabel = document.getElementById('this-month-label'), prevMonthLabel = document.getElementById('prev-month-label');
+            const addDividendBtn = document.getElementById('add-dividend-btn'), dividendModal = document.getElementById('dividend-modal'), dividendForm = document.getElementById('dividend-form'), cancelDividendBtn = document.getElementById('cancel-dividend-btn'), dividendsList = document.getElementById('dividends-list'), noDividendsMessage = document.getElementById('no-dividends-message'), dividendsTotalEl = document.getElementById('dividends-total'), dividendsMonthLabelEl = document.getElementById('dividends-month-label'), dividendAssetNameModalSelect = document.getElementById('dividend-asset-name-modal');
+            const assetBreakdownContainer = document.getElementById('asset-breakdown');
+            const importDataBtn = document.getElementById('import-data-btn'), importFileInput = document.getElementById('import-file-input'), exportDataBtn = document.getElementById('export-data-btn');
+            const allocationDisplayToggle = document.getElementById('allocation-display-toggle'), privacyToggleBtn = document.getElementById('privacy-toggle-btn'), privacyOnIcon = document.getElementById('privacy-on-icon'), privacyOffIcon = document.getElementById('privacy-off-icon');
+            const filterAssetName = document.getElementById('filter-asset-name'), filterCategory = document.getElementById('filter-category'), filterStartDate = document.getElementById('filter-start-date'), filterEndDate = document.getElementById('filter-end-date'), applyFiltersBtn = document.getElementById('apply-filters-btn'), resetFiltersBtn = document.getElementById('reset-filters-btn');
+            const summaryFilterAssetCategory = document.getElementById('summary-filter-asset-category'), summaryFilterAssetName = document.getElementById('summary-filter-asset-name'), summaryDateButtons = document.getElementById('summary-date-buttons'), summaryFilterStartDate = document.getElementById('summary-filter-start-date'), summaryFilterEndDate = document.getElementById('summary-filter-end-date'), summaryApplyFiltersBtn = document.getElementById('summary-apply-filters-btn'), summaryResetFiltersBtn = document.getElementById('summary-reset-filters-btn');
+            const summaryTableBody = document.getElementById('summary-table-body'), summaryTableFooter = document.getElementById('summary-table-footer'), summaryTableHeader = document.querySelector('#summary-content thead');
+            let allocationChart, trendChart, gainLossChart, monthlyIncomeChart;
+            const alertModal = document.getElementById('alert-modal'), alertModalTitle = document.getElementById('alert-modal-title'), alertModalMessage = document.getElementById('alert-modal-message'), alertModalOkBtn = document.getElementById('alert-modal-ok-btn');
+            const confirmModal = document.getElementById('confirm-modal'), confirmModalTitle = document.getElementById('confirm-modal-title'), confirmModalMessage = document.getElementById('confirm-modal-message'), confirmModalOkBtn = document.getElementById('confirm-modal-ok-btn'), confirmModalCancelBtn = document.getElementById('confirm-modal-cancel-btn');
+            let confirmResolve = null;
+            const authScreen = document.getElementById('auth-screen'), appLoader = document.getElementById('app-loader'), appScreen = document.getElementById('app-screen');
+            const authForm = document.getElementById('auth-form'), authTitle = document.getElementById('auth-title'), authEmailInput = document.getElementById('auth-email'), authPasswordInput = document.getElementById('auth-password');
+            const signinActions = document.getElementById('signin-actions'), signupActions = document.getElementById('signup-actions'), showSignupLink = document.getElementById('show-signup'), showSigninLink = document.getElementById('show-signin');
+            const signOutBtn = document.getElementById('signout-btn'), userEmailEl = document.getElementById('user-email'), userInfoEl = document.getElementById('user-info');
+
+            // --- Custom Modals ---
+            function showAlert(message, title = 'Info') { alertModalTitle.textContent = title; alertModalMessage.textContent = message; alertModal.classList.remove('hidden'); }
+            function closeAlert() { alertModal.classList.add('hidden'); }
+            alertModalOkBtn.addEventListener('click', closeAlert);
+            alertModal.addEventListener('click', (e) => { if (e.target === alertModal) closeAlert(); });
+            function showConfirm(message, title = 'Are you sure?') { return new Promise(resolve => { confirmModalTitle.textContent = title; confirmModalMessage.textContent = message; confirmModal.classList.remove('hidden'); confirmResolve = resolve; }); }
+            function closeConfirm(resolution) { confirmModal.classList.add('hidden'); if (confirmResolve) { confirmResolve(resolution); confirmResolve = null; } }
+            confirmModalOkBtn.addEventListener('click', () => closeConfirm(true));
+            confirmModalCancelBtn.addEventListener('click', () => closeConfirm(false));
+            confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(false); });
+            function parseDate(dateString) { if (!dateString) return null; if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return new Date(dateString + 'T00:00:00'); if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) { const [month, day, year] = dateString.split('/'); const date = new Date(year, month - 1, day); if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) return date; } const fallbackDate = new Date(dateString); if (!isNaN(fallbackDate.getTime())) return fallbackDate; return null; }
+
+            // --- Main Authentication Flow ---
+            let currentUser = null, assetsListener = null, dividendsListener = null;
+            let initialAssetsLoaded = false, initialDividendsLoaded = false;
+
+            auth.onAuthStateChanged(user => {
+                if (assetsListener) assetsListener();
+                if (dividendsListener) dividendsListener();
+                initialAssetsLoaded = false; initialDividendsLoaded = false;
+
+                if (user) {
+                    currentUser = user;
+                    authScreen.style.display = 'none'; appLoader.style.display = 'flex'; appScreen.style.display = 'none';
+                    userEmailEl.textContent = user.email; userInfoEl.style.display = 'flex';
+
+                    const assetsCollection = db.collection('users').doc(currentUser.uid).collection('assets').orderBy('purchaseDate', 'desc');
+                    assetsListener = assetsCollection.onSnapshot(snapshot => {
+                        allAssets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        initialAssetsLoaded = true;
+                        attemptRender();
+                    }, error => { console.error("Error fetching assets: ", error); showAlert("Could not sync assets.", "Sync Error"); });
+
+                    const dividendsCollection = db.collection('users').doc(currentUser.uid).collection('dividends').orderBy('date', 'desc');
+                    dividendsListener = dividendsCollection.onSnapshot(snapshot => {
+                        allDividends = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        initialDividendsLoaded = true;
+                        attemptRender();
+                    }, error => { console.error("Error fetching dividends: ", error); });
+
+                    loadSettings();
+                    populateCurrencyDatalists();
+                    updateExchangeRates();
+                    window.addEventListener('online', updateExchangeRates);
+                    window.addEventListener('offline', updateRatesStatus);
+                } else {
+                    currentUser = null;
+                    authScreen.style.display = 'flex'; appLoader.style.display = 'none'; appScreen.style.display = 'none';
+                    userInfoEl.style.display = 'none';
+                    allAssets = []; allDividends = [];
+                }
+            });
+            
+            authForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = authEmailInput.value; const password = authPasswordInput.value; const action = e.submitter.name; appLoader.style.display = 'flex'; authScreen.style.display = 'none'; try { if (action === 'signup') { await auth.createUserWithEmailAndPassword(email, password); } else if (action === 'signin') { await auth.signInWithEmailAndPassword(email, password); } } catch (error) { showAlert(error.message, "Authentication Failed"); appLoader.style.display = 'none'; authScreen.style.display = 'flex'; } });
+            showSignupLink.addEventListener('click', (e) => { e.preventDefault(); signinActions.classList.add('hidden'); signupActions.classList.remove('hidden'); authTitle.textContent = 'Create a new account'; });
+            showSigninLink.addEventListener('click', (e) => { e.preventDefault(); signupActions.classList.add('hidden'); signinActions.classList.remove('hidden'); authTitle.textContent = 'Sign in to your account'; });
+            signOutBtn.addEventListener('click', () => { auth.signOut(); });
+            
+            function attemptRender() {
+                if (currentUser && appSettings.rates && Object.keys(appSettings.rates).length > 0 && initialAssetsLoaded && initialDividendsLoaded) {
+                    if (appScreen.style.display === 'none') {
+                        appLoader.style.display = 'none';
+                        appScreen.style.display = 'flex';
+                    }
+                    renderAll();
+                }
+            }
+
+            function renderAll() {
+                updateDatalists(allAssets);
+                updateTotalValue(allAssets, appSettings);
+                if (currentTab === 'dashboard') { renderDashboard(allAssets, appSettings); } 
+                else if(currentTab === 'tracker') { renderGroupedAssets(allAssets, appSettings); } 
+                else if(currentTab === 'dividends') { renderDividends(allDividends, appSettings); } 
+                else if(currentTab === 'summary') { renderSummaryTable(); }
+            }
+
             async function updateExchangeRates() {
                 const onlineIndicator = document.getElementById('online-indicator');
                 const ratesLastUpdated = document.getElementById('rates-last-updated');
@@ -880,306 +1400,6 @@
                 const sizeClass = isSmall ? 'text-sm' : 'text-xl'; const amountSizeClass = isSmall ? 'font-semibold' : 'text-xl font-bold';
                 amountEl.className = `${amountSizeClass} ${colorClass}`; percentEl.className = `${sizeClass} font-medium ${colorClass}`;
             }
-            addTransactionFab.addEventListener('click', () => { if (currentTab === 'dividends') { openDividendModal(); } else { openTransactionModal(); } });
-            assetNameModalInput.addEventListener('input', () => {
-                const currentName = assetNameModalInput.value.trim(); const existingAsset = allAssets.find(a => a.name === currentName);
-                if (existingAsset) { assetTypeCategoryWrapperModal.classList.add('hidden'); assetTypeCategoryModalInput.required = false; assetCurrencyModalInput.value = existingAsset.currency; assetCurrencyModalInput.readOnly = true; } 
-                else { assetTypeCategoryWrapperModal.classList.remove('hidden'); assetTypeCategoryModalInput.required = true; assetCurrencyModalInput.readOnly = false; }
-            });
-            assetCategoryModalInput.addEventListener('input', () => {
-                const category = assetCategoryModalInput.value.trim(); const valueLabel = document.querySelector('label[for="asset-value-modal"]'); if(!valueLabel) return;
-                if (category === 'Deposit' || category === 'Withdrawal') { valueLabel.textContent = 'Amount'; } else { valueLabel.textContent = 'Value'; }
-            });
 
-            transactionForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (!currentUser) return showAlert("You must be signed in to save data.");
-                
-                const name = assetNameModalInput.value.trim();
-                const currency = assetCurrencyModalInput.value.toUpperCase().trim();
-                const category = assetCategoryModalInput.value.trim();
-                const transactionAmount = parseFloat(assetValueModalInput.value);
 
-                if (!currency || currency.length !== 3) { return showAlert("Please enter a valid 3-letter currency code (e.g., USD, EUR).", "Invalid Input"); }
 
-                let finalTransactionData;
-
-                if (isEditMode) {
-                    const originalAsset = allAssets.find(a => a.id === currentEditId);
-                    const editedTxDate = parseDate(purchaseDateModalInput.value);
-
-                    const assetHistory = allAssets
-                        .filter(a => a.name === name && a.id !== currentEditId && parseDate(a.purchaseDate) < editedTxDate)
-                        .sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-
-                    const latestAssetBeforeEdit = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
-                    const previousValue = latestAssetBeforeEdit ? latestAssetBeforeEdit.value : 0;
-
-                    let newAssetValue;
-                    if (category === 'Deposit') {
-                        newAssetValue = previousValue + transactionAmount;
-                    } else if (category === 'Withdrawal') {
-                        if (transactionAmount > previousValue) { return showAlert('Withdrawal cannot be greater than value.', 'Invalid Amount'); }
-                        newAssetValue = previousValue - transactionAmount;
-                    } else {
-                        newAssetValue = transactionAmount;
-                    }
-
-                    finalTransactionData = {
-                        name: name,
-                        category: category,
-                        purchaseDate: purchaseDateModalInput.value,
-                        currency: currency,
-                        description: assetDescriptionModalInput.value.trim(),
-                        assetCategory: assetTypeCategoryModalInput.value.trim() || originalAsset?.assetCategory || 'Other',
-                        value: newAssetValue,
-                        createdAt: originalAsset?.createdAt || new Date().toISOString()
-                    };
-                } else {
-                    const newTxDate = parseDate(purchaseDateModalInput.value);
-                    const assetHistory = allAssets
-                        .filter(a => a.name === name && parseDate(a.purchaseDate) < newTxDate)
-                        .sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-
-                    const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
-                    
-                    if (!latestAsset && (category === 'Withdrawal' || category === 'Transfer')) { return showAlert('First transaction must be a "Deposit" or "Market Value Update".', 'Invalid Transaction'); }
-                    
-                    let assetCategoryValue = latestAsset ? latestAsset.assetCategory : assetTypeCategoryModalInput.value.trim();
-                    if (!assetCategoryValue) { return showAlert('Asset Category is required for new assets.', 'Invalid Input'); }
-
-                    const previousValue = latestAsset ? latestAsset.value : 0;
-                    let newAssetValue;
-                    if (category === 'Deposit') { newAssetValue = previousValue + transactionAmount; } 
-                    else if (category === 'Withdrawal') { if (transactionAmount > previousValue) { return showAlert('Withdrawal cannot be greater than current value.', 'Invalid Amount'); } newAssetValue = previousValue - transactionAmount; } 
-                    else { newAssetValue = transactionAmount; }
-                    
-                    finalTransactionData = { name: name, assetCategory: assetCategoryValue, category: category, purchaseDate: purchaseDateModalInput.value, value: newAssetValue, currency: currency, description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString() };
-                }
-                
-                try {
-                    if (isEditMode) { await db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId).set(finalTransactionData); } 
-                    else { await db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData); }
-                    closeTransactionModal();
-                } catch (error) { console.error("Error saving transaction: ", error); showAlert("Failed to save transaction to the cloud."); }
-            });
-
-            assetList.addEventListener('click', (e) => {
-                const target = e.target;
-                const transactionElement = target.closest('[data-id]');
-                if (!transactionElement) return;
-                const assetId = transactionElement.getAttribute('data-id');
-                if (target.classList.contains('delete-btn')) deleteAsset(assetId);
-                if (target.classList.contains('edit-btn')) { const asset = allAssets.find(a => a.id === assetId); if (asset) { openTransactionModal(asset); } }
-            });
-            
-            function openTransactionModal(asset = null) {
-                transactionForm.reset();
-                isEditMode = !!asset;
-                currentEditId = asset ? asset.id : null;
-                transactionModalTitle.textContent = isEditMode ? 'Edit Transaction' : 'Add Transaction';
-                
-                assetNameModalInput.readOnly = isEditMode; 
-                assetCurrencyModalInput.readOnly = isEditMode;
-                assetTypeCategoryWrapperModal.classList.add('hidden');
-
-                const valueLabel = document.querySelector('label[for="asset-value-modal"]');
-                if (asset) {
-                    assetNameModalInput.value = asset.name; 
-                    assetCategoryModalInput.value = asset.category || ''; 
-                    purchaseDateModalInput.value = asset.purchaseDate;
-                    
-                    const assetHistory = allAssets.filter(a => a.name === asset.name && parseDate(a.purchaseDate) < parseDate(asset.purchaseDate)).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-                    const prevAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null; 
-                    const prevValue = prevAsset ? prevAsset.value : 0;
-                    
-                    if(asset.category === 'Deposit' || asset.category === 'Withdrawal') { 
-                        assetValueModalInput.value = Math.abs(asset.value - prevValue); 
-                        if(valueLabel) valueLabel.textContent = 'Amount'; 
-                    } else { 
-                        assetValueModalInput.value = asset.value; 
-                        if(valueLabel) valueLabel.textContent = 'Value'; 
-                    }
-                    assetCurrencyModalInput.value = asset.currency; 
-                    assetDescriptionModalInput.value = asset.description || '';
-                } else { 
-                    purchaseDateModalInput.value = new Date().toISOString().split('T')[0]; 
-                    if(valueLabel) valueLabel.textContent = 'Value'; 
-                    assetNameModalInput.readOnly = false;
-                    assetCurrencyModalInput.readOnly = false;
-                }
-                transactionModal.classList.remove('hidden');
-            }
-            
-            function closeTransactionModal() { transactionModal.classList.add('hidden'); isEditMode = false; currentEditId = null; }
-            cancelTransactionBtn.addEventListener('click', closeTransactionModal);
-            transactionModal.addEventListener('click', (e) => { if (e.target === transactionModal) closeTransactionModal(); });
-
-            async function deleteAsset(id) {
-                const confirmed = await showConfirm('Delete this transaction from the cloud? This action cannot be undone.', 'Delete Transaction');
-                if(confirmed && currentUser){
-                    try { await db.collection('users').doc(currentUser.uid).collection('assets').doc(id).delete(); } 
-                    catch(error) { console.error("Error deleting asset:", error); showAlert("Failed to delete transaction."); }
-                }
-            }
-            
-            addDividendBtn.addEventListener('click', () => openDividendModal());
-            dividendAssetNameModalSelect.addEventListener('change', (e) => {
-                const assetName = e.target.value; const latestAsset = allAssets.filter(a => a.name === assetName).sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0];
-                const dividendCurrencyInput = document.getElementById('dividend-currency-modal');
-                if (latestAsset) { dividendCurrencyInput.value = latestAsset.currency; dividendCurrencyInput.readOnly = true; } 
-                else { dividendCurrencyInput.value = ''; dividendCurrencyInput.readOnly = false; }
-            });
-
-            dividendForm.addEventListener('submit', async (e) => {
-                e.preventDefault(); if (!currentUser) return;
-                const dividendData = { name: document.getElementById('dividend-asset-name-modal').value.trim(), subAssetName: document.getElementById('dividend-sub-asset-name-modal').value.trim(), date: document.getElementById('dividend-date-modal').value, value: parseFloat(document.getElementById('dividend-value-modal').value), currency: document.getElementById('dividend-currency-modal').value.toUpperCase().trim(), description: document.getElementById('dividend-description-modal').value.trim() };
-                const id = document.getElementById('edit-dividend-id').value;
-                if (!dividendData.name || !dividendData.currency || dividendData.currency.length !== 3) { return showAlert("Please select an asset and ensure currency is valid.", "Invalid Input"); }
-                try {
-                    if (isEditMode) { await db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).update(dividendData); } 
-                    else { await db.collection('users').doc(currentUser.uid).collection('dividends').add(dividendData); }
-                    closeDividendModal();
-                } catch (error) { console.error("Error saving dividend:", error); showAlert("Failed to save dividend."); }
-            });
-
-            function openDividendModal(dividend = null) {
-                dividendForm.reset(); isEditMode = !!dividend; document.getElementById('dividend-modal-title').textContent = isEditMode ? 'Edit Dividend' : 'Add Dividend'; const dividendCurrencyInput = document.getElementById('dividend-currency-modal');
-                if (dividend) { document.getElementById('edit-dividend-id').value = dividend.id; document.getElementById('dividend-asset-name-modal').value = dividend.name; document.getElementById('dividend-sub-asset-name-modal').value = dividend.subAssetName || ''; document.getElementById('dividend-date-modal').value = dividend.date; document.getElementById('dividend-value-modal').value = dividend.value; dividendCurrencyInput.value = dividend.currency; dividendCurrencyInput.readOnly = true; document.getElementById('dividend-description-modal').value = dividend.description; } 
-                else { document.getElementById('dividend-date-modal').value = new Date().toISOString().split('T')[0]; dividendCurrencyInput.readOnly = false; }
-                dividendModal.classList.remove('hidden');
-            }
-
-            function closeDividendModal() { dividendModal.classList.add('hidden'); isEditMode = false; }
-            cancelDividendBtn.addEventListener('click', closeDividendModal);
-            dividendModal.addEventListener('click', (e) => { if (e.target === dividendModal) closeDividendModal(); });
-            
-            dividendsList.addEventListener('click', (e) => {
-                const target = e.target; const dividendItem = target.closest('.dividend-item'); if (!dividendItem) return; const dividendId = dividendItem.getAttribute('data-id');
-                if (target.classList.contains('delete-dividend-btn')) deleteDividend(dividendId);
-                if (target.classList.contains('edit-dividend-btn')) { const dividend = allDividends.find(i => i.id === dividendId); if (dividend) openDividendModal(dividend); }
-            });
-            
-            async function deleteDividend(id) {
-                const confirmed = await showConfirm('Are you sure you want to delete this dividend entry?', 'Delete Dividend');
-                if (confirmed && currentUser) {
-                    try { await db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).delete(); } 
-                    catch (error) { console.error("Error deleting dividend:", error); showAlert("Failed to delete dividend."); }
-                }
-            }
-
-            function populateCurrencyDatalists() {
-                const optionsHtml = Object.keys(commonCurrencies).sort().map(code => `<option value="${code}">${code} - ${commonCurrencies[code]}</option>`).join('');
-                if(mainCurrencySelect) mainCurrencySelect.innerHTML = optionsHtml;
-                if(currencyDatalist) currencyDatalist.innerHTML = Object.keys(commonCurrencies).sort().map(code => `<option value="${code}"></option>`).join('');
-            }
-            settingsBtn.addEventListener('click', () => { mainCurrencySelect.value = appSettings.mainCurrency; settingsModal.classList.remove('hidden'); });
-            cancelSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
-            settingsModal.addEventListener('click', (e) => { if(e.target === settingsModal) settingsModal.classList.add('hidden'); });
-            saveSettingsBtn.addEventListener('click', () => { appSettings.mainCurrency = mainCurrencySelect.value; localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings)); settingsModal.classList.add('hidden'); renderAll(); });
-            
-            importDataBtn.addEventListener('click', () => importFileInput.click());
-            importFileInput.addEventListener('change', async (event) => {
-                const file = event.target.files[0]; if (!file) return;
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const content = e.target.result;
-                    try {
-                        const zip = await JSZip.loadAsync(content);
-                        let importedAssets, importedDividends;
-
-                        if (zip.files['assets.csv']) {
-                            importedAssets = csvToArray(await zip.files['assets.csv'].async('string'));
-                        }
-                        if (zip.files['dividends.csv']) {
-                            importedDividends = csvToDividendArray(await zip.files['dividends.csv'].async('string'));
-                        }
-                        
-                        if ((importedAssets || importedDividends) && currentUser) {
-                            const confirmed = await showConfirm(
-                                'REPLACE all current data (assets and dividends) with the backup file? This action cannot be undone.', 
-                                'Import Backup'
-                            );
-
-                            if (confirmed) {
-                                const existingAssets = await db.collection('users').doc(currentUser.uid).collection('assets').get();
-                                const assetBatch = db.batch();
-                                existingAssets.docs.forEach(doc => assetBatch.delete(doc.ref));
-                                
-                                const existingDividends = await db.collection('users').doc(currentUser.uid).collection('dividends').get();
-                                const dividendBatch = db.batch();
-                                existingDividends.docs.forEach(doc => dividendBatch.delete(doc.ref));
-                                
-                                await assetBatch.commit();
-                                await dividendBatch.commit();
-
-                                if (importedAssets) {
-                                    for (const asset of importedAssets) {
-                                        if(asset.id === null || asset.id === undefined || asset.id.trim() === '') delete asset.id;
-                                        await db.collection('users').doc(currentUser.uid).collection('assets').add(asset);
-                                    }
-                                }
-                                
-                                if (importedDividends) {
-                                    for (const dividend of importedDividends) {
-                                        if(dividend.id === null || dividend.id === undefined || dividend.id.trim() === '') delete dividend.id;
-                                        await db.collection('users').doc(currentUser.uid).collection('dividends').add(dividend);
-                                    }
-                                }
-                                showAlert('Backup imported successfully!', 'Success');
-                            }
-                        } else {
-                             showAlert('No valid asset or dividend data found in the zip file.', 'Import Warning');
-                        }
-                        
-                    } catch (err) {
-                        showAlert('Failed to import backup. Please check the file format.', 'Import Error');
-                        console.error(err);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-                importFileInput.value = '';
-            });
-
-            function exportBackup() {
-                if (allAssets.length === 0 && allDividends.length === 0) { showAlert('No data to export.'); return; }
-                const zip = new JSZip();
-                const assetHeaders = ['id','name','assetCategory','category','purchaseDate','value', 'currency', 'description','createdAt'];
-                const assetRows = allAssets.map(asset => assetHeaders.map(h => { let c = asset[h] === null || asset[h] === undefined ? '' : String(asset[h]); if (/[",\n]/.test(c)) { c = `"${c.replace(/"/g, '""')}"`; } return c; }).join(','));
-                zip.file("assets.csv", [assetHeaders.join(','), ...assetRows].join('\n'));
-                const dividendHeaders = ['id', 'name', 'subAssetName', 'date', 'value', 'currency', 'description'];
-                const dividendRows = allDividends.map(d => dividendHeaders.map(h => { let c = d[h] === null || d[h] === undefined ? '' : String(d[h]); if (/[",\n]/.test(c)) { c = `"${c.replace(/"/g, '""')}"`; } return c; }).join(','));
-                zip.file("dividends.csv", [dividendHeaders.join(','), ...dividendRows].join('\n'));
-                zip.generateAsync({type:"blob"}).then(function(content) { const link = document.createElement("a"); const url = URL.createObjectURL(content); link.setAttribute("href", url); link.setAttribute("download", `asset_tracker_backup_${new Date().toISOString().split('T')[0]}.zip`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); });
-            }
-            exportDataBtn.addEventListener('click', exportBackup);
-
-            function csvToArray(csv) { const lines = csv.trim().replace(/\r\n/g, '\n').split('\n'); if (lines.length < 2) return []; const headers = lines[0].trim().split(',').map(h => h.trim()); return lines.slice(1).map(line => { if (!line.trim()) return null; const values = line.split(','); const obj = {}; headers.forEach((h, i) => { obj[h] = (values[i] || '').trim(); }); obj.value = parseFloat(obj.value); if (isNaN(obj.value)) obj.value = 0; if (obj.id) delete obj.id; return obj; }).filter(Boolean); }
-            function csvToDividendArray(csv) { const lines = csv.trim().replace(/\r\n/g, '\n').split('\n'); if (lines.length < 2) return []; const headers = lines[0].trim().split(',').map(h => h.trim()); return lines.slice(1).map(line => { if (!line.trim()) return null; const values = line.split(','); const obj = {}; headers.forEach((h, i) => { obj[h] = (values[i] || '').trim(); }); obj.value = parseFloat(obj.value); if (isNaN(obj.value)) obj.value = 0; if (obj.id) delete obj.id; return obj; }).filter(Boolean); }
-            
-            applyFiltersBtn.addEventListener('click', () => { const name = filterAssetName.value; const category = filterCategory.value; const startDate = filterStartDate.value; const endDate = filterEndDate.value; let filteredAssets = [...allAssets]; if (name) { filteredAssets = filteredAssets.filter(a => a.name === name); } if (category) { filteredAssets = filteredAssets.filter(a => a.category === category); } if (startDate) { filteredAssets = filteredAssets.filter(a => parseDate(a.purchaseDate) >= parseDate(startDate)); } if (endDate) { filteredAssets = filteredAssets.filter(a => parseDate(a.purchaseDate) <= parseDate(endDate)); } renderGroupedAssets(filteredAssets, appSettings); });
-            resetFiltersBtn.addEventListener('click', () => { filterAssetName.value = ''; filterCategory.value = ''; filterStartDate.value = ''; filterEndDate.value = ''; renderGroupedAssets(allAssets, appSettings); });
-
-            summaryTableHeader.addEventListener('click', (e) => {
-                const headerCell = e.target.closest('.sortable'); if (!headerCell || !headerCell.dataset.sort) return;
-                const sortKey = headerCell.dataset.sort;
-                if (summarySortState.column === sortKey) { summarySortState.direction = summarySortState.direction === 'asc' ? 'desc' : 'asc'; } else { summarySortState.column = sortKey; const numericColumns = ['allocation', 'totalDeposited', 'totalWithdrawn', 'gainLossAmount', 'gainLossPercentage', 'totalDividend']; summarySortState.direction = numericColumns.includes(sortKey) ? 'desc' : 'asc'; }
-                renderSummaryTable();
-            });
-
-            function calculatePerformanceForPeriod(assetName, settings, startDate, endDate) { const { mainCurrency, rates } = settings; const allAssetTransactions = allAssets.filter(a => a.name === assetName).sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); if (allAssetTransactions.length === 0) return null; const txBeforeStart = startDate ? allAssetTransactions.filter(tx => parseDate(tx.purchaseDate) < parseDate(startDate)) : []; const latestTxBeforeStart = txBeforeStart.length > 0 ? txBeforeStart[txBeforeStart.length - 1] : null; const valueAtStartConverted = latestTxBeforeStart ? (convertCurrency(latestTxBeforeStart.value, latestTxBeforeStart.currency, mainCurrency, rates) || 0) : 0; const txUntilEnd = endDate ? allAssetTransactions.filter(tx => parseDate(tx.purchaseDate) <= parseDate(endDate)) : allAssetTransactions; const latestTxAtEnd = txUntilEnd.length > 0 ? txUntilEnd[txUntilEnd.length - 1] : null; const valueAtEndConverted = latestTxAtEnd ? (convertCurrency(latestTxAtEnd.value, latestTxAtEnd.currency, mainCurrency, rates) || 0) : 0; const periodTransactions = allAssetTransactions.filter(tx => { const txDate = parseDate(tx.purchaseDate); const startCheck = startDate ? txDate >= parseDate(startDate) : true; const endCheck = endDate ? txDate <= parseDate(endDate) : true; return startCheck && endCheck; }); let totalDeposits = 0; let totalWithdrawals = 0; for (const currentTx of periodTransactions) { const allPrevTxs = allAssetTransactions.filter(tx => parseDate(tx.purchaseDate) < parseDate(currentTx.purchaseDate)); const prevTx = allPrevTxs.length > 0 ? allPrevTxs[allPrevTxs.length - 1] : null; if (currentTx.category === 'Deposit') { const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value; const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, rates); if(convertedDeposit > 0) totalDeposits += convertedDeposit; } else if (currentTx.category === 'Withdrawal' && prevTx) { const withdrawalAmount = prevTx.value - currentTx.value; const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, rates); if (convertedWithdrawal > 0) totalWithdrawals += convertedWithdrawal; } } const gainLossAmount = valueAtEndConverted - valueAtStartConverted - (totalDeposits - totalWithdrawals); const basis = valueAtStartConverted + totalDeposits; const gainLossPercentage = basis > 0 ? (gainLossAmount / basis) * 100 : 0; return { currentValue: valueAtEndConverted, totalDeposits, totalWithdrawals, gainLossAmount, gainLossPercentage }; }
-            function generateSummaryData(filters) { const { mainCurrency, rates } = appSettings; let uniqueAssetNames = [...new Set(allAssets.map(a => a.name))]; if (filters.assetName) { uniqueAssetNames = uniqueAssetNames.filter(name => name === filters.assetName); } if (filters.assetCategory) { uniqueAssetNames = uniqueAssetNames.filter(name => { const latestAsset = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; return latestAsset && latestAsset.assetCategory === filters.assetCategory; }); } const totalPortfolioValue = uniqueAssetNames.reduce((total, name) => { const txUntilEnd = filters.endDate ? allAssets.filter(tx => tx.name === name && parseDate(tx.purchaseDate) <= parseDate(filters.endDate)) : allAssets.filter(tx => tx.name === name); if(txUntilEnd.length === 0) return total; const latestAsset = txUntilEnd.sort((a,b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; return total + (convertCurrency(latestAsset.value, latestAsset.currency, mainCurrency, rates) || 0); }, 0); let summary = uniqueAssetNames.map(name => { const performance = calculatePerformanceForPeriod(name, appSettings, filters.startDate, filters.endDate); if(!performance) return null; const assetDividends = allDividends.filter(i => { const dividendDate = parseDate(i.date); const startCheck = filters.startDate ? dividendDate >= parseDate(filters.startDate) : true; const endCheck = filters.endDate ? dividendDate <= parseDate(filters.endDate) : true; return i.name === name && startCheck && endCheck; }); const totalDividend = assetDividends.reduce((sum, dividend) => { return sum + (convertCurrency(dividend.value, dividend.currency, mainCurrency, rates) || 0); }, 0); const allocation = totalPortfolioValue > 0 ? (performance.currentValue / totalPortfolioValue) * 100 : 0; const latestAssetOverall = allAssets.filter(a => a.name === name).sort((a,b)=> parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; return { assetName: name, assetCategory: latestAssetOverall.assetCategory || 'Other', allocation: allocation, totalDeposited: performance.totalDeposits, totalWithdrawn: performance.totalWithdrawn, gainLossAmount: performance.gainLossAmount, gainLossPercentage: performance.gainLossPercentage, totalDividend: totalDividend }; }).filter(Boolean); return summary; }
-            function renderSummaryTable() { const filters = { assetCategory: summaryFilterAssetCategory.value, assetName: summaryFilterAssetName.value, startDate: summaryFilterStartDate.value, endDate: summaryFilterEndDate.value }; const summaryData = generateSummaryData(filters); if (summarySortState.column) { summaryData.sort((a, b) => { const valA = a[summarySortState.column]; const valB = b[summarySortState.column]; let comparison = 0; if (typeof valA === 'string') { comparison = valA.localeCompare(valB, undefined, { numeric: true }); } else if (typeof valA === 'number') { if (valA < valB) comparison = -1; if (valA > valB) comparison = 1; } return summarySortState.direction === 'asc' ? comparison : -comparison; }); } const allHeaders = document.querySelectorAll('#summary-content thead th'); allHeaders.forEach(th => { th.classList.remove('asc', 'desc'); if (th.dataset.sort === summarySortState.column) { th.classList.add(summarySortState.direction); } }); summaryTableBody.innerHTML = summaryData.map(d => `<tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${d.assetName}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${d.assetCategory}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${d.allocation.toFixed(2)}%</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatCurrency(d.totalDeposited, appSettings.mainCurrency)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatCurrency(d.totalWithdrawn, appSettings.mainCurrency)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right ${d.gainLossAmount >= 0 ? 'text-green-500' : 'text-red-500'}">${formatCurrency(d.gainLossAmount, appSettings.mainCurrency)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right ${d.gainLossPercentage >= 0 ? 'text-green-500' : 'text-red-500'}">${d.gainLossPercentage.toFixed(2)}%</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-500">${formatCurrency(d.totalDividend, appSettings.mainCurrency)}</td></tr>`).join(''); const totals = summaryData.reduce((acc, d) => { acc.totalDeposited += d.totalDeposited; acc.totalWithdrawn += d.totalWithdrawn; acc.gainLossAmount += d.gainLossAmount; acc.totalDividend += d.totalDividend; return acc; }, { totalDeposited: 0, totalWithdrawn: 0, gainLossAmount: 0, totalDividend: 0 }); summaryTableFooter.innerHTML = `<tr><th colspan="3" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Totals</th><td class="px-6 py-4 text-right text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(totals.totalDeposited, appSettings.mainCurrency)}</td><td class="px-6 py-4 text-right text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(totals.totalWithdrawn, appSettings.mainCurrency)}</td><td class="px-6 py-4 text-right text-sm font-bold ${totals.gainLossAmount >= 0 ? 'text-green-600' : 'text-red-600'}">${formatCurrency(totals.gainLossAmount, appSettings.mainCurrency)}</td><td colspan="1"></td><td class="px-6 py-4 text-right text-sm font-bold text-blue-600">${formatCurrency(totals.totalDividend, appSettings.mainCurrency)}</td></tr>`; }
-            summaryApplyFiltersBtn.addEventListener('click', renderSummaryTable);
-            summaryResetFiltersBtn.addEventListener('click', () => { summaryFilterAssetCategory.value = ''; summaryFilterAssetName.value = ''; summaryFilterStartDate.value = ''; summaryFilterEndDate.value = ''; summaryDateButtons.querySelector('.active')?.classList.remove('active'); summaryDateButtons.querySelector('[data-span="ALL"]').classList.add('active'); renderSummaryTable(); });
-            summaryDateButtons.addEventListener('click', e => { if (e.target.tagName === 'BUTTON') { const span = e.target.dataset.span; const now = new Date(); let startDate = new Date(); summaryDateButtons.querySelector('.active')?.classList.remove('active'); e.target.classList.add('active'); if (span === 'ALL') { summaryFilterStartDate.value = ''; summaryFilterEndDate.value = ''; } else { summaryFilterEndDate.value = now.toISOString().split('T')[0]; if (span === '1M') startDate.setMonth(now.getMonth() - 1); if (span === '3M') startDate.setMonth(now.getMonth() - 3); if (span === '6M') startDate.setMonth(now.getMonth() - 6); if (span === '1Y') startDate.setFullYear(now.getFullYear() - 1); summaryFilterStartDate.value = startDate.toISOString().split('T')[0]; } renderSummaryTable(); } });
-
-            function getChartColors(isDark) { return { grid: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)', ticks: isDark ? '#9ca3af' : '#6b7280', labels: isDark ? '#d1d5db' : '#374151', pie: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#6b7280', '#ec4899'] }; }
-            function renderDashboard(assets, settings){ if(assets.length === 0 || !settings.rates) return; const isDark = docElement.classList.contains('dark'); const mainCurrency = settings.mainCurrency; const currentTimeline = document.querySelector('#trend-timeline-buttons .active')?.dataset.timeline || 'ALL'; renderAllocationChart(assets, settings, isDark, mainCurrency); renderCashFlowSummary(assets, settings, mainCurrency); renderAssetBreakdown(assets, settings, mainCurrency); renderTrendChart(assets, settings, isDark, mainCurrency, currentTimeline); renderGainLossChart(assets, settings, isDark, mainCurrency, currentTimeline); renderMonthlyIncomeChart(allDividends, settings, isDark, mainCurrency, currentTimeline); }
-            function renderAllocationChart(assets, settings, isDark, mainCurrency) { const colors = getChartColors(isDark); const latestAssets = {}; assets.forEach(asset => { if (!latestAssets[asset.name] || parseDate(asset.purchaseDate) >= parseDate(latestAssets[asset.name].purchaseDate)) { latestAssets[asset.name] = asset; } }); const allocation = Object.values(latestAssets).reduce((acc, asset) => { const category = asset.assetCategory || 'Other'; const convertedValue = convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0; acc[category] = (acc[category] || 0) + convertedValue; return acc; }, {}); const labels = Object.keys(allocation); const data = Object.values(allocation); const total = data.reduce((a, b) => a + b, 0); const ctx = document.getElementById('allocationChart').getContext('2d'); if (allocationChart) allocationChart.destroy(); allocationChart = new Chart(ctx, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors.pie, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => { if (isPrivacyMode) return '*****'; const value = c.raw; if (allocationDisplayMode === 'percent') { const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0; return `${c.label}: ${percentage}%`; } return `${c.label}: ${formatCurrency(value, mainCurrency)}`; } } } } } }); document.getElementById('allocation-legend').innerHTML = labels.map((label, i) => { const value = data[i]; let displayValue; if(allocationDisplayMode === 'percent'){ const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0; displayValue = isPrivacyMode ? `**.**%` : `${percentage}%`; } else { displayValue = formatCurrency(value, mainCurrency); } return `<div class="flex items-center justify-between text-sm"><div class="flex items-center"><span class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors.pie[i % colors.pie.length]}"></span><span class="text-gray-700 dark:text-gray-300">${label}</span></div><span class="font-medium text-gray-900 dark:text-white">${displayValue}</span></div>` }).join(''); }
-            allocationDisplayToggle.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON') { const newMode = e.target.dataset.mode; if(newMode === allocationDisplayMode) return; allocationDisplayMode = newMode; const btnContainer = e.target.parentElement; btnContainer.querySelector('.active')?.classList.remove('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white'); e.target.classList.add('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white'); renderAllocationChart(allAssets, appSettings, docElement.classList.contains('dark'), appSettings.mainCurrency); } });
-            function renderCashFlowSummary(assets, settings, mainCurrency) { const groupedAssets = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {}); for (const name in groupedAssets) groupedAssets[name].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); let totalDeposits = 0; let totalWithdrawals = 0; for (const name in groupedAssets) { const group = groupedAssets[name]; for (let i = 0; i < group.length; i++) { const currentTx = group[i]; const prevTx = i > 0 ? group[i - 1] : null; if (currentTx.category === 'Deposit') { const depositAmount = convertCurrency(prevTx ? (currentTx.value - prevTx.value) : currentTx.value, currentTx.currency, mainCurrency, settings.rates); if(depositAmount > 0) totalDeposits += depositAmount; } else if (currentTx.category === 'Withdrawal' && prevTx) { const withdrawalAmount = convertCurrency(prevTx.value - currentTx.value, currentTx.currency, mainCurrency, settings.rates); if (withdrawalAmount > 0) totalWithdrawals += withdrawalAmount; } } } const totalDividends = allDividends.reduce((sum, dividend) => { const convertedValue = convertCurrency(dividend.value, dividend.currency, mainCurrency, settings.rates) || 0; return sum + convertedValue; }, 0); document.getElementById('cash-flow-summary').innerHTML = `<div><p class="text-sm text-gray-500 dark:text-gray-400">Total Deposited</p><p class="text-xl font-semibold text-green-600">${formatCurrency(totalDeposits, mainCurrency)}</p></div><div><p class="text-sm text-gray-500 dark:text-gray-400">Total Withdrawn</p><p class="text-xl font-semibold text-red-500">${formatCurrency(totalWithdrawals, mainCurrency)}</p></div><div><p class="text-sm text-gray-500 dark:text-gray-400">Total Dividends Received</p><p class="text-xl font-semibold text-blue-600">${formatCurrency(totalDividends, mainCurrency)}</p></div>`; }
-            function calculateAssetPerformance(transactions, settings, mainCurrency, nativeCurrencyValue = false) { if (transactions.length === 0) { return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0, totalDeposits: 0, totalWithdrawals: 0 }; } const sortedTxs = [...transactions].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); const latestTx = sortedTxs[sortedTxs.length - 1]; const currentValue = nativeCurrencyValue ? latestTx.value : (convertCurrency(latestTx.value, latestTx.currency, mainCurrency, settings.rates) || 0); let totalDeposits = 0; let totalWithdrawals = 0; for (let i = 0; i < sortedTxs.length; i++) { const currentTx = sortedTxs[i]; const prevTx = i > 0 ? sortedTxs[i - 1] : null; if (currentTx.category === 'Deposit') { const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value; const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, settings.rates); if(convertedDeposit > 0) totalDeposits += convertedDeposit; } else if (currentTx.category === 'Withdrawal' && prevTx) { const withdrawalAmount = prevTx.value - currentTx.value; const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, settings.rates); if (convertedWithdrawal > 0) totalWithdrawals += convertedWithdrawal; } } const netCapital = totalDeposits - totalWithdrawals; const gainLossAmount = currentValue - netCapital; const gainLossPercentage = netCapital !== 0 ? (gainLossAmount / netCapital) * 100 : 0; return { currentValue, gainLossAmount, gainLossPercentage, netCapital, totalDeposits, totalWithdrawals }; }
-            function renderPerformanceGainLossHtml(amount, percentage, currency) { if(isNaN(amount) || isNaN(percentage)) return '<div>-</div>'; const isGain = amount >= 0, colorClass = isGain ? 'text-green-500' : 'text-red-500'; return `<div class="text-right"><p class="font-semibold ${colorClass}">${formatCurrency(amount, currency)}</p><p class="text-xs ${colorClass}">${isPrivacyMode ? '(**.**%)' : `(${percentage.toFixed(2)}%)`}</p></div>`; }
-            function renderAssetBreakdown(assets, settings, mainCurrency) { assetBreakdownContainer.innerHTML = ''; if(assets.length === 0) return; const groupedByName = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {}); const assetPerformances = Object.values(groupedByName).map(txs => { const latestTx = txs.sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; const performance = calculateAssetPerformance(txs, settings, mainCurrency); const nativePerformance = calculateAssetPerformance(txs, settings, mainCurrency, true); return { name: latestTx.name, currency: latestTx.currency, assetCategory: latestTx.assetCategory, nativeValue: nativePerformance.currentValue, ...performance }; }); const performanceByCategory = assetPerformances.reduce((acc, assetPerf) => { const category = assetPerf.assetCategory || 'Other'; if(!acc[category]){ acc[category] = { assets: [], totalValue: 0, totalGainLoss: 0, totalNetCapital: 0 }; } acc[category].assets.push(assetPerf); acc[category].totalValue += assetPerf.currentValue; acc[category].totalGainLoss += assetPerf.gainLossAmount; acc[category].totalNetCapital += assetPerf.netCapital; return acc; }, {}); for (const category in performanceByCategory) { const categoryData = performanceByCategory[category]; const categoryPercentage = categoryData.totalNetCapital !== 0 ? (categoryData.totalGainLoss / categoryData.totalNetCapital) * 100 : 0; const categoryDiv = document.createElement('div'); categoryDiv.className = 'border-t border-gray-200 dark:border-gray-700 py-2'; categoryDiv.innerHTML = `<div class="asset-category-row flex justify-between items-center cursor-pointer p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"><div class="flex items-center"><svg class="toggle-icon w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg><span class="font-semibold text-gray-800 dark:text-gray-100">${category}</span></div><div class="text-right"><p class="font-bold text-gray-900 dark:text-white">${formatCurrency(categoryData.totalValue, mainCurrency)}</p>${renderPerformanceGainLossHtml(categoryData.totalGainLoss, categoryPercentage, mainCurrency)}</div></div><div class="asset-list-nested hidden pl-6 pt-2 space-y-2">${categoryData.assets.map(asset => `<div class="flex justify-between items-center text-sm"><div class="flex items-center"><p class="text-gray-600 dark:text-gray-300">${asset.name} <span class="text-xs text-gray-400 dark:text-gray-500">${asset.currency}</span></p><button data-asset-name="${asset.name}" class="quick-add-btn ml-2 text-primary-500 hover:text-primary-700 dark:hover:text-primary-300 p-1 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button></div><div class="text-right"><p class="font-medium text-gray-800 dark:text-gray-100">${formatCurrency(asset.nativeValue, asset.currency)}</p>${renderPerformanceGainLossHtml(asset.gainLossAmount, asset.gainLossPercentage, mainCurrency)}</div></div>`).join('')}</div>`; assetBreakdownContainer.appendChild(categoryDiv); } }
-            assetBreakdownContainer.addEventListener('click', (e) => { const categoryRow = e.target.closest('.asset-category-row'); if (categoryRow) { categoryRow.nextElementSibling.classList.toggle('hidden'); categoryRow.querySelector('.toggle-icon').classList.toggle('rotate-90'); } const quickAddBtn = e.target.closest('.quick-add-btn'); if (quickAddBtn) { const assetName = quickAddBtn.dataset.assetName; const asset = allAssets.find(a => a.name === assetName); if (asset) { openTransactionModal(); assetNameModalInput.value = asset.name; assetNameModalInput.readOnly = true; assetCurrencyModalInput.value = asset.currency; assetCurrencyModalInput.readOnly = true; assetTypeCategoryWrapperModal.classList.add('hidden'); } } });
