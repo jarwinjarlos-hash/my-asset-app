@@ -989,7 +989,7 @@ if (isEditMode) {
                 isEditMode = !!asset;
                 currentEditId = asset ? asset.id : null;
                 transactionModalTitle.textContent = isEditMode ? 'Edit Transaction' : 'Add Transaction';
-                assetNameModalInput.disabled = isEditMode; assetCurrencyModalInput.disabled = isEditMode; assetTypeCategoryWrapperModal.classList.add('hidden');
+                assetNameModalInput.disabled = isEditMode; assetCurrencyModalInput.readOnly = isEditMode; assetTypeCategoryWrapperModal.classList.add('hidden');
                 const valueLabel = document.querySelector('label[for="asset-value-modal"]');
                 if (asset) {
                     assetNameModalInput.value = asset.name; assetCategoryModalInput.value = asset.category || ''; purchaseDateModalInput.value = asset.purchaseDate;
@@ -1148,6 +1148,7 @@ if (isEditMode) {
     </script>
 </body>
 </html>
+
 
 
 
