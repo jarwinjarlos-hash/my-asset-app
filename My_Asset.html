@@ -584,17 +584,20 @@
             confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(false); });
             
            // --- Toast Notification Logic ---
+            // --- Toast Notification Logic ---
+            let toastTimeout; // A variable to hold the timer
+
             function showToast(message, type = 'info') {
                 const toastElement = document.getElementById('toast-notification');
                 const toastMessage = document.getElementById('toast-message');
 
-                // This function will be the event handler
-                const dismissToast = () => {
-                    toastElement.classList.remove('toast-show');
-                };
+                // Clear any existing timer to prevent toasts from overlapping or getting stuck
+                clearTimeout(toastTimeout);
 
                 toastMessage.textContent = message;
-                toastElement.className = 'fixed top-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-semibold transition-transform transform'; // Reset classes
+                // Reset classes to ensure the toast is correctly styled every time
+                toastElement.className = 'fixed top-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-semibold transition-transform transform';
+                
                 switch (type) {
                     case 'success':
                         toastElement.classList.add('bg-green-500');
@@ -606,14 +609,14 @@
                         toastElement.classList.add('bg-blue-500');
                         break;
                 }
+                
+                // Make the toast visible by sliding it in
                 toastElement.classList.add('toast-show');
 
-                // CRITICAL FIX: Use setTimeout to delay adding the listener.
-                // This ensures the click that triggered the save has finished propagating
-                // before we start listening for the next click to dismiss.
-                setTimeout(() => {
-                    document.addEventListener('pointerdown', dismissToast, { once: true });
-                }, 1000); // A small 100ms delay is safe and unnoticeable.
+                // Set a timer to automatically hide the toast after 1 second (1000 milliseconds)
+                toastTimeout = setTimeout(() => {
+                    toastElement.classList.remove('toast-show');
+                }, 1000);
             }
 
             function parseDate(dateString) { if (!dateString) return null; if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return new Date(dateString + 'T00:00:00'); if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) { const [month, day, year] = dateString.split('/'); const date = new Date(year, month - 1, day); if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) return date; } const fallbackDate = new Date(dateString); if (!isNaN(fallbackDate.getTime())) return fallbackDate; return null; }
@@ -1162,6 +1165,7 @@ if (!transactionElement) return;
     </script>
 </body>
 </html>
+
 
 
 
