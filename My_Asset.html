@@ -583,7 +583,6 @@
             confirmModalCancelBtn.addEventListener('click', () => closeConfirm(false));
             confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(false); });
             
-            // --- Toast Notification Logic ---
            // --- Toast Notification Logic ---
             function showToast(message, type = 'info') {
                 const toastElement = document.getElementById('toast-notification');
@@ -1163,4 +1162,5 @@ if (!transactionElement) return;
     </script>
 </body>
 </html>
+
 
