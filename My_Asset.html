@@ -625,6 +625,7 @@
             // --- Main Authentication Flow ---
             let currentUser = null, assetsListener = null, dividendsListener = null;
             let initialAssetsLoaded = false, initialDividendsLoaded = false;
+
             auth.onAuthStateChanged(user => {
                 if (assetsListener) assetsListener();
                 if (dividendsListener) dividendsListener();
@@ -1142,33 +1143,41 @@ if (!transactionElement) return;
             function renderSummaryTable() { const filters = { assetCategory: summaryFilterAssetCategory.value, assetName: summaryFilterAssetName.value, startDate: summaryFilterStartDate.value, endDate: summaryFilterEndDate.value }; const summaryData = generateSummaryData(filters); if (summarySortState.column) { summaryData.sort((a, b) => { const valA = a[summarySortState.column]; const valB = b[summarySortState.column]; let comparison = 0; if (typeof valA === 'string') { comparison = valA.localeCompare(valB, undefined, { numeric: true }); } else if (typeof valA === 'number') { if (valA < valB) comparison = -1; if (valA > valB) comparison = 1; } return summarySortState.direction === 'asc' ? comparison : -comparison; }); } const allHeaders = document.querySelectorAll('#summary-content thead th'); allHeaders.forEach(th => { th.classList.remove('asc', 'desc'); if (th.dataset.sort === summarySortState.column) { th.classList.add(summarySortState.direction); } }); summaryTableBody.innerHTML = summaryData.map(d => `<tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${d.assetName}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${d.assetCategory}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${d.allocation.toFixed(2)}%</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatCurrency(d.totalDeposited, appSettings.mainCurrency)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatCurrency(d.totalWithdrawn, appSettings.mainCurrency)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right ${d.gainLossAmount >= 0 ? 'text-green-500' : 'text-red-500'}">${formatCurrency(d.gainLossAmount, appSettings.mainCurrency)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right ${d.gainLossPercentage >= 0 ? 'text-green-500' : 'text-red-500'}">${d.gainLossPercentage.toFixed(2)}%</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-500">${formatCurrency(d.totalDividend, appSettings.mainCurrency)}</td></tr>`).join(''); const totals = summaryData.reduce((acc, d) => { acc.totalDeposited += d.totalDeposited; acc.totalWithdrawn += d.totalWithdrawn; acc.gainLossAmount += d.gainLossAmount; acc.totalDividend += d.totalDividend; return acc; }, { totalDeposited: 0, totalWithdrawn: 0, gainLossAmount: 0, totalDividend: 0 }); summaryTableFooter.innerHTML = `<tr><th colspan="3" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Totals</th><td class="px-6 py-4 text-right text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(totals.totalDeposited, appSettings.mainCurrency)}</td><td class="px-6 py-4 text-right text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(totals.totalWithdrawn, appSettings.mainCurrency)}</td><td class="px-6 py-4 text-right text-sm font-bold ${totals.gainLossAmount >= 0 ? 'text-green-600' : 'text-red-600'}">${formatCurrency(totals.gainLossAmount, appSettings.mainCurrency)}</td><td colspan="1"></td><td class="px-6 py-4 text-right text-sm font-bold text-blue-600">${formatCurrency(totals.totalDividend, appSettings.mainCurrency)}</td></tr>`; }
             summaryApplyFiltersBtn.addEventListener('click', renderSummaryTable);
             summaryResetFiltersBtn.addEventListener('click', () => { summaryFilterAssetCategory.value = ''; summaryFilterAssetName.value = ''; summaryFilterStartDate.value = ''; summaryFilterEndDate.value = ''; summaryDateButtons.querySelector('.active')?.classList.remove('active'); summaryDateButtons.querySelector('[data-span="ALL"]').classList.add('active'); renderSummaryTable(); });
-            summaryDateButtons.addEventListener('click', e => { 
-                if (e.target.tagName === 'BUTTON') { 
-                    const span = e.target.dataset.span; 
-                    const now = new Date(); 
-                    let startDate = new Date(); 
-                    summaryDateButtons.querySelector('.active')?.classList.remove('active'); 
-                    e.target.classList.add('active'); 
-                    if (span === 'ALL') { 
-                        summaryFilterStartDate.value = ''; 
-                        summaryFilterEndDate.value = ''; 
-                    } else { 
-                        summaryFilterEndDate.value = now.toISOString().split('T')[0]; 
+            summaryDateButtons.addEventListener('click', e => {
+                if (e.target.tagName === 'BUTTON') {
+                    const span = e.target.dataset.span;
+                    const now = new Date();
+                    let startDate;
+                    let endDate;
+                    summaryDateButtons.querySelector('.active')?.classList.remove('active');
+                    e.target.classList.add('active');
+
+                    if (span === 'ALL') {
+                        summaryFilterStartDate.value = '';
+                        summaryFilterEndDate.value = '';
+                    } else {
                         if (span === 'MTD') {
                             startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of current month
                         } else if (span === 'YTD') {
                             startDate = new Date(now.getFullYear(), 0, 1);
-                        } else if (span === '1M') {
-                            startDate.setMonth(now.getMonth() - 1);
-                        } else if (span === '3M') {
-                            startDate.setMonth(now.getMonth() - 3);
-                        } else if (span === '1Y') {
-                            startDate.setFullYear(now.getFullYear() - 1);
+                            endDate = new Date(now.getFullYear(), 11, 31); // Last day of current year
+                        } else {
+                            endDate = new Date(); // Today
+                            startDate = new Date();
+                            if (span === '1M') {
+                                startDate.setMonth(now.getMonth() - 1);
+                            } else if (span === '3M') {
+                                startDate.setMonth(now.getMonth() - 3);
+                            } else if (span === '1Y') {
+                                startDate.setFullYear(now.getFullYear() - 1);
+                            }
                         }
-                        summaryFilterStartDate.value = startDate.toISOString().split('T')[0]; 
-                    } 
-                    renderSummaryTable(); 
-                } 
+                        summaryFilterStartDate.value = startDate.toISOString().split('T')[0];
+                        summaryFilterEndDate.value = endDate.toISOString().split('T')[0];
+                    }
+                    renderSummaryTable();
+                }
             });
 
             function getChartColors(isDark) { return { grid: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)', ticks: isDark ? '#9ca3af' : '#6b7280', labels: isDark ? '#d1d5db' : '#374151', pie: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#6b7280', '#ec4899'] }; }
