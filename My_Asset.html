@@ -39,6 +39,9 @@
         .sortable:hover .sort-indicator { opacity: 1; }
         .sortable.asc .sort-indicator::after { content: '▲'; font-size: 0.8em; opacity: 1; }
         .sortable.desc .sort-indicator::after { content: '▼'; font-size: 0.8em; opacity: 1; }
+        .toast-show {
+            transform: translateX(0);
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 h-screen overflow-hidden">
@@ -483,6 +486,11 @@
             </div>
         </div>
     </div>
+    
+    <!-- Toast Notification Element -->
+    <div id="toast-notification" class="fixed top-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-semibold transition-transform transform translate-x-[150%]">
+        <span id="toast-message"></span>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
@@ -575,6 +583,33 @@
             confirmModalOkBtn.addEventListener('click', () => closeConfirm(true));
             confirmModalCancelBtn.addEventListener('click', () => closeConfirm(false));
             confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(false); });
+            
+            // --- Toast Notification Logic ---
+            const toastElement = document.getElementById('toast-notification');
+            const toastMessage = document.getElementById('toast-message');
+            let toastTimeout;
+
+            function showToast(message, type = 'info', duration = 3000) {
+                clearTimeout(toastTimeout);
+                toastMessage.textContent = message;
+                toastElement.className = 'fixed top-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-semibold transition-transform transform'; // Reset classes
+                switch (type) {
+                    case 'success':
+                        toastElement.classList.add('bg-green-500');
+                        break;
+                    case 'error':
+                        toastElement.classList.add('bg-red-500');
+                        break;
+                    default: // 'info'
+                        toastElement.classList.add('bg-blue-500');
+                        break;
+                }
+                toastElement.classList.add('toast-show');
+                toastTimeout = setTimeout(() => {
+                    toastElement.classList.remove('toast-show');
+                }, duration);
+            }
+
             function parseDate(dateString) { if (!dateString) return null; if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return new Date(dateString + 'T00:00:00'); if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) { const [month, day, year] = dateString.split('/'); const date = new Date(year, month - 1, day); if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) return date; } const fallbackDate = new Date(dateString); if (!isNaN(fallbackDate.getTime())) return fallbackDate; return null; }
 
             // --- Main Authentication Flow ---
@@ -596,7 +631,7 @@
                         allAssets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         initialAssetsLoaded = true;
                         attemptRender();
-                    }, error => { console.error("Error fetching assets: ", error); showAlert("Could not sync assets.", "Sync Error"); });
+                    }, error => { console.error("Error fetching assets: ", error); showToast("Could not sync assets.", "error"); });
 
                     const dividendsCollection = db.collection('users').doc(currentUser.uid).collection('dividends').orderBy('date', 'desc');
                     dividendsListener = dividendsCollection.onSnapshot(snapshot => {
@@ -618,7 +653,7 @@
                 }
             });
             
-            authForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = authEmailInput.value; const password = authPasswordInput.value; const action = e.submitter.name; appLoader.style.display = 'flex'; authScreen.style.display = 'none'; try { if (action === 'signup') { await auth.createUserWithEmailAndPassword(email, password); } else if (action === 'signin') { await auth.signInWithEmailAndPassword(email, password); } } catch (error) { showAlert(error.message, "Authentication Failed"); appLoader.style.display = 'none'; authScreen.style.display = 'flex'; } });
+            authForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = authEmailInput.value; const password = authPasswordInput.value; const action = e.submitter.name; appLoader.style.display = 'flex'; authScreen.style.display = 'none'; try { if (action === 'signup') { await auth.createUserWithEmailAndPassword(email, password); } else if (action === 'signin') { await auth.signInWithEmailAndPassword(email, password); } } catch (error) { showToast(error.message, "error"); appLoader.style.display = 'none'; authScreen.style.display = 'flex'; } });
             showSignupLink.addEventListener('click', (e) => { e.preventDefault(); signinActions.classList.add('hidden'); signupActions.classList.remove('hidden'); authTitle.textContent = 'Create a new account'; });
             showSigninLink.addEventListener('click', (e) => { e.preventDefault(); signupActions.classList.add('hidden'); signinActions.classList.remove('hidden'); authTitle.textContent = 'Sign in to your account'; });
             signOutBtn.addEventListener('click', () => { auth.signOut(); });
@@ -662,7 +697,7 @@
                     } else { throw new Error(`API error: ${data['error-type']}`); }
                 } catch (error) { 
                     console.error('Failed to fetch exchange rates:', error); 
-                    showAlert(`Could not fetch the latest currency rates. The app will use the last known rates. \nError: ${error.message}`, 'Connection Error');
+                    showToast(`Could not fetch currency rates. Using last known rates.`, 'error');
                     attemptRender();
                 } finally { 
                     updateRatesStatus(); 
@@ -857,7 +892,6 @@
                     const avgIncome = monthDiff > 0 ? totalIncome / monthDiff : 0; avgMonthlyIncomeEl.textContent = formatCurrency(avgIncome, mainCurrency);
                 } else { avgMonthlyIncomeEl.textContent = '-'; }
             }
-
             function renderGainLossDisplay(amountEl, percentEl, amount, percentage, currency, isSmall) {
                 const isGain = amount >= 0; const colorClass = isGain ? 'text-green-500' : 'text-red-500';
                 amountEl.textContent = formatCurrency(amount, currency);
@@ -879,47 +913,81 @@
 
             transactionForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (!currentUser) return showAlert("You must be signed in to save data.");
-                
-                const name = assetNameModalInput.value.trim();
-                const currency = assetCurrencyModalInput.value.toUpperCase().trim();
-                const category = assetCategoryModalInput.value.trim();
-                const transactionAmount = parseFloat(assetValueModalInput.value);
+                if (!currentUser) return showToast("You must be signed in to save data.", "error");
 
-                if (!currency || currency.length !== 3) { return showAlert("Please enter a valid 3-letter currency code (e.g., USD, EUR).", "Invalid Input"); }
+                const saveButton = transactionForm.querySelector('button[type="submit"]');
+                const cancelButton = transactionForm.querySelector('#cancel-transaction-btn');
+                const originalButtonText = saveButton.innerHTML;
 
-                let finalTransactionData;
-
-                if (isEditMode) {
-                    const originalAsset = allAssets.find(a=>a.id === currentEditId);
-                    finalTransactionData = {
-                        name: name, category: category, purchaseDate: purchaseDateModalInput.value, currency: currency, description: assetDescriptionModalInput.value.trim(),
-                        assetCategory: assetTypeCategoryModalInput.value.trim() || originalAsset?.assetCategory || 'Other',
-                        value: transactionAmount,
-                        createdAt: originalAsset?.createdAt || new Date().toISOString()
-                    };
-                } else {
-                    const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-                    const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
-                    if (!latestAsset && (category === 'Withdrawal' || category === 'Transfer')) { return showAlert('First transaction must be a "Deposit" or "Market Value Update".', 'Invalid Transaction'); }
-                    
-                    let assetCategoryValue = latestAsset ? latestAsset.assetCategory : assetTypeCategoryModalInput.value.trim();
-                    if (!assetCategoryValue) { return showAlert('Asset Category is required for new assets.', 'Invalid Input'); }
-
-                    const previousValue = latestAsset ? latestAsset.value : 0;
-                    let newAssetValue;
-                    if (category === 'Deposit') { newAssetValue = previousValue + transactionAmount; } 
-                    else if (category === 'Withdrawal') { if (transactionAmount > previousValue) { return showAlert('Withdrawal cannot be greater than current value.', 'Invalid Amount'); } newAssetValue = previousValue - transactionAmount; } 
-                    else { newAssetValue = transactionAmount; }
-                    
-                    finalTransactionData = { name: name, assetCategory: assetCategoryValue, category: category, purchaseDate: purchaseDateModalInput.value, value: newAssetValue, currency: currency, description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString() };
-                }
-                
                 try {
-                    if (isEditMode) { await db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId).set(finalTransactionData); } 
+                    saveButton.disabled = true;
+                    cancelButton.disabled = true;
+                    saveButton.innerHTML = 'Saving...';
+
+                    const name = assetNameModalInput.value.trim();
+                    const currency = assetCurrencyModalInput.value.toUpperCase().trim();
+                    const category = assetCategoryModalInput.value.trim();
+                    const transactionAmount = parseFloat(assetValueModalInput.value);
+
+                    if (!currency || currency.length !== 3) {
+                         showToast("Please enter a valid 3-letter currency code.", "error");
+                         return;
+                    }
+
+                    let finalTransactionData;
+
+                    if (isEditMode) {
+                        const originalAsset = allAssets.find(a=>a.id === currentEditId);
+                        finalTransactionData = {
+                            name: name, category: category, purchaseDate: purchaseDateModalInput.value, currency: currency, description: assetDescriptionModalInput.value.trim(),
+                            assetCategory: assetTypeCategoryModalInput.value.trim() || originalAsset?.assetCategory || 'Other',
+                            value: transactionAmount,
+                            createdAt: originalAsset?.createdAt || new Date().toISOString()
+                        };
+                    } else {
+                        const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
+                        const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
+                        if (!latestAsset && (category === 'Withdrawal' || category === 'Transfer')) {
+                            showToast('First transaction must be a "Deposit" or "Market Value Update".', 'error');
+                            return;
+                        }
+
+                        let assetCategoryValue = latestAsset ? latestAsset.assetCategory : assetTypeCategoryModalInput.value.trim();
+                        if (!assetCategoryValue) {
+                            showToast('Asset Category is required for new assets.', 'error');
+                            return;
+                        }
+
+                        const previousValue = latestAsset ? latestAsset.value : 0;
+                        let newAssetValue;
+                        if (category === 'Deposit') { newAssetValue = previousValue + transactionAmount; }
+                        else if (category === 'Withdrawal') { if (transactionAmount > previousValue) {
+                            showToast('Withdrawal cannot be greater than current value.', 'error');
+                            return;
+                        } newAssetValue = previousValue - transactionAmount; }
+                        else { newAssetValue = transactionAmount; }
+
+                        finalTransactionData = { name: name, assetCategory: assetCategoryValue, category: category, purchaseDate: purchaseDateModalInput.value, value: newAssetValue, currency: currency, description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString() };
+                    }
+
+                    if (isEditMode) { await db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId).set(finalTransactionData); }
                     else { await db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData); }
+
                     closeTransactionModal();
-                } catch (error) { console.error("Error saving transaction: ", error); showAlert("Failed to save transaction to the cloud."); }
+                    showToast('Transaction saved successfully!', 'success');
+
+                } catch (error) {
+                    console.error("Error saving transaction: ", error);
+                    showToast('Failed to save transaction. Please try again.', 'error');
+                } finally {
+                    if (saveButton) {
+                        saveButton.disabled = false;
+                        saveButton.innerHTML = originalButtonText;
+                    }
+                    if (cancelButton) {
+                        cancelButton.disabled = false;
+                    }
+                }
             });
 
             assetList.addEventListener('click', (e) => {
@@ -956,8 +1024,8 @@
             async function deleteAsset(id) {
                 const confirmed = await showConfirm('Delete this transaction from the cloud? This action cannot be undone.', 'Delete Transaction');
                 if(confirmed && currentUser){
-                    try { await db.collection('users').doc(currentUser.uid).collection('assets').doc(id).delete(); } 
-                    catch(error) { console.error("Error deleting asset:", error); showAlert("Failed to delete transaction."); }
+                    try { await db.collection('users').doc(currentUser.uid).collection('assets').doc(id).delete(); showToast('Transaction deleted.', 'success'); } 
+                    catch(error) { console.error("Error deleting asset:", error); showToast("Failed to delete transaction.", 'error'); }
                 }
             }
             
@@ -973,12 +1041,13 @@
                 e.preventDefault(); if (!currentUser) return;
                 const dividendData = { name: document.getElementById('dividend-asset-name-modal').value.trim(), subAssetName: document.getElementById('dividend-sub-asset-name-modal').value.trim(), date: document.getElementById('dividend-date-modal').value, value: parseFloat(document.getElementById('dividend-value-modal').value), currency: document.getElementById('dividend-currency-modal').value.toUpperCase().trim(), description: document.getElementById('dividend-description-modal').value.trim() };
                 const id = document.getElementById('edit-dividend-id').value;
-                if (!dividendData.name || !dividendData.currency || dividendData.currency.length !== 3) { return showAlert("Please select an asset and ensure currency is valid.", "Invalid Input"); }
+                if (!dividendData.name || !dividendData.currency || dividendData.currency.length !== 3) { return showToast("Please select an asset and ensure currency is valid.", "error"); }
                 try {
                     if (isEditMode) { await db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).update(dividendData); } 
                     else { await db.collection('users').doc(currentUser.uid).collection('dividends').add(dividendData); }
                     closeDividendModal();
-                } catch (error) { console.error("Error saving dividend:", error); showAlert("Failed to save dividend."); }
+                    showToast('Dividend saved successfully!', 'success');
+                } catch (error) { console.error("Error saving dividend:", error); showToast("Failed to save dividend.", 'error'); }
             });
 
             function openDividendModal(dividend = null) {
@@ -1001,8 +1070,8 @@
             async function deleteDividend(id) {
                 const confirmed = await showConfirm('Are you sure you want to delete this dividend entry?', 'Delete Dividend');
                 if (confirmed && currentUser) {
-                    try { await db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).delete(); } 
-                    catch (error) { console.error("Error deleting dividend:", error); showAlert("Failed to delete dividend."); }
+                    try { await db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).delete(); showToast('Dividend deleted.', 'success'); } 
+                    catch (error) { console.error("Error deleting dividend:", error); showToast("Failed to delete dividend.", 'error'); }
                 }
             }
 
@@ -1027,14 +1096,14 @@
                         if (zip.files['dividends.csv']) { importedDividends = csvToDividendArray(await zip.files['dividends.csv'].async('string')); }
                         if (importedAssets && currentUser) { if (await showConfirm('REPLACE current assets with imported file? Cancel to MERGE.', 'Import Assets')) { /* Delete existing logic here */ } for(const asset of importedAssets) { await db.collection('users').doc(currentUser.uid).collection('assets').add(asset); } }
                         if (importedDividends && currentUser) { if (await showConfirm('REPLACE current dividends with imported file? Cancel to MERGE.', 'Import Dividends')) { /* Delete existing logic here */ } for(const dividend of importedDividends) { await db.collection('users').doc(currentUser.uid).collection('dividends').add(dividend); } }
-                        showAlert('Backup imported successfully!', 'Success');
-                    } catch (err) { showAlert('Failed to import backup.', 'Import Error'); console.error(err); }
+                        showToast('Backup imported successfully!', 'success');
+                    } catch (err) { showToast('Failed to import backup.', 'error'); console.error(err); }
                 };
                 reader.readAsArrayBuffer(file); importFileInput.value = '';
             });
 
             function exportBackup() {
-                if (allAssets.length === 0 && allDividends.length === 0) { showAlert('No data to export.'); return; }
+                if (allAssets.length === 0 && allDividends.length === 0) { showToast('No data to export.', 'info'); return; }
                 const zip = new JSZip();
                 const assetHeaders = ['id','name','assetCategory','category','purchaseDate','value', 'currency', 'description','createdAt'];
                 const assetRows = allAssets.map(asset => assetHeaders.map(h => { let c = asset[h] === null || asset[h] === undefined ? '' : String(asset[h]); if (/[",\n]/.test(c)) { c = `"${c.replace(/"/g, '""')}"`; } return c; }).join(','));
@@ -1060,7 +1129,7 @@
             });
 
             function calculatePerformanceForPeriod(assetName, settings, startDate, endDate) { const { mainCurrency, rates } = settings; const allAssetTransactions = allAssets.filter(a => a.name === assetName).sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); if (allAssetTransactions.length === 0) return null; const txBeforeStart = startDate ? allAssetTransactions.filter(tx => parseDate(tx.purchaseDate) < parseDate(startDate)) : []; const latestTxBeforeStart = txBeforeStart.length > 0 ? txBeforeStart[txBeforeStart.length - 1] : null; const valueAtStartConverted = latestTxBeforeStart ? (convertCurrency(latestTxBeforeStart.value, latestTxBeforeStart.currency, mainCurrency, rates) || 0) : 0; const txUntilEnd = endDate ? allAssetTransactions.filter(tx => parseDate(tx.purchaseDate) <= parseDate(endDate)) : allAssetTransactions; const latestTxAtEnd = txUntilEnd.length > 0 ? txUntilEnd[txUntilEnd.length - 1] : null; const valueAtEndConverted = latestTxAtEnd ? (convertCurrency(latestTxAtEnd.value, latestTxAtEnd.currency, mainCurrency, rates) || 0) : 0; const periodTransactions = allAssetTransactions.filter(tx => { const txDate = parseDate(tx.purchaseDate); const startCheck = startDate ? txDate >= parseDate(startDate) : true; const endCheck = endDate ? txDate <= parseDate(endDate) : true; return startCheck && endCheck; }); let totalDeposits = 0; let totalWithdrawals = 0; for (const currentTx of periodTransactions) { const allPrevTxs = allAssetTransactions.filter(tx => parseDate(tx.purchaseDate) < parseDate(currentTx.purchaseDate)); const prevTx = allPrevTxs.length > 0 ? allPrevTxs[allPrevTxs.length - 1] : null; if (currentTx.category === 'Deposit') { const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value; const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, rates); if(convertedDeposit > 0) totalDeposits += convertedDeposit; } else if (currentTx.category === 'Withdrawal' && prevTx) { const withdrawalAmount = prevTx.value - currentTx.value; const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, rates); if (convertedWithdrawal > 0) totalWithdrawals += convertedWithdrawal; } } const gainLossAmount = valueAtEndConverted - valueAtStartConverted - (totalDeposits - totalWithdrawals); const basis = valueAtStartConverted + totalDeposits; const gainLossPercentage = basis > 0 ? (gainLossAmount / basis) * 100 : 0; return { currentValue: valueAtEndConverted, totalDeposits, totalWithdrawals, gainLossAmount, gainLossPercentage }; }
-            function generateSummaryData(filters) { const { mainCurrency, rates } = appSettings; let uniqueAssetNames = [...new Set(allAssets.map(a => a.name))]; if (filters.assetName) { uniqueAssetNames = uniqueAssetNames.filter(name => name === filters.assetName); } if (filters.assetCategory) { uniqueAssetNames = uniqueAssetNames.filter(name => { const latestAsset = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; return latestAsset && latestAsset.assetCategory === filters.assetCategory; }); } const totalPortfolioValue = uniqueAssetNames.reduce((total, name) => { const txUntilEnd = filters.endDate ? allAssets.filter(tx => tx.name === name && parseDate(tx.purchaseDate) <= parseDate(filters.endDate)) : allAssets.filter(tx => tx.name === name); if(txUntilEnd.length === 0) return total; const latestAsset = txUntilEnd.sort((a,b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; return total + (convertCurrency(latestAsset.value, latestAsset.currency, mainCurrency, rates) || 0); }, 0); let summary = uniqueAssetNames.map(name => { const performance = calculatePerformanceForPeriod(name, appSettings, filters.startDate, filters.endDate); if(!performance) return null; const assetDividends = allDividends.filter(i => { const dividendDate = parseDate(i.date); const startCheck = filters.startDate ? dividendDate >= parseDate(filters.startDate) : true; const endCheck = filters.endDate ? dividendDate <= parseDate(filters.endDate) : true; return i.name === name && startCheck && endCheck; }); const totalDividend = assetDividends.reduce((sum, dividend) => { return sum + (convertCurrency(dividend.value, dividend.currency, mainCurrency, rates) || 0); }, 0); const allocation = totalPortfolioValue > 0 ? (performance.currentValue / totalPortfolioValue) * 100 : 0; const latestAssetOverall = allAssets.filter(a => a.name === name).sort((a,b)=> parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; return { assetName: name, assetCategory: latestAssetOverall.assetCategory || 'Other', allocation: allocation, totalDeposited: performance.totalDeposits, totalWithdrawn: performance.totalWithdrawn, gainLossAmount: performance.gainLossAmount, gainLossPercentage: performance.gainLossPercentage, totalDividend: totalDividend }; }).filter(Boolean); return summary; }
+            function generateSummaryData(filters) { const { mainCurrency, rates } = appSettings; let uniqueAssetNames = [...new Set(allAssets.map(a => a.name))]; if (filters.assetName) { uniqueAssetNames = uniqueAssetNames.filter(name => name === filters.assetName); } if (filters.assetCategory) { uniqueAssetNames = uniqueAssetNames.filter(name => { const latestAsset = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; return latestAsset && latestAsset.assetCategory === filters.assetCategory; }); } const totalPortfolioValue = uniqueAssetNames.reduce((total, name) => { const txUntilEnd = filters.endDate ? allAssets.filter(tx => tx.name === name && parseDate(tx.purchaseDate) <= parseDate(filters.endDate)) : allAssets.filter(tx => tx.name === name); if(txUntilEnd.length === 0) return total; const latestAsset = txUntilEnd.sort((a,b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; return total + (convertCurrency(latestAsset.value, latestAsset.currency, mainCurrency, rates) || 0); }, 0); let summary = uniqueAssetNames.map(name => { const performance = calculatePerformanceForPeriod(name, appSettings, filters.startDate, filters.endDate); if(!performance) return null; const assetDividends = allDividends.filter(i => { const dividendDate = parseDate(i.date); const startCheck = filters.startDate ? dividendDate >= parseDate(filters.startDate) : true; const endCheck = filters.endDate ? dividendDate <= parseDate(filters.endDate) : true; return i.name === name && startCheck && endCheck; }); const totalDividend = assetDividends.reduce((sum, dividend) => { return sum + (convertCurrency(dividend.value, dividend.currency, mainCurrency, rates) || 0); }, 0); const allocation = totalPortfolioValue > 0 ? (performance.currentValue / totalPortfolioValue) * 100 : 0; const latestAssetOverall = allAssets.filter(a => a.name === name).sort((a,b)=> parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; return { assetName: name, assetCategory: latestAssetOverall.assetCategory || 'Other', allocation: allocation, totalDeposited: performance.totalDeposits, totalWithdrawn: performance.totalWithdrawals, gainLossAmount: performance.gainLossAmount, gainLossPercentage: performance.gainLossPercentage, totalDividend: totalDividend }; }).filter(Boolean); return summary; }
             function renderSummaryTable() { const filters = { assetCategory: summaryFilterAssetCategory.value, assetName: summaryFilterAssetName.value, startDate: summaryFilterStartDate.value, endDate: summaryFilterEndDate.value }; const summaryData = generateSummaryData(filters); if (summarySortState.column) { summaryData.sort((a, b) => { const valA = a[summarySortState.column]; const valB = b[summarySortState.column]; let comparison = 0; if (typeof valA === 'string') { comparison = valA.localeCompare(valB, undefined, { numeric: true }); } else if (typeof valA === 'number') { if (valA < valB) comparison = -1; if (valA > valB) comparison = 1; } return summarySortState.direction === 'asc' ? comparison : -comparison; }); } const allHeaders = document.querySelectorAll('#summary-content thead th'); allHeaders.forEach(th => { th.classList.remove('asc', 'desc'); if (th.dataset.sort === summarySortState.column) { th.classList.add(summarySortState.direction); } }); summaryTableBody.innerHTML = summaryData.map(d => `<tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${d.assetName}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${d.assetCategory}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${d.allocation.toFixed(2)}%</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatCurrency(d.totalDeposited, appSettings.mainCurrency)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatCurrency(d.totalWithdrawn, appSettings.mainCurrency)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right ${d.gainLossAmount >= 0 ? 'text-green-500' : 'text-red-500'}">${formatCurrency(d.gainLossAmount, appSettings.mainCurrency)}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right ${d.gainLossPercentage >= 0 ? 'text-green-500' : 'text-red-500'}">${d.gainLossPercentage.toFixed(2)}%</td><td class="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-500">${formatCurrency(d.totalDividend, appSettings.mainCurrency)}</td></tr>`).join(''); const totals = summaryData.reduce((acc, d) => { acc.totalDeposited += d.totalDeposited; acc.totalWithdrawn += d.totalWithdrawn; acc.gainLossAmount += d.gainLossAmount; acc.totalDividend += d.totalDividend; return acc; }, { totalDeposited: 0, totalWithdrawn: 0, gainLossAmount: 0, totalDividend: 0 }); summaryTableFooter.innerHTML = `<tr><th colspan="3" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Totals</th><td class="px-6 py-4 text-right text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(totals.totalDeposited, appSettings.mainCurrency)}</td><td class="px-6 py-4 text-right text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(totals.totalWithdrawn, appSettings.mainCurrency)}</td><td class="px-6 py-4 text-right text-sm font-bold ${totals.gainLossAmount >= 0 ? 'text-green-600' : 'text-red-600'}">${formatCurrency(totals.gainLossAmount, appSettings.mainCurrency)}</td><td colspan="1"></td><td class="px-6 py-4 text-right text-sm font-bold text-blue-600">${formatCurrency(totals.totalDividend, appSettings.mainCurrency)}</td></tr>`; }
             summaryApplyFiltersBtn.addEventListener('click', renderSummaryTable);
             summaryResetFiltersBtn.addEventListener('click', () => { summaryFilterAssetCategory.value = ''; summaryFilterAssetName.value = ''; summaryFilterStartDate.value = ''; summaryFilterEndDate.value = ''; summaryDateButtons.querySelector('.active')?.classList.remove('active'); summaryDateButtons.querySelector('[data-span="ALL"]').classList.add('active'); renderSummaryTable(); });
@@ -1081,10 +1150,7 @@
             function renderMonthlyIncomeChart(dividends, settings, isDark, mainCurrency, timeline) { const colors = getChartColors(isDark); if(dividends.length === 0) return; const sortedDividends = [...dividends].sort((a, b) => parseDate(a.date) - parseDate(b.date)); let startDate; const now = new Date(); switch (timeline) { case '1M': startDate = new Date(new Date().setMonth(now.getMonth() - 1)); break; case '3M': startDate = new Date(new Date().setMonth(now.getMonth() - 3)); break; case '1Y': startDate = new Date(new Date().setFullYear(now.getFullYear() - 1)); break; default: if (sortedDividends.length > 0) { startDate = parseDate(sortedDividends[0].date); } else { startDate = new Date(); } break; } const incomeInTimeline = sortedDividends.filter(i => parseDate(i.date) >= startDate); const monthlyTotals = incomeInTimeline.reduce((acc, i) => { const monthKey = parseDate(i.date).toLocaleString('default', { month: 'short', year: 'numeric' }); const convertedValue = convertCurrency(i.value, i.currency, mainCurrency, settings.rates) || 0; acc[monthKey] = (acc[monthKey] || 0) + convertedValue; return acc; }, {}); const labels = Object.keys(monthlyTotals); const data = Object.values(monthlyTotals); const ctx = document.getElementById('monthlyIncomeChart').getContext('2d'); if (monthlyIncomeChart) monthlyIncomeChart.destroy(); monthlyIncomeChart = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: 'Dividend', data, backgroundColor: 'rgba(16, 185, 129, 0.6)', }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.ticks, callback: (v) => formatCurrency(v, mainCurrency, true) } }, x: { grid: { display: false }, ticks: { color: colors.ticks } } }, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `Dividend: ${formatCurrency(c.parsed.y, mainCurrency)}` } } } } }); }
             function updatePrivacyView(){ if(isPrivacyMode){ privacyOnIcon.classList.add('hidden'); privacyOffIcon.classList.remove('hidden'); } else { privacyOnIcon.classList.remove('hidden'); privacyOffIcon.classList.add('hidden'); } }
             privacyToggleBtn.addEventListener('click', () => { isPrivacyMode = !isPrivacyMode; localStorage.setItem('assetTrackerPrivacyMode', isPrivacyMode); updatePrivacyView(); renderAll(); });
-            /*const mainContent = document.querySelector('main'); let touchstartX = 0, touchstartY = 0, touchendX = 0, touchendY = 0; const tabs = ['dashboard', 'tracker', 'dividends', 'summary'];
-            mainContent.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, { passive: true });
-            mainContent.addEventListener('touchend', e => { touchendX = e.changedTouches[0].screenX; touchendY = e.changedTouches[0].screenY; handleSwipe(); });
-            function handleSwipe() { const deltaX = touchendX - touchstartX; const deltaY = touchendY - touchstartY; if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) { const currentIndex = tabs.indexOf(currentTab); if (deltaX < 0) { if (currentIndex < tabs.length - 1) { switchTab(tabs[currentIndex + 1]); } } else { if (currentIndex > 0) { switchTab(tabs[currentIndex - 1]); } } } } */
+            
             if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js').then(registration => { console.log('SW registration successful'); }, err => { console.log('SW registration failed: ', err); }); }); }
         });
     </script>
