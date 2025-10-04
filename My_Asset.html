@@ -487,7 +487,6 @@
         </div>
     </div>
     
-    <!-- Toast Notification Element -->
     <div id="toast-notification" class="fixed top-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-semibold transition-transform transform translate-x-[150%]">
         <span id="toast-message"></span>
     </div>
@@ -993,7 +992,7 @@
             assetList.addEventListener('click', (e) => {
                 const target = e.target;
                 const transactionElement = target.closest('[data-id]');
-                if (!transactionElement) return;
+if (!transactionElement) return;
                 const assetId = transactionElement.getAttribute('data-id');
                 if (target.classList.contains('delete-btn')) deleteAsset(assetId);
                 if (target.classList.contains('edit-btn')) { const asset = allAssets.find(a => a.id === assetId); if (asset) { openTransactionModal(asset); } }
@@ -1156,4 +1155,3 @@
     </script>
 </body>
 </html>
-
