@@ -521,6 +521,7 @@
             // --- Global App State and Settings ---
             const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
             let allAssets = [], allDividends = [], appSettings = {};
+            let syncPromises = {}; // --- CHANGE 1 of 3: ADDED PROMISE MANAGER ---
             let isEditMode = false, currentEditId = null, allocationDisplayMode = 'amount', isPrivacyMode = false, currentTab = 'dashboard';
             let summarySortState = { column: 'allocation', direction: 'desc' };
             const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
@@ -620,8 +621,19 @@
                     
                     const assetsCollection = db.collection('users').doc(user.uid).collection('assets');
                     if (assetsListener) assetsListener();
+                    
+                    // --- CHANGE 2 of 3: UPGRADED DATA LISTENER ---
                     assetsListener = assetsCollection.onSnapshot(snapshot => {
                         allAssets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                        // Check for and resolve any pending sync promises we are waiting for.
+                        for (const docId in syncPromises) {
+                            if (allAssets.some(asset => asset.id === docId)) {
+                                syncPromises[docId].resolve(); // Signal that the update is complete
+                                delete syncPromises[docId];    // Clean up
+                            }
+                        }
+
                         initialAssetsLoaded = true;
                         attemptRender();
                     }, err => { console.error("Assets listener error:", err); showToast("Could not sync assets.", "error"); });
@@ -906,6 +918,7 @@
                 if (category === 'Deposit' || category === 'Withdrawal') { valueLabel.textContent = 'Amount'; } else { valueLabel.textContent = 'Value'; }
             });
 
+            // --- CHANGE 3 of 3: UPDATED SAVE LOGIC ---
             transactionForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!currentUser) return showToast("You must be signed in to save data.", "error");
@@ -930,7 +943,7 @@
                     }
 
                     if (isEditMode) {
-                        // --- START: CORRECTED EDIT LOGIC ---
+                        // Edit logic remains the same
                         const originalAsset = allAssets.find(a => a.id === currentEditId);
                         if (!originalAsset) {
                             throw new Error('Original transaction not found for editing.');
@@ -996,10 +1009,9 @@
                         
                         await batch.commit();
                         showToast('Transaction updated and history recalculated!', 'success');
-                        // --- END: CORRECTED EDIT LOGIC ---
 
                     } else {
-                        // --- Logic for adding a NEW transaction ---
+                        // Logic for adding a NEW transaction
                         const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                         const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
                         if (!latestAsset && (category === 'Withdrawal' || category === 'Transfer')) {
@@ -1016,9 +1028,6 @@
                         if (category === 'Deposit') {
                             newAssetValue = previousValue + transactionAmount;
                         } else if (category === 'Withdrawal') {
-                            // *** THIS IS THE BUG FIX ***
-                            // The variable was 'currentTotalValue', which does not exist here.
-                            // It has been corrected to 'previousValue'.
                             if (transactionAmount > previousValue) {
                                 throw new Error('Withdrawal cannot be greater than current value.');
                             }
@@ -1030,7 +1039,21 @@
                         const finalTransactionData = { name: name, assetCategory: assetCategoryValue, category: category, purchaseDate: purchaseDateModalInput.value, value: newAssetValue, currency: currency, description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString() };
                         
                         const docRef = await db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData);
-                        allAssets.push({ id: docRef.id, ...finalTransactionData });
+
+                        // Now, create a promise and wait for the main listener to resolve it
+                        await new Promise((resolve, reject) => {
+                            const timeout = setTimeout(() => {
+                                delete syncPromises[docRef.id];
+                                reject(new Error('Data sync timed out. Please refresh the page.'));
+                            }, 10000); // 10-second safety timeout
+
+                            syncPromises[docRef.id] = {
+                                resolve: () => {
+                                    clearTimeout(timeout);
+                                    resolve();
+                                }
+                            };
+                        });
                         
                         showToast('Transaction saved successfully!', 'success');
                     }
