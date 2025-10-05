@@ -584,20 +584,22 @@
             confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(false); });
             
            // --- Toast Notification Logic ---
-            // --- Toast Notification Logic ---
             let toastTimeout; // A variable to hold the timer
 
             function showToast(message, type = 'info') {
                 const toastElement = document.getElementById('toast-notification');
                 const toastMessage = document.getElementById('toast-message');
 
-                // Clear any existing timer to prevent toasts from overlapping or getting stuck
+                // Clear any existing timer to prevent new toasts from closing old ones too early
                 clearTimeout(toastTimeout);
 
                 toastMessage.textContent = message;
-                // Reset classes to ensure the toast is correctly styled every time
-                toastElement.className = 'fixed top-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-semibold transition-transform transform';
-                
+
+                // --- CORRECTED LOGIC START ---
+                // Remove only the color classes from the previous toast, preserving layout classes
+                toastElement.classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-500');
+
+                // Add the new color class based on the type
                 switch (type) {
                     case 'success':
                         toastElement.classList.add('bg-green-500');
@@ -609,14 +611,15 @@
                         toastElement.classList.add('bg-blue-500');
                         break;
                 }
-                
+                // --- CORRECTED LOGIC END ---
+
                 // Make the toast visible by sliding it in
                 toastElement.classList.add('toast-show');
 
-                // Set a timer to automatically hide the toast after 1 second (1000 milliseconds)
+                // Set a timer to automatically hide the toast after 3 seconds
                 toastTimeout = setTimeout(() => {
                     toastElement.classList.remove('toast-show');
-                }, 1000);
+                }, 3000); // Increased duration for better visibility
             }
 
             function parseDate(dateString) { if (!dateString) return null; if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return new Date(dateString + 'T00:00:00'); if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) { const [month, day, year] = dateString.split('/'); const date = new Date(year, month - 1, day); if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) return date; } const fallbackDate = new Date(dateString); if (!isNaN(fallbackDate.getTime())) return fallbackDate; return null; }
@@ -1242,6 +1245,7 @@ if (!transactionElement) return;
     </script>
 </body>
 </html>
+
 
 
 
