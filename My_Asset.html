@@ -595,75 +595,7 @@
 
                 toastMessage.textContent = message;
 
-                // --- CORRECTED LOGIC START ---
-                // Remove only the color classes from the previous toast, preserving layout classes
-                toastElement.classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-500');
-
-                // Add the new color class based on the type
-                switch (type) {
-                    case 'success':
-                        toastElement.classList.add('bg-green-500');
-                        break;
-                    case 'error':
-                        toastElement.classList.add('bg-red-500');
-                        break;
-                    default: // 'info'
-                        toastElement.classList.add('bg-blue-500');
-                        break;
-                }
-                // --- CORRECTED LOGIC END ---
-
-                // Make the toast visible by sliding it in
-                toastElement.classList.add('toast-show');
-
-                // Set a timer to automatically hide the toast after 3 seconds
-                toastTimeout = setTimeout(() => {
-                    toastElement.classList.remove('toast-show');
-                }, 3000); // Increased duration for better visibility
-            }
-
-            function parseDate(dateString) { if (!dateString) return null; if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return new Date(dateString + 'T00:00:00'); if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) { const [month, day, year] = dateString.split('/'); const date = new Date(year, month - 1, day); if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) return date; } const fallbackDate = new Date(dateString); if (!isNaN(fallbackDate.getTime())) return fallbackDate; return null; }
-
-            // --- Main Authentication Flow ---
-            let currentUser = null, assetsListener = null, dividendsListener = null;
-            let initialAssetsLoaded = false, initialDividendsLoaded = false;
-
-            auth.onAuthStateChanged(user => {
-                if (assetsListener) assetsListener();
-                if (dividendsListener) dividendsListener();
-                initialAssetsLoaded = false; initialDividendsLoaded = false;
-
-                if (user) {
-                    currentUser = user;
-                    authScreen.style.display = 'none'; appLoader.style.display = 'flex'; appScreen.style.display = 'none';
-                    userEmailEl.textContent = user.email; userInfoEl.style.display = 'flex';
-
-                    const assetsCollection = db.collection('users').doc(currentUser.uid).collection('assets').orderBy('purchaseDate', 'desc');
-                    assetsListener = assetsCollection.onSnapshot(snapshot => {
-                        allAssets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        initialAssetsLoaded = true;
-                        attemptRender();
-                    }, error => { console.error("Error fetching assets: ", error); showToast("Could not sync assets.", "error"); });
-
-                    const dividendsCollection = db.collection('users').doc(currentUser.uid).collection('dividends').orderBy('date', 'desc');
-                    dividendsListener = dividendsCollection.onSnapshot(snapshot => {
-                        allDividends = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        initialDividendsLoaded = true;
-                        attemptRender();
-                    }, error => { console.error("Error fetching dividends: ", error); });
-
-                    loadSettings();
-                    populateCurrencyDatalists();
-                    updateExchangeRates();
-                    window.addEventListener('online', updateExchangeRates);
-                    window.addEventListener('offline', updateRatesStatus);
-                } else {
-                    currentUser = null;
-                    authScreen.style.display = 'flex'; appLoader.style.display = 'none'; appScreen.style.display = 'none';
-                    userInfoEl.style.display = 'none';
-                    allAssets = []; allDividends = [];
-                }
-            });
+             // --- Toast Notification Logic ---
             
             authForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = authEmailInput.value; const password = authPasswordInput.value; const action = e.submitter.name; appLoader.style.display = 'flex'; authScreen.style.display = 'none'; try { if (action === 'signup') { await auth.createUserWithEmailAndPassword(email, password); } else if (action === 'signin') { await auth.signInWithEmailAndPassword(email, password); } } catch (error) { showToast(error.message, "error"); appLoader.style.display = 'none'; authScreen.style.display = 'flex'; } });
             showSignupLink.addEventListener('click', (e) => { e.preventDefault(); signinActions.classList.add('hidden'); signupActions.classList.remove('hidden'); authTitle.textContent = 'Create a new account'; });
@@ -1249,6 +1181,7 @@ if (!transactionElement) return;
     </script>
 </body>
 </html>
+
 
 
 
