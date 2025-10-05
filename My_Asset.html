@@ -1016,7 +1016,10 @@
                         if (category === 'Deposit') {
                             newAssetValue = previousValue + transactionAmount;
                         } else if (category === 'Withdrawal') {
-                            if (transactionAmount > currentTotalValue) {
+                            // *** THIS IS THE BUG FIX ***
+                            // The variable was 'currentTotalValue', which does not exist here.
+                            // It has been corrected to 'previousValue'.
+                            if (transactionAmount > previousValue) {
                                 throw new Error('Withdrawal cannot be greater than current value.');
                             }
                             newAssetValue = previousValue - transactionAmount;
@@ -1026,7 +1029,6 @@
 
                         const finalTransactionData = { name: name, assetCategory: assetCategoryValue, category: category, purchaseDate: purchaseDateModalInput.value, value: newAssetValue, currency: currency, description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString() };
                         
-                        // *** THIS IS THE ONLY CHANGE IN THE ENTIRE FILE ***
                         const docRef = await db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData);
                         allAssets.push({ id: docRef.id, ...finalTransactionData });
                         
