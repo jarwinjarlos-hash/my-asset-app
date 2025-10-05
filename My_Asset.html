@@ -1060,7 +1060,11 @@
                         }
 
                         const finalTransactionData = { name: name, assetCategory: assetCategoryValue, category: category, purchaseDate: purchaseDateModalInput.value, value: newAssetValue, currency: currency, description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString() };
-                        await db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData);
+                       // Capture the reference to the newly created document
+                        const docRef = await db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData);
+
+                        // **THE FIX IS HERE:** Manually add the new transaction to the local array.
+                        allAssets.push({ id: docRef.id, ...finalTransactionData });
                         showToast('Transaction saved successfully!', 'success');
                     }
 
@@ -1245,6 +1249,7 @@ if (!transactionElement) return;
     </script>
 </body>
 </html>
+
 
 
 
