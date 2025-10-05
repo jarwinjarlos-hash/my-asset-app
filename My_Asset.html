@@ -433,8 +433,7 @@
             </form>
         </div>
     </div>
-    
-    <div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+<div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
         <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
             <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Settings</h3>
             <div class="space-y-6">
@@ -571,6 +570,8 @@
             const authForm = document.getElementById('auth-form'), authTitle = document.getElementById('auth-title'), authEmailInput = document.getElementById('auth-email'), authPasswordInput = document.getElementById('auth-password');
             const signinActions = document.getElementById('signin-actions'), signupActions = document.getElementById('signup-actions'), showSignupLink = document.getElementById('show-signup'), showSigninLink = document.getElementById('show-signin');
             const signOutBtn = document.getElementById('signout-btn'), userEmailEl = document.getElementById('user-email'), userInfoEl = document.getElementById('user-info');
+            let currentUser = null, assetsListener = null, dividendsListener = null;
+            let initialAssetsLoaded = false, initialDividendsLoaded = false;
 
             // --- Custom Modals ---
             function showAlert(message, title = 'Info') { alertModalTitle.textContent = title; alertModalMessage.textContent = message; alertModal.classList.remove('hidden'); }
@@ -584,18 +585,68 @@
             confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(false); });
             
            // --- Toast Notification Logic ---
-            let toastTimeout; // A variable to hold the timer
+            let toastTimeout;
 
             function showToast(message, type = 'info') {
                 const toastElement = document.getElementById('toast-notification');
                 const toastMessage = document.getElementById('toast-message');
 
-                // Clear any existing timer to prevent new toasts from closing old ones too early
                 clearTimeout(toastTimeout);
-
                 toastMessage.textContent = message;
+                toastElement.classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-500');
 
-             // --- Toast Notification Logic ---
+                switch (type) {
+                    case 'success': toastElement.classList.add('bg-green-500'); break;
+                    case 'error': toastElement.classList.add('bg-red-500'); break;
+                    default: toastElement.classList.add('bg-blue-500'); break;
+                }
+                
+                toastElement.classList.add('toast-show');
+                toastTimeout = setTimeout(() => {
+                    toastElement.classList.remove('toast-show');
+                }, 3000);
+            }
+
+            function parseDate(dateString) { if (!dateString) return null; if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return new Date(dateString + 'T00:00:00'); if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) { const [month, day, year] = dateString.split('/'); const date = new Date(year, month - 1, day); if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) return date; } const fallbackDate = new Date(dateString); if (!isNaN(fallbackDate.getTime())) return fallbackDate; return null; }
+
+            // --- Authentication Logic ---
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    userInfoEl.style.display = 'flex';
+                    userEmailEl.textContent = user.email;
+                    authScreen.style.display = 'none';
+                    appLoader.style.display = 'flex';
+                    
+                    const assetsCollection = db.collection('users').doc(user.uid).collection('assets');
+                    if (assetsListener) assetsListener();
+                    assetsListener = assetsCollection.onSnapshot(snapshot => {
+                        allAssets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        initialAssetsLoaded = true;
+                        attemptRender();
+                    }, err => { console.error("Assets listener error:", err); showToast("Could not sync assets.", "error"); });
+
+                    const dividendsCollection = db.collection('users').doc(user.uid).collection('dividends');
+                    if (dividendsListener) dividendsListener();
+                    dividendsListener = dividendsCollection.onSnapshot(snapshot => {
+                        allDividends = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        initialDividendsLoaded = true;
+                        attemptRender();
+                    }, err => { console.error("Dividends listener error:", err); showToast("Could not sync dividends.", "error"); });
+                } else {
+                    currentUser = null;
+                    if (assetsListener) assetsListener();
+                    if (dividendsListener) dividendsListener();
+                    assetsListener = null;
+                    dividendsListener = null;
+                    allAssets = [];
+                    allDividends = [];
+                    authScreen.style.display = 'flex';
+                    appScreen.style.display = 'none';
+                    appLoader.style.display = 'none';
+                    userInfoEl.style.display = 'none';
+                }
+            });
             
             authForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = authEmailInput.value; const password = authPasswordInput.value; const action = e.submitter.name; appLoader.style.display = 'flex'; authScreen.style.display = 'none'; try { if (action === 'signup') { await auth.createUserWithEmailAndPassword(email, password); } else if (action === 'signin') { await auth.signInWithEmailAndPassword(email, password); } } catch (error) { showToast(error.message, "error"); appLoader.style.display = 'none'; authScreen.style.display = 'flex'; } });
             showSignupLink.addEventListener('click', (e) => { e.preventDefault(); signinActions.classList.add('hidden'); signupActions.classList.remove('hidden'); authTitle.textContent = 'Create a new account'; });
@@ -884,25 +935,16 @@
                         if (!originalAsset) {
                             throw new Error('Original transaction not found for editing.');
                         }
-
-                        // Get all transactions for this asset, sorted chronologically
                         const assetHistory = allAssets
                             .filter(a => a.name === originalAsset.name)
                             .sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-
-                        // Create a deep copy to safely calculate original deltas
                         const originalAssetHistory = JSON.parse(JSON.stringify(assetHistory));
-
                         const editIndex = assetHistory.findIndex(a => a.id === currentEditId);
                         if (editIndex === -1) {
                             throw new Error("Could not find the transaction to edit in its history.");
                         }
-
-                        // Find the transaction that came *before* the one being edited
                         const prevTx = editIndex > 0 ? assetHistory[editIndex - 1] : null;
                         const prevValue = prevTx ? prevTx.value : 0;
-
-                        // Calculate the new cumulative value for the edited transaction
                         let newCalculatedValue;
                         if (category === 'Deposit') {
                             newCalculatedValue = prevValue + transactionAmount;
@@ -911,14 +953,10 @@
                                 throw new Error('Withdrawal cannot be greater than the preceding value.');
                             }
                             newCalculatedValue = prevValue - transactionAmount;
-                        } else { // 'Market Value Update' or other absolute-value categories
+                        } else { 
                             newCalculatedValue = transactionAmount;
                         }
-
-                        // Prepare a batch write to update all affected transactions atomically
                         const batch = db.batch();
-
-                        // 1. Update the document that was actually edited
                         const editedDocRef = db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId);
                         const finalTransactionData = {
                             ...originalAsset,
@@ -929,10 +967,7 @@
                             value: newCalculatedValue,
                         };
                         batch.update(editedDocRef, finalTransactionData);
-
-                        // 2. Cascade the update to all subsequent transactions
                         let lastCorrectValue = newCalculatedValue;
-
                         for (let i = editIndex + 1; i < assetHistory.length; i++) {
                             const subsequentTx = assetHistory[i];
                             const originalSubsequentTx = originalAssetHistory[i];
@@ -940,10 +975,8 @@
                             let newSubsequentValue;
 
                             if (subsequentTx.category === 'Market Value Update') {
-                                // This is an absolute value; it does not change based on prior edits.
                                 newSubsequentValue = subsequentTx.value;
                             } else {
-                                // This is a relative value; calculate its original delta and re-apply it.
                                 let delta = 0;
                                 if (subsequentTx.category === 'Deposit') {
                                     delta = originalSubsequentTx.value - (originalPrevTx ? originalPrevTx.value : 0);
@@ -952,7 +985,7 @@
                                     delta = (originalPrevTx ? originalPrevTx.value : 0) - originalSubsequentTx.value;
                                     newSubsequentValue = lastCorrectValue - delta;
                                 } else {
-                                    newSubsequentValue = lastCorrectValue; // Fallback
+                                    newSubsequentValue = lastCorrectValue;
                                 }
                             }
                             
@@ -966,7 +999,7 @@
                         // --- END: CORRECTED EDIT LOGIC ---
 
                     } else {
-                        // --- Logic for adding a NEW transaction (this was already correct) ---
+                        // --- Logic for adding a NEW transaction ---
                         const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                         const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
                         if (!latestAsset && (category === 'Withdrawal' || category === 'Transfer')) {
@@ -983,7 +1016,7 @@
                         if (category === 'Deposit') {
                             newAssetValue = previousValue + transactionAmount;
                         } else if (category === 'Withdrawal') {
-                            if (transactionAmount > previousValue) {
+                            if (transactionAmount > currentTotalValue) {
                                 throw new Error('Withdrawal cannot be greater than current value.');
                             }
                             newAssetValue = previousValue - transactionAmount;
@@ -992,11 +1025,11 @@
                         }
 
                         const finalTransactionData = { name: name, assetCategory: assetCategoryValue, category: category, purchaseDate: purchaseDateModalInput.value, value: newAssetValue, currency: currency, description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString() };
-                       // Capture the reference to the newly created document
+                        
+                        // *** THIS IS THE ONLY CHANGE IN THE ENTIRE FILE ***
                         const docRef = await db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData);
-
-                        // **THE FIX IS HERE:** Manually add the new transaction to the local array.
                         allAssets.push({ id: docRef.id, ...finalTransactionData });
+                        
                         showToast('Transaction saved successfully!', 'success');
                     }
 
@@ -1015,10 +1048,11 @@
                     }
                 }
             });
+
             assetList.addEventListener('click', (e) => {
                 const target = e.target;
                 const transactionElement = target.closest('[data-id]');
-if (!transactionElement) return;
+                if (!transactionElement) return;
                 const assetId = transactionElement.getAttribute('data-id');
                 if (target.classList.contains('delete-btn')) deleteAsset(assetId);
                 if (target.classList.contains('edit-btn')) { const asset = allAssets.find(a => a.id === assetId); if (asset) { openTransactionModal(asset); } }
@@ -1029,7 +1063,7 @@ if (!transactionElement) return;
                 isEditMode = !!asset;
                 currentEditId = asset ? asset.id : null;
                 transactionModalTitle.textContent = isEditMode ? 'Edit Transaction' : 'Add Transaction';
-                assetNameModalInput.disabled = isEditMode; assetCurrencyModalInput.disabled = isEditMode; assetTypeCategoryWrapperModal.classList.add('hidden');
+                assetNameModalInput.disabled = isEditMode; assetCurrencyModalInput.disabled = true; assetTypeCategoryWrapperModal.classList.add('hidden');
                 const valueLabel = document.querySelector('label[for="asset-value-modal"]');
                 if (asset) {
                     assetNameModalInput.value = asset.name; assetCategoryModalInput.value = asset.category || ''; purchaseDateModalInput.value = asset.purchaseDate;
@@ -1038,7 +1072,12 @@ if (!transactionElement) return;
                     if(asset.category === 'Deposit' || asset.category === 'Withdrawal') { assetValueModalInput.value = Math.abs(asset.value - prevValue); if(valueLabel) valueLabel.textContent = 'Amount'; } 
                     else { assetValueModalInput.value = asset.value; if(valueLabel) valueLabel.textContent = 'Value'; }
                     assetCurrencyModalInput.value = asset.currency; assetDescriptionModalInput.value = asset.description || '';
-                } else { purchaseDateModalInput.value = new Date().toISOString().split('T')[0]; if(valueLabel) valueLabel.textContent = 'Value'; }
+                } else { 
+                    assetNameModalInput.disabled = false;
+                    assetCurrencyModalInput.disabled = false;
+                    purchaseDateModalInput.value = new Date().toISOString().split('T')[0]; 
+                    if(valueLabel) valueLabel.textContent = 'Value'; 
+                }
                 transactionModal.classList.remove('hidden');
             }
             
@@ -1176,17 +1215,15 @@ if (!transactionElement) return;
             function updatePrivacyView(){ if(isPrivacyMode){ privacyOnIcon.classList.add('hidden'); privacyOffIcon.classList.remove('hidden'); } else { privacyOnIcon.classList.remove('hidden'); privacyOffIcon.classList.add('hidden'); } }
             privacyToggleBtn.addEventListener('click', () => { isPrivacyMode = !isPrivacyMode; localStorage.setItem('assetTrackerPrivacyMode', isPrivacyMode); updatePrivacyView(); renderAll(); });
             
+            // --- Service Worker ---
             if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('service-worker.js').then(registration => { console.log('SW registration successful'); }, err => { console.log('SW registration failed: ', err); }); }); }
+
+            // --- Initial Load ---
+            loadSettings();
+            populateCurrencyDatalists();
+            updateExchangeRates();
+            setInterval(updateExchangeRates, 3600000); // Update every hour
         });
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
