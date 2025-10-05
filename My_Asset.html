@@ -585,7 +585,7 @@
             
            // --- Toast Notification Logic ---
             // --- Toast Notification Logic ---
-            /*let toastTimeout; // A variable to hold the timer
+            let toastTimeout; // A variable to hold the timer
 
             function showToast(message, type = 'info') {
                 const toastElement = document.getElementById('toast-notification');
@@ -617,7 +617,7 @@
                 toastTimeout = setTimeout(() => {
                     toastElement.classList.remove('toast-show');
                 }, 1000);
-            }*/
+            }
 
             function parseDate(dateString) { if (!dateString) return null; if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return new Date(dateString + 'T00:00:00'); if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) { const [month, day, year] = dateString.split('/'); const date = new Date(year, month - 1, day); if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) return date; } const fallbackDate = new Date(dateString); if (!isNaN(fallbackDate.getTime())) return fallbackDate; return null; }
 
@@ -1242,6 +1242,7 @@ if (!transactionElement) return;
     </script>
 </body>
 </html>
+
 
 
 
