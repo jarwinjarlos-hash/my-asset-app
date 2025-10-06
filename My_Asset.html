@@ -532,6 +532,7 @@
 
             // --- Theme Switcher ---
             const themeToggleBtn = document.getElementById('theme-toggle');
+
             const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
             const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
             const docElement = document.documentElement;
@@ -1262,7 +1263,7 @@
                 if (e.target.tagName === 'BUTTON') {
                     const span = e.target.dataset.span;
                     const now = new Date();
-                    let startDate;
+                    let startDate, endDate;
                     summaryDateButtons.querySelector('.active')?.classList.remove('active');
                     e.target.classList.add('active');
 
@@ -1270,25 +1271,31 @@
                         summaryFilterStartDate.value = '';
                         summaryFilterEndDate.value = '';
                     } else {
-                        summaryFilterEndDate.value = now.toISOString().split('T')[0];
                         if (span === 'MTD') {
                             startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
                         } else if (span === 'YTD') {
                             startDate = new Date(now.getFullYear(), 0, 1);
+                            endDate = new Date(now.getFullYear(), 11, 31);
                         } else if (span === '1M') {
                             startDate = new Date();
                             startDate.setMonth(now.getMonth() - 1);
+                            endDate = now;
                         } else if (span === '3M') {
                             startDate = new Date();
                             startDate.setMonth(now.getMonth() - 3);
+                            endDate = now;
                         } else if (span === '6M') {
                              startDate = new Date();
                             startDate.setMonth(now.getMonth() - 6);
+                            endDate = now;
                         } else if (span === '1Y') {
                             startDate = new Date();
                             startDate.setFullYear(now.getFullYear() - 1);
+                            endDate = now;
                         }
                         summaryFilterStartDate.value = startDate.toISOString().split('T')[0];
+                        summaryFilterEndDate.value = endDate.toISOString().split('T')[0];
                     }
                     renderSummaryTable();
                 }
@@ -1534,4 +1541,5 @@
     </script>
 </body>
 </html>
+
 
