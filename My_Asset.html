@@ -437,7 +437,8 @@
             </form>
         </div>
     </div>
-<div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+    
+    <div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
         <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
             <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Settings</h3>
             <div class="space-y-6">
@@ -486,6 +487,43 @@
             <div class="flex justify-end space-x-2">
                 <button type="button" id="confirm-modal-cancel-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
                 <button type="button" id="confirm-modal-ok-btn" class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD THIS: Asset History Modal -->
+    <div id="asset-history-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="asset-history-modal-title" class="text-xl font-semibold text-gray-900 dark:text-white">Asset Valuation</h3>
+                <button id="close-asset-history-modal-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none">
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="space-y-6">
+                <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
+                    <div class="h-64 sm:h-72">
+                        <canvas id="assetHistoryChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Historical Valuations</h4>
+                     <div class="overflow-y-auto max-h-60 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0">
+                                <tr>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                    <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Diff</th>
+                                    <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                                    <th scope="col" class="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="asset-history-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <!-- History rows will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -572,7 +610,10 @@
             const alertModal = document.getElementById('alert-modal'), alertModalTitle = document.getElementById('alert-modal-title'), alertModalMessage = document.getElementById('alert-modal-message'), alertModalOkBtn = document.getElementById('alert-modal-ok-btn');
             const confirmModal = document.getElementById('confirm-modal'), confirmModalTitle = document.getElementById('confirm-modal-title'), confirmModalMessage = document.getElementById('confirm-modal-message'), confirmModalOkBtn = document.getElementById('confirm-modal-ok-btn'), confirmModalCancelBtn = document.getElementById('confirm-modal-cancel-btn');
             let confirmResolve = null;
-const authScreen = document.getElementById('auth-screen'), appLoader = document.getElementById('app-loader'), appScreen = document.getElementById('app-screen');
+            const assetHistoryModal = document.getElementById('asset-history-modal'); // New
+            const closeAssetHistoryModalBtn = document.getElementById('close-asset-history-modal-btn'); // New
+            let assetHistoryChart; // New
+            const authScreen = document.getElementById('auth-screen'), appLoader = document.getElementById('app-loader'), appScreen = document.getElementById('app-screen');
             const authForm = document.getElementById('auth-form'), authTitle = document.getElementById('auth-title'), authEmailInput = document.getElementById('auth-email'), authPasswordInput = document.getElementById('auth-password');
             const signinActions = document.getElementById('signin-actions'), signupActions = document.getElementById('signup-actions'), showSignupLink = document.getElementById('show-signup'), showSigninLink = document.getElementById('show-signin');
             const signOutBtn = document.getElementById('signout-btn'), userEmailEl = document.getElementById('user-email'), userInfoEl = document.getElementById('user-info');
@@ -966,6 +1007,7 @@ const authScreen = document.getElementById('auth-screen'), appLoader = document.
                 const saveButton = transactionForm.querySelector('button[type="submit"]');
                 const cancelButton = transactionForm.querySelector('#cancel-transaction-btn');
                 const originalButtonText = saveButton.innerHTML;
+                const assetNameForRefresh = assetNameModalInput.value.trim();
 
                 try {
                     saveButton.disabled = true;
@@ -1080,8 +1122,12 @@ const authScreen = document.getElementById('auth-screen'), appLoader = document.
                         
                         showToast('Transaction saved successfully!', 'success');
                     }
-
+                    
                     closeTransactionModal();
+                     if (!assetHistoryModal.classList.contains('hidden')) {
+                        openAssetHistoryModal(assetNameForRefresh);
+                     }
+
 
                 } catch (error) {
                     console.error("Error saving transaction: ", error);
@@ -1117,7 +1163,7 @@ const authScreen = document.getElementById('auth-screen'), appLoader = document.
                     assetNameModalInput.value = asset.name; assetCategoryModalInput.value = asset.category || ''; purchaseDateModalInput.value = asset.purchaseDate;
                     const assetHistory = allAssets.filter(a => a.name === asset.name && parseDate(a.purchaseDate) < parseDate(asset.purchaseDate)).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
                     const prevAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null; const prevValue = prevAsset ? prevAsset.value : 0;
-                    if(asset.category === 'Deposit' || asset.category === 'Withdrawal') { assetValueModalInput.value = Math.abs(asset.value - prevValue); if(valueLabel) valueLabel.textContent = 'Amount'; } 
+                    if(asset.category === 'Deposit' || asset.category === 'Withdrawal') { assetValueModalInput.value = Math.abs(asset.value - prevValue).toFixed(2); if(valueLabel) valueLabel.textContent = 'Amount'; } 
                     else { assetValueModalInput.value = asset.value; if(valueLabel) valueLabel.textContent = 'Value'; }
                     assetCurrencyModalInput.value = asset.currency; assetDescriptionModalInput.value = asset.description || '';
                 } else { 
@@ -1134,9 +1180,28 @@ const authScreen = document.getElementById('auth-screen'), appLoader = document.
             transactionModal.addEventListener('click', (e) => { if (e.target === transactionModal) closeTransactionModal(); });
 
             async function deleteAsset(id) {
+                const assetToDelete = allAssets.find(a => a.id === id);
+                if (!assetToDelete) return;
+                
                 const confirmed = await showConfirm('Delete this transaction from the cloud? This action cannot be undone.', 'Delete Transaction');
                 if(confirmed && currentUser){
-                    try { await db.collection('users').doc(currentUser.uid).collection('assets').doc(id).delete(); showToast('Transaction deleted.', 'success'); } 
+                    try { 
+                        await db.collection('users').doc(currentUser.uid).collection('assets').doc(id).delete(); 
+                        showToast('Transaction deleted.', 'success'); 
+                        
+                        if (!assetHistoryModal.classList.contains('hidden')) {
+                            const modalTitle = document.getElementById('asset-history-modal-title').textContent;
+                            if (modalTitle.includes(assetToDelete.name)) {
+                                const remainingTxs = allAssets.filter(a => a.name === assetToDelete.name && a.id !== id);
+                                if (remainingTxs.length > 0) {
+                                    openAssetHistoryModal(assetToDelete.name);
+                                } else {
+                                    closeAssetHistoryModal();
+                                }
+                            }
+                        }
+
+                    } 
                     catch(error) { console.error("Error deleting asset:", error); showToast("Failed to delete transaction.", 'error'); }
                 }
             }
@@ -1303,10 +1368,204 @@ const authScreen = document.getElementById('auth-screen'), appLoader = document.
             function renderCashFlowSummary(assets, settings, mainCurrency) { const groupedAssets = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {}); for (const name in groupedAssets) groupedAssets[name].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); let totalDeposits = 0, totalWithdrawals = 0; for (const name in groupedAssets) { const group = groupedAssets[name]; for (let i = 0; i < group.length; i++) { const currentTx = group[i]; const prevTx = i > 0 ? group[i - 1] : null; if (currentTx.category === 'Deposit') { const depositAmount = convertCurrency(prevTx ? (currentTx.value - prevTx.value) : currentTx.value, currentTx.currency, mainCurrency, settings.rates); if(depositAmount > 0) totalDeposits += depositAmount; } else if (currentTx.category === 'Withdrawal' && prevTx) { const withdrawalAmount = convertCurrency(prevTx.value - currentTx.value, currentTx.currency, mainCurrency, settings.rates); if (withdrawalAmount > 0) totalWithdrawals += withdrawalAmount; } } } const totalDividends = allDividends.reduce((sum, dividend) => { const convertedValue = convertCurrency(dividend.value, dividend.currency, mainCurrency, settings.rates) || 0; return sum + convertedValue; }, 0); document.getElementById('cash-flow-summary').innerHTML = `<div><p class="text-sm text-gray-500 dark:text-gray-400">Total Deposited</p><p class="text-xl font-semibold text-green-600">${formatCurrency(totalDeposits, mainCurrency)}</p></div><div><p class="text-sm text-gray-500 dark:text-gray-400">Total Withdrawn</p><p class="text-xl font-semibold text-red-500">${formatCurrency(totalWithdrawals, mainCurrency)}</p></div><div><p class="text-sm text-gray-500 dark:text-gray-400">Total Dividends Received</p><p class="text-xl font-semibold text-blue-600">${formatCurrency(totalDividends, mainCurrency)}</p></div>`; }
             function calculateAssetPerformance(transactions, settings, mainCurrency, nativeCurrencyValue = false) { if (transactions.length === 0) { return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0, totalDeposits: 0, totalWithdrawals: 0 }; } const sortedTxs = [...transactions].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); const latestTx = sortedTxs[sortedTxs.length - 1]; const currentValue = nativeCurrencyValue ? latestTx.value : (convertCurrency(latestTx.value, latestTx.currency, mainCurrency, settings.rates) || 0); let totalDeposits = 0; let totalWithdrawals = 0; for (let i = 0; i < sortedTxs.length; i++) { const currentTx = sortedTxs[i]; const prevTx = i > 0 ? sortedTxs[i - 1] : null; if (currentTx.category === 'Deposit') { const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value; const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, settings.rates); if(convertedDeposit > 0) totalDeposits += convertedDeposit; } else if (currentTx.category === 'Withdrawal' && prevTx) { const withdrawalAmount = prevTx.value - currentTx.value; const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, settings.rates); if (convertedWithdrawal > 0) totalWithdrawals += convertedWithdrawal; } } const netCapital = totalDeposits - totalWithdrawals; const gainLossAmount = currentValue - netCapital; const gainLossPercentage = netCapital !== 0 ? (gainLossAmount / netCapital) * 100 : 0; return { currentValue, gainLossAmount, gainLossPercentage, netCapital, totalDeposits, totalWithdrawals }; }
             function renderPerformanceGainLossHtml(amount, percentage, currency) { if(isNaN(amount) || isNaN(percentage)) return '<div>-</div>'; const isGain = amount >= 0, colorClass = isGain ? 'text-green-500' : 'text-red-500'; return `<div class="text-right"><p class="font-semibold ${colorClass}">${formatCurrency(amount, currency)}</p><p class="text-xs ${colorClass}">${isPrivacyMode ? '(**.**%)' : `(${percentage.toFixed(2)}%)`}</p></div>`; }
-            function renderAssetBreakdown(assets, settings, mainCurrency) { assetBreakdownContainer.innerHTML = ''; if(assets.length === 0) return; const groupedByName = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {}); const assetPerformances = Object.values(groupedByName).map(txs => { const latestTx = txs.sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; const performance = calculateAssetPerformance(txs, settings, mainCurrency); const nativePerformance = calculateAssetPerformance(txs, settings, mainCurrency, true); return { name: latestTx.name, currency: latestTx.currency, assetCategory: latestTx.assetCategory, nativeValue: nativePerformance.currentValue, ...performance }; }); const performanceByCategory = assetPerformances.reduce((acc, assetPerf) => { const category = assetPerf.assetCategory || 'Other'; if(!acc[category]){ acc[category] = { assets: [], totalValue: 0, totalGainLoss: 0, totalNetCapital: 0 }; } acc[category].assets.push(assetPerf); acc[category].totalValue += assetPerf.currentValue; acc[category].totalGainLoss += assetPerf.gainLossAmount; acc[category].totalNetCapital += assetPerf.netCapital; return acc; }, {}); for (const category in performanceByCategory) { const categoryData = performanceByCategory[category]; const categoryPercentage = categoryData.totalNetCapital !== 0 ? (categoryData.totalGainLoss / categoryData.totalNetCapital) * 100 : 0; const categoryDiv = document.createElement('div'); categoryDiv.className = 'border-t border-gray-200 dark:border-gray-700 py-2'; categoryDiv.innerHTML = `<div class="asset-category-row flex justify-between items-center cursor-pointer p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"><div class="flex items-center"><svg class="toggle-icon w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg><span class="font-semibold text-gray-800 dark:text-gray-100">${category}</span></div><div class="text-right"><p class="font-bold text-gray-900 dark:text-white">${formatCurrency(categoryData.totalValue, mainCurrency)}</p>${renderPerformanceGainLossHtml(categoryData.totalGainLoss, categoryPercentage, mainCurrency)}</div></div><div class="asset-list-nested hidden pl-6 pt-2 space-y-2">${categoryData.assets.sort((a, b) => a.name.localeCompare(b.name)).map(asset => `<div class="flex justify-between items-center text-sm"><div class="flex items-center"><p class="text-gray-600 dark:text-gray-300">${asset.name} <span class="text-xs text-gray-400 dark:text-gray-500">${asset.currency}</span></p><button data-asset-name="${asset.name}" class="quick-add-btn ml-2 text-primary-500 hover:text-primary-700 dark:hover:text-primary-300 p-1 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button></div><div class="text-right"><p class="font-medium text-gray-800 dark:text-gray-100">${formatCurrency(asset.nativeValue, asset.currency)}</p>${renderPerformanceGainLossHtml(asset.gainLossAmount, asset.gainLossPercentage, mainCurrency)}</div></div>`).join('')}</div>`; assetBreakdownContainer.appendChild(categoryDiv); } }
-            assetBreakdownContainer.addEventListener('click', (e) => { const categoryRow = e.target.closest('.asset-category-row'); if (categoryRow) { categoryRow.nextElementSibling.classList.toggle('hidden'); categoryRow.querySelector('.toggle-icon').classList.toggle('rotate-90'); } const quickAddBtn = e.target.closest('.quick-add-btn'); if (quickAddBtn) { const assetName = quickAddBtn.dataset.assetName; const asset = allAssets.find(a => a.name === assetName); if (asset) { openTransactionModal(); assetNameModalInput.value = asset.name; assetNameModalInput.disabled = true; assetCurrencyModalInput.value = asset.currency; assetCurrencyModalInput.disabled = true; assetTypeCategoryWrapperModal.classList.add('hidden'); } } });
+            
+            function renderAssetBreakdown(assets, settings, mainCurrency) { 
+                assetBreakdownContainer.innerHTML = ''; 
+                if(assets.length === 0) return; 
+                const groupedByName = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {}); 
+                const assetPerformances = Object.values(groupedByName).map(txs => { const latestTx = txs.sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate))[0]; const performance = calculateAssetPerformance(txs, settings, mainCurrency); const nativePerformance = calculateAssetPerformance(txs, settings, mainCurrency, true); return { name: latestTx.name, currency: latestTx.currency, assetCategory: latestTx.assetCategory, nativeValue: nativePerformance.currentValue, ...performance }; }); 
+                const performanceByCategory = assetPerformances.reduce((acc, assetPerf) => { const category = assetPerf.assetCategory || 'Other'; if(!acc[category]){ acc[category] = { assets: [], totalValue: 0, totalGainLoss: 0, totalNetCapital: 0 }; } acc[category].assets.push(assetPerf); acc[category].totalValue += assetPerf.currentValue; acc[category].totalGainLoss += assetPerf.gainLossAmount; acc[category].totalNetCapital += assetPerf.netCapital; return acc; }, {}); 
+                for (const category in performanceByCategory) { 
+                    const categoryData = performanceByCategory[category]; 
+                    const categoryPercentage = categoryData.totalNetCapital !== 0 ? (categoryData.totalGainLoss / categoryData.totalNetCapital) * 100 : 0; 
+                    const categoryDiv = document.createElement('div'); 
+                    categoryDiv.className = 'border-t border-gray-200 dark:border-gray-700 py-2'; 
+                    categoryDiv.innerHTML = `<div class="asset-category-row flex justify-between items-center cursor-pointer p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"><div class="flex items-center"><svg class="toggle-icon w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg><span class="font-semibold text-gray-800 dark:text-gray-100">${category}</span></div><div class="text-right"><p class="font-bold text-gray-900 dark:text-white">${formatCurrency(categoryData.totalValue, mainCurrency)}</p>${renderPerformanceGainLossHtml(categoryData.totalGainLoss, categoryPercentage, mainCurrency)}</div></div><div class="asset-list-nested hidden pl-6 pt-2 space-y-2">${categoryData.assets.sort((a, b) => a.name.localeCompare(b.name)).map(asset => 
+                        `<div data-asset-name="${asset.name}" class="asset-detail-row flex justify-between items-center text-sm cursor-pointer p-1 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded"><div class="flex items-center"><p class="text-gray-600 dark:text-gray-300">${asset.name} <span class="text-xs text-gray-400 dark:text-gray-500">${asset.currency}</span></p><button data-asset-name="${asset.name}" class="quick-add-btn ml-2 text-primary-500 hover:text-primary-700 dark:hover:text-primary-300 p-1 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></button></div><div class="text-right pointer-events-none"><p class="font-medium text-gray-800 dark:text-gray-100">${formatCurrency(asset.nativeValue, asset.currency)}</p>${renderPerformanceGainLossHtml(asset.gainLossAmount, asset.gainLossPercentage, mainCurrency)}</div></div>`).join('')}</div>`; 
+                    assetBreakdownContainer.appendChild(categoryDiv); 
+                } 
+            }
+            assetBreakdownContainer.addEventListener('click', (e) => { 
+                const categoryRow = e.target.closest('.asset-category-row'); 
+                if (categoryRow) { categoryRow.nextElementSibling.classList.toggle('hidden'); categoryRow.querySelector('.toggle-icon').classList.toggle('rotate-90'); } 
+                const quickAddBtn = e.target.closest('.quick-add-btn'); 
+                if (quickAddBtn) { e.stopPropagation(); const assetName = quickAddBtn.dataset.assetName; const asset = allAssets.find(a => a.name === assetName); if (asset) { openTransactionModal(); assetNameModalInput.value = asset.name; assetNameModalInput.disabled = true; assetCurrencyModalInput.value = asset.currency; assetCurrencyModalInput.disabled = true; assetTypeCategoryWrapperModal.classList.add('hidden'); } } 
+                const assetDetailRow = e.target.closest('.asset-detail-row');
+                if(assetDetailRow && !quickAddBtn){
+                    const assetName = assetDetailRow.dataset.assetName;
+                    openAssetHistoryModal(assetName);
+                }
+            });
             document.getElementById('trend-timeline-buttons').addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON') { const btnContainer = e.target.parentElement; btnContainer.querySelector('.active')?.classList.remove('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white'); e.target.classList.add('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white'); renderDashboard(allAssets, appSettings); } });
             
+            function openAssetHistoryModal(assetName) {
+                const assetTransactions = allAssets
+                    .filter(a => a.name === assetName)
+                    .sort((a, b) => parseDate(b.purchaseDate) - parseDate(a.purchaseDate));
+
+                if (assetTransactions.length === 0) return;
+
+                const modalTitle = document.getElementById('asset-history-modal-title');
+                const tableBody = document.getElementById('asset-history-table-body');
+                const assetCurrency = assetTransactions[0].currency;
+
+                modalTitle.textContent = `Valuation: ${assetName}`;
+                tableBody.innerHTML = '';
+
+                assetTransactions.forEach((tx, index) => {
+                    const prevTx = assetTransactions[index + 1];
+                    const diff = prevTx ? tx.value - prevTx.value : tx.value;
+                    const diffColor = diff >= 0 ? 'text-green-500' : 'text-red-500';
+
+                    const row = `
+                        <tr data-id="${tx.id}" class="asset-history-row">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">${new Date(tx.purchaseDate).toLocaleDateString()}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium ${diffColor}">${diff >= 0 ? '+' : ''}${formatCurrency(diff, assetCurrency)}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-gray-800 dark:text-gray-100">${formatCurrency(tx.value, assetCurrency)}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center text-sm">
+                                <button class="edit-history-btn p-1 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300" title="Edit"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                                <button class="delete-history-btn p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+                
+                renderAssetHistoryChart(assetTransactions.slice().reverse());
+                assetHistoryModal.classList.remove('hidden');
+            }
+
+            function closeAssetHistoryModal() {
+                assetHistoryModal.classList.add('hidden');
+                if (assetHistoryChart) {
+                    assetHistoryChart.destroy();
+                }
+            }
+
+            closeAssetHistoryModalBtn.addEventListener('click', closeAssetHistoryModal);
+            assetHistoryModal.addEventListener('click', (e) => { if (e.target === assetHistoryModal) closeAssetHistoryModal(); });
+            
+            document.getElementById('asset-history-table-body').addEventListener('click', e => {
+                const row = e.target.closest('.asset-history-row');
+                if (!row) return;
+
+                const txId = row.dataset.id;
+                const tx = allAssets.find(a => a.id === txId);
+
+                if (e.target.closest('.edit-history-btn')) {
+                    if (tx) {
+                        closeAssetHistoryModal();
+                        openTransactionModal(tx);
+                    }
+                }
+                if (e.target.closest('.delete-history-btn')) {
+                    if (tx) {
+                        deleteAsset(txId);
+                    }
+                }
+            });
+
+            function renderAssetHistoryChart(sortedAssetTxs) {
+                if (sortedAssetTxs.length === 0) return;
+                const isDark = docElement.classList.contains('dark');
+                const colors = getChartColors(isDark);
+                const assetCurrency = sortedAssetTxs[0].currency;
+
+                const labels = sortedAssetTxs.map(tx => new Date(tx.purchaseDate).toLocaleDateString());
+                const assetData = sortedAssetTxs.map(tx => tx.value);
+                
+                const portfolioData = sortedAssetTxs.map(currentTx => {
+                    const date = parseDate(currentTx.purchaseDate);
+                    const latestAssetsAtDate = {};
+                    allAssets.forEach(asset => {
+                        if (parseDate(asset.purchaseDate) <= date) {
+                           if (!latestAssetsAtDate[asset.name] || parseDate(asset.purchaseDate) >= parseDate(latestAssetsAtDate[asset.name].purchaseDate)) {
+                                latestAssetsAtDate[asset.name] = asset;
+                            }
+                        }
+                    });
+                    const totalValue = Object.values(latestAssetsAtDate).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, appSettings.mainCurrency, appSettings.rates) || 0), 0);
+                    return totalValue;
+                });
+
+                const ctx = document.getElementById('assetHistoryChart').getContext('2d');
+                if (assetHistoryChart) {
+                    assetHistoryChart.destroy();
+                }
+                assetHistoryChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [
+                            {
+                                label: `Valuation (${assetCurrency})`,
+                                data: assetData,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                fill: true,
+                                yAxisID: 'yAsset',
+                                tension: 0.1
+                            },
+                            {
+                                label: `Valuation (Portfolio)`,
+                                data: portfolioData,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                fill: true,
+                                yAxisID: 'yPortfolio',
+                                tension: 0.1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        scales: {
+                            yAsset: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                grid: { color: colors.grid },
+                                ticks: { color: colors.ticks, callback: (v) => formatCurrency(v, assetCurrency, true) }
+                            },
+                            yPortfolio: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: { drawOnChartArea: false, },
+                                ticks: { color: colors.ticks, callback: (v) => formatCurrency(v, appSettings.mainCurrency, true) }
+                            },
+                            x: { grid: { color: colors.grid }, ticks: { color: colors.ticks } }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: colors.labels }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            const currency = context.dataset.yAxisID === 'yAsset' ? assetCurrency : appSettings.mainCurrency;
+                                            label += formatCurrency(context.parsed.y, currency);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
             function renderTrendChart(assets, settings, isDark, mainCurrency, timeline) {
                 const colors = getChartColors(isDark);
                 const sortedAssets = [...assets].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
