@@ -921,7 +921,7 @@
                 if (assetDatalist) assetDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
                 if (dividendAssetNameModalSelect) { const existingValue = dividendAssetNameModalSelect.value; dividendAssetNameModalSelect.innerHTML = '<option value="" disabled>Select an existing asset</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join(''); if (existingValue) { dividendAssetNameModalSelect.value = existingValue; } else { dividendAssetNameModalSelect.value = ""; } }
                 if (filterAssetName) { const currentFilter = trackerFilterState.name; filterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join(''); filterAssetName.value = currentFilter; }
-                if(summaryFilterAssetName){ summaryFilterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join(''); }
+                if(summaryFilterAssetName){ summaryFilterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}"></option>`).join(''); }
                 const defaultTxCategories = ['Market Value Update', 'Deposit', 'Withdrawal']; const customTxCategories = assets.map(asset => asset.category).filter(Boolean); const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])].sort();
                 if (categoryDatalist) categoryDatalist.innerHTML = allTxCategories.map(cat => `<option value="${cat}"></option>`).join('');
                 if (filterCategory) { const currentFilter = trackerFilterState.category; filterCategory.innerHTML = '<option value="">All</option>' + allTxCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); filterCategory.value = currentFilter; }
@@ -1791,6 +1791,10 @@
             populateCurrencyDatalists();
             updateExchangeRates();
             setInterval(updateExchangeRates, 3600000); // Update every hour
+
+            // --- Online/Offline Handling ---
+            window.addEventListener('online', updateRatesStatus);
+            window.addEventListener('offline', updateRatesStatus);
         });
     </script>
 </body>
