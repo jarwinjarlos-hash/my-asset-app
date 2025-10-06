@@ -29,6 +29,13 @@ self.addEventListener('install', event => {
         // Add all the specified URLs to the cache.
         return cache.addAll(URLS_TO_CACHE);
       })
+      .then(() => {
+        // IMPROVEMENT: Force the waiting service worker to become the active service worker.
+        return self.skipWaiting();
+      })
+      .catch(err => {
+        console.error('Failed to cache resources during install:', err);
+      })
   );
 });
 
@@ -46,6 +53,9 @@ self.addEventListener('activate', event => {
           }
         })
       );
+    }).then(() => {
+        // IMPROVEMENT: Take control of all open clients (tabs) immediately.
+        return self.clients.claim();
     })
   );
 });
@@ -92,9 +102,7 @@ self.addEventListener('fetch', event => {
         ).catch(error => {
             // This will be triggered if the network request fails,
             // which is expected when the user is offline.
-            console.log('Fetch failed; returning offline page instead.', error);
-            // Optionally, return a fallback offline page here.
-            // For this app, the cached root should be sufficient.
+            console.log('Fetch failed; app is running offline.', error);
         });
       })
   );
