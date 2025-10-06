@@ -46,6 +46,11 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 h-screen overflow-hidden">
 
+    <!-- IMPROVEMENT: Added an offline indicator banner -->
+    <div id="offline-banner" class="hidden fixed top-0 left-0 right-0 bg-yellow-500 text-center text-white p-2 z-50 text-sm shadow-lg">
+        You are currently offline. Changes are saved locally and will sync when you reconnect.
+    </div>
+
     <div id="auth-screen" class="h-full flex items-center justify-center p-4">
         <div class="p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-sm w-full">
             <div class="text-center mb-8">
@@ -155,10 +160,15 @@
                                     <div class="text-sm font-medium text-gray-500 dark:text-gray-400">&nbsp;</div>
                                 </div>
                         </div>
-                         <div id="rates-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
+                         <div id="connection-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
                             <div class="flex items-center justify-end">
                                 <span id="online-indicator" class="h-2 w-2 rounded-full bg-gray-400 mr-1.5"></span>
-                                <span id="rates-last-updated">Checking rates...</span>
+                                <span id="rates-last-updated">Checking connection...</span>
+                            </div>
+                             <!-- IMPROVEMENT: Added a sync status indicator -->
+                            <div id="sync-status-container" class="hidden flex items-center justify-end mt-1">
+                                <svg class="animate-spin h-3 w-3 text-blue-500 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span class="text-blue-500 dark:text-blue-400">Syncing offline changes...</span>
                             </div>
                         </div>
                     </div>
@@ -565,6 +575,7 @@
             let isEditMode = false, currentEditId = null, allocationDisplayMode = 'amount', isPrivacyMode = false, currentTab = 'dashboard';
             let summarySortState = { column: 'allocation', direction: 'desc' };
             let trackerFilterState = { name: '', category: '', startDate: '', endDate: '' };
+            let hasPendingWrites = { assets: false, dividends: false }; // IMPROVEMENT: Track pending writes
             const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
             const commonCurrencies = { "USD": "United States Dollar", "EUR": "Euro", "JPY": "Japanese Yen", "GBP": "British Pound Sterling", "AUD": "Australian Dollar", "CAD": "Canadian Dollar", "CHF": "Swiss Franc", "CNY": "Chinese Yuan", "HKD": "Hong Kong Dollar", "NZD": "New Zealand Dollar", "SEK": "Swedish Krona", "KRW": "South Korean Won", "SGD": "Singapore Dollar", "NOK": "Norwegian Krone", "MXN": "Mexican Peso", "INR": "Indian Rupee", "RUB": "Russian Ruble", "ZAR": "South African Rand", "BRL": "Brazilian Real", "PHP": "Philippine Peso", "SAR": "Saudi Riyal" };
 
@@ -591,6 +602,8 @@
             applyTheme(initialTheme);
 
             // --- DOM Elements ---
+            const offlineBanner = document.getElementById('offline-banner'); // IMPROVEMENT: Offline banner element
+            const syncStatusContainer = document.getElementById('sync-status-container'); // IMPROVEMENT: Sync status element
             const dashboardTabButton = document.getElementById('dashboard-tab-button'), trackerTabButton = document.getElementById('tracker-tab-button'), dividendsTabButton = document.getElementById('dividends-tab-button'), summaryTabButton = document.getElementById('summary-tab-button');
             const dashboardContent = document.getElementById('dashboard-content'), trackerContent = document.getElementById('tracker-content'), dividendsContent = document.getElementById('dividends-content'), summaryContent = document.getElementById('summary-content');
             const transactionModal = document.getElementById('transaction-modal'), transactionModalTitle = document.getElementById('transaction-modal-title'), transactionForm = document.getElementById('transaction-form');
@@ -669,7 +682,10 @@
                     const assetsCollection = db.collection('users').doc(user.uid).collection('assets');
                     if (assetsListener) assetsListener();
                     
-                    assetsListener = assetsCollection.onSnapshot(snapshot => {
+                    // IMPROVEMENT: Listen for metadata changes to detect pending writes
+                    assetsListener = assetsCollection.onSnapshot({ includeMetadataChanges: true }, snapshot => {
+                        hasPendingWrites.assets = snapshot.metadata.hasPendingWrites;
+                        updateOnlineStatus();
                         allAssets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         initialAssetsLoaded = true;
                         attemptRender();
@@ -677,7 +693,9 @@
 
                     const dividendsCollection = db.collection('users').doc(user.uid).collection('dividends');
                     if (dividendsListener) dividendsListener();
-                    dividendsListener = dividendsCollection.onSnapshot(snapshot => {
+                    dividendsListener = dividendsCollection.onSnapshot({ includeMetadataChanges: true }, snapshot => {
+                        hasPendingWrites.dividends = snapshot.metadata.hasPendingWrites;
+                        updateOnlineStatus();
                         allDividends = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         initialDividendsLoaded = true;
                         attemptRender();
@@ -722,13 +740,10 @@
             }
 
             async function updateExchangeRates() {
-                const onlineIndicator = document.getElementById('online-indicator');
+                if (!navigator.onLine) { updateOnlineStatus(); return; }
                 const ratesLastUpdated = document.getElementById('rates-last-updated');
-                const ratesStatusModal = document.getElementById('rates-status-modal');
-                if (!navigator.onLine) { updateRatesStatus(); return; }
                 ratesLastUpdated.textContent = 'Fetching latest rates...';
-                if(ratesStatusModal) ratesStatusModal.textContent = 'Fetching latest rates...';
-                onlineIndicator.className = 'h-2 w-2 rounded-full bg-yellow-500 mr-1.5';
+                
                 try {
                     const response = await fetch(CURRENCY_API_URL);
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -744,7 +759,7 @@
                     showToast(`Could not fetch currency rates. Using last known rates.`, 'error');
                     attemptRender();
                 } finally { 
-                    updateRatesStatus(); 
+                    updateOnlineStatus(); 
                 }
             }
             
@@ -754,7 +769,7 @@
                 appSettings = { mainCurrency: 'USD', rates: {}, lastUpdated: null, ...storedSettings };
                 isPrivacyMode = localStorage.getItem('assetTrackerPrivacyMode') === 'true';
                 updatePrivacyView();
-                updateRatesStatus();
+                updateOnlineStatus();
             }
             
             dashboardTabButton.addEventListener('click', () => switchTab('dashboard'));
@@ -818,23 +833,36 @@
                  catch (e) { console.error(`Error formatting currency: ${finalCurrencyCode}. Falling back to USD.`, e); options.currency = 'USD'; return new Intl.NumberFormat('en-US', options).format(amount); }
             }
             
-            function updateRatesStatus() {
+            // IMPROVEMENT: Consolidated function to handle all connection status UI
+            function updateOnlineStatus() {
                  const onlineIndicator = document.getElementById('online-indicator');
                  const ratesLastUpdated = document.getElementById('rates-last-updated');
                  const ratesStatusModal = document.getElementById('rates-status-modal');
-                 if (!navigator.onLine) {
+                 
+                 const isActuallyOffline = !navigator.onLine;
+                 const isSyncing = hasPendingWrites.assets || hasPendingWrites.dividends;
+
+                 offlineBanner.classList.toggle('hidden', !isActuallyOffline);
+                 syncStatusContainer.classList.toggle('hidden', !isSyncing || isActuallyOffline);
+
+                 if (isActuallyOffline) {
                      onlineIndicator.className = 'h-2 w-2 rounded-full bg-red-500 mr-1.5';
-                     const statusText = appSettings.lastUpdated ? `Offline. Last sync: ${new Date(appSettings.lastUpdated).toLocaleTimeString()}` : 'Offline. Rate data unavailable.';
-                     ratesLastUpdated.textContent = statusText; if(ratesStatusModal) ratesStatusModal.textContent = statusText; return;
+                     const statusText = appSettings.lastUpdated ? `Offline. Using data from ${new Date(appSettings.lastUpdated).toLocaleTimeString()}` : 'Offline. Rate data unavailable.';
+                     ratesLastUpdated.textContent = statusText; 
+                     if(ratesStatusModal) ratesStatusModal.textContent = statusText;
+                     return;
                  }
+
                  if (appSettings.lastUpdated) {
                     onlineIndicator.className = 'h-2 w-2 rounded-full bg-green-500 mr-1.5';
                     const statusText = `Rates updated: ${new Date(appSettings.lastUpdated).toLocaleString()}`;
-                    ratesLastUpdated.textContent = statusText; if(ratesStatusModal) ratesStatusModal.textContent = statusText;
+                    ratesLastUpdated.textContent = statusText; 
+                    if(ratesStatusModal) ratesStatusModal.textContent = statusText;
                  } else {
                      onlineIndicator.className = 'h-2 w-2 rounded-full bg-yellow-500 mr-1.5';
                      const statusText = 'Awaiting rate data...';
-                     ratesLastUpdated.textContent = statusText; if(ratesStatusModal) ratesStatusModal.textContent = statusText;
+                     ratesLastUpdated.textContent = statusText; 
+                     if(ratesStatusModal) ratesStatusModal.textContent = statusText;
                  }
             }
              
@@ -1262,6 +1290,16 @@
             settingsModal.addEventListener('click', (e) => { if(e.target === settingsModal) settingsModal.classList.add('hidden'); });
             saveSettingsBtn.addEventListener('click', () => { appSettings.mainCurrency = mainCurrencySelect.value; localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings)); settingsModal.classList.add('hidden'); renderAll(); });
             
+            // IMPROVEMENT: Added "deleteAll" logic for import
+            async function deleteAllData(collectionName) {
+                if (!currentUser) return;
+                const collectionRef = db.collection('users').doc(currentUser.uid).collection(collectionName);
+                const snapshot = await collectionRef.get();
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            }
+
             importDataBtn.addEventListener('click', () => importFileInput.click());
             importFileInput.addEventListener('change', async (event) => {
                 const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
@@ -1271,8 +1309,31 @@
                         const zip = await JSZip.loadAsync(content); let importedAssets, importedDividends;
                         if (zip.files['assets.csv']) { importedAssets = csvToArray(await zip.files['assets.csv'].async('string')); }
                         if (zip.files['dividends.csv']) { importedDividends = csvToDividendArray(await zip.files['dividends.csv'].async('string')); }
-                        if (importedAssets && currentUser) { if (await showConfirm('REPLACE current assets with imported file? Cancel to MERGE.', 'Import Assets')) { /* Delete existing logic here */ } for(const asset of importedAssets) { await db.collection('users').doc(currentUser.uid).collection('assets').add(asset); } }
-                        if (importedDividends && currentUser) { if (await showConfirm('REPLACE current dividends with imported file? Cancel to MERGE.', 'Import Dividends')) { /* Delete existing logic here */ } for(const dividend of importedDividends) { await db.collection('users').doc(currentUser.uid).collection('dividends').add(dividend); } }
+                        
+                        if (importedAssets && currentUser) { 
+                            if (await showConfirm('REPLACE all current assets with the imported file? This cannot be undone. \n\n (Cancel to MERGE instead)', 'Import Assets')) { 
+                                showToast("Replacing assets... Please wait.", "info");
+                                await deleteAllData('assets');
+                            }
+                            const batch = db.batch();
+                            importedAssets.forEach(asset => {
+                                const docRef = db.collection('users').doc(currentUser.uid).collection('assets').doc();
+                                batch.set(docRef, asset);
+                            });
+                            await batch.commit();
+                         }
+                        if (importedDividends && currentUser) { 
+                            if (await showConfirm('REPLACE all current dividends with the imported file? This cannot be undone. \n\n (Cancel to MERGE instead)', 'Import Dividends')) {
+                                showToast("Replacing dividends... Please wait.", "info");
+                                await deleteAllData('dividends');
+                            } 
+                            const batch = db.batch();
+                            importedDividends.forEach(dividend => {
+                                const docRef = db.collection('users').doc(currentUser.uid).collection('dividends').doc();
+                                batch.set(docRef, dividend);
+                            });
+                            await batch.commit();
+                        }
                         showToast('Backup imported successfully!', 'success');
                     } catch (err) { showToast('Failed to import backup.', 'error'); console.error(err); }
                 };
@@ -1793,8 +1854,8 @@
             setInterval(updateExchangeRates, 3600000); // Update every hour
 
             // --- Online/Offline Handling ---
-            window.addEventListener('online', updateRatesStatus);
-            window.addEventListener('offline', updateRatesStatus);
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
         });
     </script>
 </body>
