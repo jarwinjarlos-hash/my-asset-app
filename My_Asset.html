@@ -39,16 +39,37 @@
         .sortable:hover .sort-indicator { opacity: 1; }
         .sortable.asc .sort-indicator::after { content: '▲'; font-size: 0.8em; opacity: 1; }
         .sortable.desc .sort-indicator::after { content: '▼'; font-size: 0.8em; opacity: 1; }
-        .toast-show {
-            transform: translateX(0);
+        .toast-show { transform: translateX(0); }
+        /* IMPROVEMENT: Styles for the offline banner */
+        #offline-banner {
+            transition: transform 0.3s ease-in-out;
+            transform: translateY(-100%);
+        }
+        #offline-banner.show {
+            transform: translateY(0);
+        }
+        /* IMPROVEMENT: Styles for pending sync indicator */
+        .pending-sync-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #f59e0b; /* Amber 500 */
+            margin-left: 8px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 h-screen overflow-hidden">
-
-    <!-- IMPROVEMENT: Added an offline indicator banner -->
-    <div id="offline-banner" class="hidden fixed top-0 left-0 right-0 bg-yellow-500 text-center text-white p-2 z-50 text-sm shadow-lg">
-        You are currently offline. Changes are saved locally and will sync when you reconnect.
+    
+    <!-- IMPROVEMENT: Offline Status Banner -->
+    <div id="offline-banner" class="fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 text-sm z-50">
+        <span id="offline-banner-message">You are currently offline. Changes are saved locally.</span>
     </div>
 
     <div id="auth-screen" class="h-full flex items-center justify-center p-4">
@@ -160,15 +181,10 @@
                                     <div class="text-sm font-medium text-gray-500 dark:text-gray-400">&nbsp;</div>
                                 </div>
                         </div>
-                         <div id="connection-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
+                         <div id="rates-status" class="text-right text-xs text-gray-400 dark:text-gray-500 pl-4 flex-shrink-0">
                             <div class="flex items-center justify-end">
                                 <span id="online-indicator" class="h-2 w-2 rounded-full bg-gray-400 mr-1.5"></span>
-                                <span id="rates-last-updated">Checking connection...</span>
-                            </div>
-                             <!-- IMPROVEMENT: Added a sync status indicator -->
-                            <div id="sync-status-container" class="hidden flex items-center justify-end mt-1">
-                                <svg class="animate-spin h-3 w-3 text-blue-500 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                <span class="text-blue-500 dark:text-blue-400">Syncing offline changes...</span>
+                                <span id="rates-last-updated">Checking rates...</span>
                             </div>
                         </div>
                     </div>
@@ -575,7 +591,6 @@
             let isEditMode = false, currentEditId = null, allocationDisplayMode = 'amount', isPrivacyMode = false, currentTab = 'dashboard';
             let summarySortState = { column: 'allocation', direction: 'desc' };
             let trackerFilterState = { name: '', category: '', startDate: '', endDate: '' };
-            let hasPendingWrites = { assets: false, dividends: false }; // IMPROVEMENT: Track pending writes
             const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
             const commonCurrencies = { "USD": "United States Dollar", "EUR": "Euro", "JPY": "Japanese Yen", "GBP": "British Pound Sterling", "AUD": "Australian Dollar", "CAD": "Canadian Dollar", "CHF": "Swiss Franc", "CNY": "Chinese Yuan", "HKD": "Hong Kong Dollar", "NZD": "New Zealand Dollar", "SEK": "Swedish Krona", "KRW": "South Korean Won", "SGD": "Singapore Dollar", "NOK": "Norwegian Krone", "MXN": "Mexican Peso", "INR": "Indian Rupee", "RUB": "Russian Ruble", "ZAR": "South African Rand", "BRL": "Brazilian Real", "PHP": "Philippine Peso", "SAR": "Saudi Riyal" };
 
@@ -602,8 +617,6 @@
             applyTheme(initialTheme);
 
             // --- DOM Elements ---
-            const offlineBanner = document.getElementById('offline-banner'); // IMPROVEMENT: Offline banner element
-            const syncStatusContainer = document.getElementById('sync-status-container'); // IMPROVEMENT: Sync status element
             const dashboardTabButton = document.getElementById('dashboard-tab-button'), trackerTabButton = document.getElementById('tracker-tab-button'), dividendsTabButton = document.getElementById('dividends-tab-button'), summaryTabButton = document.getElementById('summary-tab-button');
             const dashboardContent = document.getElementById('dashboard-content'), trackerContent = document.getElementById('tracker-content'), dividendsContent = document.getElementById('dividends-content'), summaryContent = document.getElementById('summary-content');
             const transactionModal = document.getElementById('transaction-modal'), transactionModalTitle = document.getElementById('transaction-modal-title'), transactionForm = document.getElementById('transaction-form');
@@ -632,6 +645,8 @@
             const signOutBtn = document.getElementById('signout-btn'), userEmailEl = document.getElementById('user-email'), userInfoEl = document.getElementById('user-info');
             let currentUser = null, assetsListener = null, dividendsListener = null;
             let initialAssetsLoaded = false, initialDividendsLoaded = false;
+            const offlineBanner = document.getElementById('offline-banner');
+            const offlineBannerMessage = document.getElementById('offline-banner-message');
 
             // --- Custom Modals ---
             function showAlert(message, title = 'Info') { alertModalTitle.textContent = title; alertModalMessage.textContent = message; alertModal.classList.remove('hidden'); }
@@ -682,10 +697,17 @@
                     const assetsCollection = db.collection('users').doc(user.uid).collection('assets');
                     if (assetsListener) assetsListener();
                     
-                    // IMPROVEMENT: Listen for metadata changes to detect pending writes
-                    assetsListener = assetsCollection.onSnapshot({ includeMetadataChanges: true }, snapshot => {
-                        hasPendingWrites.assets = snapshot.metadata.hasPendingWrites;
-                        updateOnlineStatus();
+                    assetsListener = assetsCollection.onSnapshot(snapshot => {
+                        // IMPROVEMENT: Check for pending writes to show sync status
+                        const hasPendingWrites = snapshot.metadata.hasPendingWrites;
+                        if (navigator.onLine && hasPendingWrites) {
+                             offlineBanner.classList.add('show');
+                             offlineBannerMessage.textContent = "Syncing local changes...";
+                        } else if (navigator.onLine && !hasPendingWrites && offlineBanner.classList.contains('show')) {
+                             offlineBannerMessage.textContent = "All changes synced!";
+                             setTimeout(() => offlineBanner.classList.remove('show'), 2000);
+                        }
+                        
                         allAssets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         initialAssetsLoaded = true;
                         attemptRender();
@@ -693,9 +715,7 @@
 
                     const dividendsCollection = db.collection('users').doc(user.uid).collection('dividends');
                     if (dividendsListener) dividendsListener();
-                    dividendsListener = dividendsCollection.onSnapshot({ includeMetadataChanges: true }, snapshot => {
-                        hasPendingWrites.dividends = snapshot.metadata.hasPendingWrites;
-                        updateOnlineStatus();
+                    dividendsListener = dividendsCollection.onSnapshot(snapshot => {
                         allDividends = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         initialDividendsLoaded = true;
                         attemptRender();
@@ -739,11 +759,14 @@
                 else if(currentTab === 'summary') { renderSummaryTable(); }
             }
 
-            async function updateExchangeRates() {
-                if (!navigator.onLine) { updateOnlineStatus(); return; }
+async function updateExchangeRates() {
+                const onlineIndicator = document.getElementById('online-indicator');
                 const ratesLastUpdated = document.getElementById('rates-last-updated');
+                const ratesStatusModal = document.getElementById('rates-status-modal');
+                if (!navigator.onLine) { updateRatesStatus(); return; }
                 ratesLastUpdated.textContent = 'Fetching latest rates...';
-                
+                if(ratesStatusModal) ratesStatusModal.textContent = 'Fetching latest rates...';
+                onlineIndicator.className = 'h-2 w-2 rounded-full bg-yellow-500 mr-1.5';
                 try {
                     const response = await fetch(CURRENCY_API_URL);
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -759,7 +782,7 @@
                     showToast(`Could not fetch currency rates. Using last known rates.`, 'error');
                     attemptRender();
                 } finally { 
-                    updateOnlineStatus(); 
+                    updateRatesStatus(); 
                 }
             }
             
@@ -769,7 +792,7 @@
                 appSettings = { mainCurrency: 'USD', rates: {}, lastUpdated: null, ...storedSettings };
                 isPrivacyMode = localStorage.getItem('assetTrackerPrivacyMode') === 'true';
                 updatePrivacyView();
-                updateOnlineStatus();
+                updateRatesStatus();
             }
             
             dashboardTabButton.addEventListener('click', () => switchTab('dashboard'));
@@ -833,36 +856,23 @@
                  catch (e) { console.error(`Error formatting currency: ${finalCurrencyCode}. Falling back to USD.`, e); options.currency = 'USD'; return new Intl.NumberFormat('en-US', options).format(amount); }
             }
             
-            // IMPROVEMENT: Consolidated function to handle all connection status UI
-            function updateOnlineStatus() {
+            function updateRatesStatus() {
                  const onlineIndicator = document.getElementById('online-indicator');
                  const ratesLastUpdated = document.getElementById('rates-last-updated');
                  const ratesStatusModal = document.getElementById('rates-status-modal');
-                 
-                 const isActuallyOffline = !navigator.onLine;
-                 const isSyncing = hasPendingWrites.assets || hasPendingWrites.dividends;
-
-                 offlineBanner.classList.toggle('hidden', !isActuallyOffline);
-                 syncStatusContainer.classList.toggle('hidden', !isSyncing || isActuallyOffline);
-
-                 if (isActuallyOffline) {
+                 if (!navigator.onLine) {
                      onlineIndicator.className = 'h-2 w-2 rounded-full bg-red-500 mr-1.5';
-                     const statusText = appSettings.lastUpdated ? `Offline. Using data from ${new Date(appSettings.lastUpdated).toLocaleTimeString()}` : 'Offline. Rate data unavailable.';
-                     ratesLastUpdated.textContent = statusText; 
-                     if(ratesStatusModal) ratesStatusModal.textContent = statusText;
-                     return;
+                     const statusText = appSettings.lastUpdated ? `Offline. Last sync: ${new Date(appSettings.lastUpdated).toLocaleTimeString()}` : 'Offline. Rate data unavailable.';
+                     ratesLastUpdated.textContent = statusText; if(ratesStatusModal) ratesStatusModal.textContent = statusText; return;
                  }
-
                  if (appSettings.lastUpdated) {
                     onlineIndicator.className = 'h-2 w-2 rounded-full bg-green-500 mr-1.5';
                     const statusText = `Rates updated: ${new Date(appSettings.lastUpdated).toLocaleString()}`;
-                    ratesLastUpdated.textContent = statusText; 
-                    if(ratesStatusModal) ratesStatusModal.textContent = statusText;
+                    ratesLastUpdated.textContent = statusText; if(ratesStatusModal) ratesStatusModal.textContent = statusText;
                  } else {
                      onlineIndicator.className = 'h-2 w-2 rounded-full bg-yellow-500 mr-1.5';
                      const statusText = 'Awaiting rate data...';
-                     ratesLastUpdated.textContent = statusText; 
-                     if(ratesStatusModal) ratesStatusModal.textContent = statusText;
+                     ratesLastUpdated.textContent = statusText; if(ratesStatusModal) ratesStatusModal.textContent = statusText;
                  }
             }
              
@@ -1028,7 +1038,7 @@
                 if (category === 'Deposit' || category === 'Withdrawal') { valueLabel.textContent = 'Amount'; } else { valueLabel.textContent = 'Value'; }
             });
 
-            transactionForm.addEventListener('submit', async (e) => {
+            transactionForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 if (!currentUser) return showToast("You must be signed in to save data.", "error");
 
@@ -1037,138 +1047,89 @@
                 const originalButtonText = saveButton.innerHTML;
                 const assetNameForRefresh = assetNameModalInput.value.trim();
 
-                try {
-                    saveButton.disabled = true;
-                    cancelButton.disabled = true;
-                    saveButton.innerHTML = 'Saving...';
+                const name = assetNameModalInput.value.trim();
+                const currency = assetCurrencyModalInput.value.toUpperCase().trim();
+                const category = assetCategoryModalInput.value.trim();
+                const transactionAmount = parseFloat(assetValueModalInput.value);
 
-                    const name = assetNameModalInput.value.trim();
-                    const currency = assetCurrencyModalInput.value.toUpperCase().trim();
-                    const category = assetCategoryModalInput.value.trim();
-                    const transactionAmount = parseFloat(assetValueModalInput.value);
-
-                    if (!currency || currency.length !== 3) {
-                         showToast("Please enter a valid 3-letter currency code.", "error");
-                         return;
-                    }
-
-                    if (isEditMode) {
-                        const originalAsset = allAssets.find(a => a.id === currentEditId);
-                        if (!originalAsset) {
-                            throw new Error('Original transaction not found for editing.');
-                        }
-                        const assetHistory = allAssets
-                            .filter(a => a.name === originalAsset.name)
-                            .sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-                        const originalAssetHistory = JSON.parse(JSON.stringify(assetHistory));
-                        const editIndex = assetHistory.findIndex(a => a.id === currentEditId);
-                        if (editIndex === -1) {
-                            throw new Error("Could not find the transaction to edit in its history.");
-                        }
-                        const prevTx = editIndex > 0 ? assetHistory[editIndex - 1] : null;
-                        const prevValue = prevTx ? prevTx.value : 0;
-                        let newCalculatedValue;
-                        if (category === 'Deposit') {
-                            newCalculatedValue = prevValue + transactionAmount;
-                        } else if (category === 'Withdrawal') {
-                            if (transactionAmount > prevValue) {
-                                throw new Error('Withdrawal cannot be greater than the preceding value.');
-                            }
-                            newCalculatedValue = prevValue - transactionAmount;
-                        } else { 
-                            newCalculatedValue = transactionAmount;
-                        }
-                        const batch = db.batch();
-                        const editedDocRef = db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId);
-                        const finalTransactionData = {
-                            ...originalAsset,
-                            name: name,
-                            category: category,
-                            purchaseDate: purchaseDateModalInput.value,
-                            description: assetDescriptionModalInput.value.trim(),
-                            value: newCalculatedValue,
-                        };
-                        batch.update(editedDocRef, finalTransactionData);
-                        let lastCorrectValue = newCalculatedValue;
-                        for (let i = editIndex + 1; i < assetHistory.length; i++) {
-                            const subsequentTx = assetHistory[i];
-                            const originalSubsequentTx = originalAssetHistory[i];
-                            const originalPrevTx = originalAssetHistory[i - 1];
-                            let newSubsequentValue;
-
-                            if (subsequentTx.category === 'Market Value Update') {
-                                newSubsequentValue = subsequentTx.value;
-                            } else {
-                                let delta = 0;
-                                if (subsequentTx.category === 'Deposit') {
-                                    delta = originalSubsequentTx.value - (originalPrevTx ? originalPrevTx.value : 0);
-                                    newSubsequentValue = lastCorrectValue + delta;
-                                } else if (subsequentTx.category === 'Withdrawal') {
-                                    delta = (originalPrevTx ? originalPrevTx.value : 0) - originalSubsequentTx.value;
-                                    newSubsequentValue = lastCorrectValue - delta;
-                                } else {
-                                    newSubsequentValue = lastCorrectValue;
-                                }
-                            }
-                            
-                            const subsequentDocRef = db.collection('users').doc(currentUser.uid).collection('assets').doc(subsequentTx.id);
-                            batch.update(subsequentDocRef, { value: newSubsequentValue });
-                            lastCorrectValue = newSubsequentValue;
-                        }
-                        
-                        await batch.commit();
-                        showToast('Transaction updated and history recalculated!', 'success');
-
-                    } else {
-                        const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
-                        const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
-                        if (!latestAsset && (category === 'Withdrawal' || category === 'Transfer')) {
-                            throw new Error('First transaction for an asset must be a "Deposit" or "Market Value Update".');
-                        }
-
-                        let assetCategoryValue = latestAsset ? latestAsset.assetCategory : assetTypeCategoryModalInput.value.trim();
-                        if (!assetCategoryValue) {
-                            throw new Error('Asset Category is required for new assets.');
-                        }
-
-                        const previousValue = latestAsset ? latestAsset.value : 0;
-                        let newAssetValue;
-                        if (category === 'Deposit') {
-                            newAssetValue = previousValue + transactionAmount;
-                        } else if (category === 'Withdrawal') {
-                            if (transactionAmount > previousValue) {
-                                throw new Error('Withdrawal cannot be greater than current value.');
-                            }
-                            newAssetValue = previousValue - transactionAmount;
-                        } else {
-                            newAssetValue = transactionAmount;
-                        }
-
-                        const finalTransactionData = { name: name, assetCategory: assetCategoryValue, category: category, purchaseDate: purchaseDateModalInput.value, value: newAssetValue, currency: currency, description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString() };
-                        
-                        await db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData);
-                        
-                        showToast('Transaction saved successfully!', 'success');
-                    }
-                    
-                    closeTransactionModal();
-                     if (!assetHistoryModal.classList.contains('hidden')) {
-                        openAssetHistoryModal(assetNameForRefresh);
-                     }
-
-
-                } catch (error) {
-                    console.error("Error saving transaction: ", error);
-                    showToast(error.message || 'Failed to save transaction. Please try again.', 'error');
-                } finally {
-                    if (saveButton) {
-                        saveButton.disabled = false;
-                        saveButton.innerHTML = originalButtonText;
-                    }
-                    if (cancelButton) {
-                        cancelButton.disabled = false;
-                    }
+                if (!currency || currency.length !== 3) {
+                     showToast("Please enter a valid 3-letter currency code.", "error");
+                     return;
                 }
+                
+                // Disable buttons immediately for UI feedback
+                saveButton.disabled = true;
+                cancelButton.disabled = true;
+                saveButton.innerHTML = 'Saving...';
+                
+                let saveOperation;
+
+                if (isEditMode) {
+                    const originalAsset = allAssets.find(a => a.id === currentEditId);
+                    if (!originalAsset) { throw new Error('Original transaction not found for editing.'); }
+                    const assetHistory = allAssets.filter(a => a.name === originalAsset.name).sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
+                    const originalAssetHistory = JSON.parse(JSON.stringify(assetHistory));
+                    const editIndex = assetHistory.findIndex(a => a.id === currentEditId);
+                    if (editIndex === -1) { throw new Error("Could not find the transaction to edit in its history."); }
+                    const prevTx = editIndex > 0 ? assetHistory[editIndex - 1] : null;
+                    const prevValue = prevTx ? prevTx.value : 0;
+                    let newCalculatedValue;
+                    if (category === 'Deposit') { newCalculatedValue = prevValue + transactionAmount; } 
+                    else if (category === 'Withdrawal') { if (transactionAmount > prevValue) { throw new Error('Withdrawal cannot be greater than the preceding value.'); } newCalculatedValue = prevValue - transactionAmount; } 
+                    else { newCalculatedValue = transactionAmount; }
+
+                    const batch = db.batch();
+                    const editedDocRef = db.collection('users').doc(currentUser.uid).collection('assets').doc(currentEditId);
+                    const finalTransactionData = { ...originalAsset, name: name, category: category, purchaseDate: purchaseDateModalInput.value, description: assetDescriptionModalInput.value.trim(), value: newCalculatedValue };
+                    batch.update(editedDocRef, finalTransactionData);
+                    
+                    let lastCorrectValue = newCalculatedValue;
+                    for (let i = editIndex + 1; i < assetHistory.length; i++) {
+                        const subsequentTx = assetHistory[i];
+                        const originalSubsequentTx = originalAssetHistory[i];
+                        const originalPrevTx = originalAssetHistory[i - 1];
+                        let newSubsequentValue;
+                        if (subsequentTx.category === 'Market Value Update') { newSubsequentValue = subsequentTx.value; } 
+                        else {
+                            let delta = 0;
+                            if (subsequentTx.category === 'Deposit') { delta = originalSubsequentTx.value - (originalPrevTx ? originalPrevTx.value : 0); newSubsequentValue = lastCorrectValue + delta; } 
+                            else if (subsequentTx.category === 'Withdrawal') { delta = (originalPrevTx ? originalPrevTx.value : 0) - originalSubsequentTx.value; newSubsequentValue = lastCorrectValue - delta; } 
+                            else { newSubsequentValue = lastCorrectValue; }
+                        }
+                        const subsequentDocRef = db.collection('users').doc(currentUser.uid).collection('assets').doc(subsequentTx.id);
+                        batch.update(subsequentDocRef, { value: newSubsequentValue });
+                        lastCorrectValue = newSubsequentValue;
+                    }
+                    saveOperation = batch.commit();
+
+                } else {
+                    const assetHistory = allAssets.filter(a => a.name === name).sort((a,b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate));
+                    const latestAsset = assetHistory.length > 0 ? assetHistory[assetHistory.length - 1] : null;
+                    if (!latestAsset && (category === 'Withdrawal' || category === 'Transfer')) { throw new Error('First transaction for an asset must be a "Deposit" or "Market Value Update".'); }
+                    let assetCategoryValue = latestAsset ? latestAsset.assetCategory : assetTypeCategoryModalInput.value.trim();
+                    if (!assetCategoryValue) { throw new Error('Asset Category is required for new assets.'); }
+                    const previousValue = latestAsset ? latestAsset.value : 0;
+                    let newAssetValue;
+                    if (category === 'Deposit') { newAssetValue = previousValue + transactionAmount; } 
+                    else if (category === 'Withdrawal') { if (transactionAmount > previousValue) { throw new Error('Withdrawal cannot be greater than current value.'); } newAssetValue = previousValue - transactionAmount; } 
+                    else { newAssetValue = transactionAmount; }
+                    const finalTransactionData = { name: name, assetCategory: assetCategoryValue, category: category, purchaseDate: purchaseDateModalInput.value, value: newAssetValue, currency: currency, description: assetDescriptionModalInput.value.trim(), createdAt: new Date().toISOString() };
+                    saveOperation = db.collection('users').doc(currentUser.uid).collection('assets').add(finalTransactionData);
+                }
+
+                // Immediately close modal and show toast. The operation will complete in the background.
+                const successMessage = isEditMode ? 'Transaction updated locally!' : 'Transaction saved locally!';
+                showToast(successMessage, 'success');
+                closeTransactionModal();
+                if (!assetHistoryModal.classList.contains('hidden')) { openAssetHistoryModal(assetNameForRefresh); }
+
+                saveOperation.catch(error => {
+                    console.error("Error saving transaction to Firestore: ", error);
+                    showToast(error.message || 'Failed to sync transaction. It is saved locally.', 'error');
+                }).finally(() => {
+                     // The UI is already updated, this block is for handling server-side errors.
+                     // The button state is reset when the modal is closed/reopened.
+                });
             });
 
             assetList.addEventListener('click', (e) => {
@@ -1186,6 +1147,13 @@
                 currentEditId = asset ? asset.id : null;
                 transactionModalTitle.textContent = isEditMode ? 'Edit Transaction' : 'Add Transaction';
                 assetNameModalInput.disabled = isEditMode; assetCurrencyModalInput.disabled = true; assetTypeCategoryWrapperModal.classList.add('hidden');
+                
+                // Enable buttons on open
+                const saveButton = transactionForm.querySelector('button[type="submit"]');
+                const cancelButton = transactionForm.querySelector('#cancel-transaction-btn');
+                if(saveButton) saveButton.disabled = false; saveButton.innerHTML = "Save Transaction";
+                if(cancelButton) cancelButton.disabled = false;
+
                 const valueLabel = document.querySelector('label[for="asset-value-modal"]');
                 if (asset) {
                     assetNameModalInput.value = asset.name; assetCategoryModalInput.value = asset.category || ''; purchaseDateModalInput.value = asset.purchaseDate;
@@ -1211,11 +1179,12 @@
                 const assetToDelete = allAssets.find(a => a.id === id);
                 if (!assetToDelete) return;
                 
-                const confirmed = await showConfirm('Delete this transaction from the cloud? This action cannot be undone.', 'Delete Transaction');
+                const confirmed = await showConfirm('Delete this transaction? It will be removed locally and synced when online.', 'Delete Transaction');
                 if(confirmed && currentUser){
                     try { 
-                        await db.collection('users').doc(currentUser.uid).collection('assets').doc(id).delete(); 
-                        showToast('Transaction deleted.', 'success'); 
+                        // No await needed for offline-first UI update
+                        db.collection('users').doc(currentUser.uid).collection('assets').doc(id).delete(); 
+                        showToast('Transaction removed locally.', 'success'); 
                         
                         if (!assetHistoryModal.classList.contains('hidden')) {
                             const modalTitle = document.getElementById('asset-history-modal-title').textContent;
@@ -1242,17 +1211,26 @@
                 else { dividendCurrencyInput.value = ''; dividendCurrencyInput.disabled = false; }
             });
 
-            dividendForm.addEventListener('submit', async (e) => {
+            dividendForm.addEventListener('submit', (e) => {
                 e.preventDefault(); if (!currentUser) return;
                 const dividendData = { name: document.getElementById('dividend-asset-name-modal').value.trim(), subAssetName: document.getElementById('dividend-sub-asset-name-modal').value.trim(), date: document.getElementById('dividend-date-modal').value, value: parseFloat(document.getElementById('dividend-value-modal').value), currency: document.getElementById('dividend-currency-modal').value.toUpperCase().trim(), description: document.getElementById('dividend-description-modal').value.trim() };
                 const id = document.getElementById('edit-dividend-id').value;
                 if (!dividendData.name || !dividendData.currency || dividendData.currency.length !== 3) { return showToast("Please select an asset and ensure currency is valid.", "error"); }
-                try {
-                    if (isEditMode) { await db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).update(dividendData); } 
-                    else { await db.collection('users').doc(currentUser.uid).collection('dividends').add(dividendData); }
-                    closeDividendModal();
-                    showToast('Dividend saved successfully!', 'success');
-                } catch (error) { console.error("Error saving dividend:", error); showToast("Failed to save dividend.", 'error'); }
+                
+                let saveOperation;
+                if (isEditMode) {
+                    saveOperation = db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).update(dividendData); 
+                } else {
+                    saveOperation = db.collection('users').doc(currentUser.uid).collection('dividends').add(dividendData);
+                }
+                
+                showToast('Dividend saved locally!', 'success');
+                closeDividendModal();
+                
+                saveOperation.catch(error => {
+                     console.error("Error saving dividend to Firestore:", error);
+                     showToast("Failed to sync dividend. It is saved locally.", 'error');
+                });
             });
 
             function openDividendModal(dividend = null) {
@@ -1275,8 +1253,9 @@
             async function deleteDividend(id) {
                 const confirmed = await showConfirm('Are you sure you want to delete this dividend entry?', 'Delete Dividend');
                 if (confirmed && currentUser) {
-                    try { await db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).delete(); showToast('Dividend deleted.', 'success'); } 
-                    catch (error) { console.error("Error deleting dividend:", error); showToast("Failed to delete dividend.", 'error'); }
+                    // No await needed for offline-first UI update
+                    db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).delete().catch(err => console.error("Error deleting dividend from Firestore:", err)); 
+                    showToast('Dividend deleted locally.', 'success'); 
                 }
             }
 
@@ -1290,16 +1269,6 @@
             settingsModal.addEventListener('click', (e) => { if(e.target === settingsModal) settingsModal.classList.add('hidden'); });
             saveSettingsBtn.addEventListener('click', () => { appSettings.mainCurrency = mainCurrencySelect.value; localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings)); settingsModal.classList.add('hidden'); renderAll(); });
             
-            // IMPROVEMENT: Added "deleteAll" logic for import
-            async function deleteAllData(collectionName) {
-                if (!currentUser) return;
-                const collectionRef = db.collection('users').doc(currentUser.uid).collection(collectionName);
-                const snapshot = await collectionRef.get();
-                const batch = db.batch();
-                snapshot.docs.forEach(doc => batch.delete(doc.ref));
-                await batch.commit();
-            }
-
             importDataBtn.addEventListener('click', () => importFileInput.click());
             importFileInput.addEventListener('change', async (event) => {
                 const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
@@ -1309,30 +1278,39 @@
                         const zip = await JSZip.loadAsync(content); let importedAssets, importedDividends;
                         if (zip.files['assets.csv']) { importedAssets = csvToArray(await zip.files['assets.csv'].async('string')); }
                         if (zip.files['dividends.csv']) { importedDividends = csvToDividendArray(await zip.files['dividends.csv'].async('string')); }
-                        
-                        if (importedAssets && currentUser) { 
-                            if (await showConfirm('REPLACE all current assets with the imported file? This cannot be undone. \n\n (Cancel to MERGE instead)', 'Import Assets')) { 
-                                showToast("Replacing assets... Please wait.", "info");
-                                await deleteAllData('assets');
+
+                        // IMPROVEMENT: Implement Replace logic
+                        if (importedAssets && currentUser) {
+                            if (await showConfirm('REPLACE all current assets with the imported file? Cancel to MERGE.', 'Import Assets')) {
+                                showToast('Replacing assets... This may take a moment.', 'info');
+                                const existingAssetDocs = await db.collection('users').doc(currentUser.uid).collection('assets').get();
+                                const batch = db.batch();
+                                existingAssetDocs.forEach(doc => batch.delete(doc.ref));
+                                await batch.commit();
+                                showToast('All existing assets deleted.', 'success');
                             }
-                            const batch = db.batch();
+                            const writeBatch = db.batch();
                             importedAssets.forEach(asset => {
-                                const docRef = db.collection('users').doc(currentUser.uid).collection('assets').doc();
-                                batch.set(docRef, asset);
+                                const docRef = db.collection('users').doc(currentUser.uid).collection('assets').doc(); // Auto-generate ID
+                                writeBatch.set(docRef, asset);
                             });
-                            await batch.commit();
-                         }
-                        if (importedDividends && currentUser) { 
-                            if (await showConfirm('REPLACE all current dividends with the imported file? This cannot be undone. \n\n (Cancel to MERGE instead)', 'Import Dividends')) {
-                                showToast("Replacing dividends... Please wait.", "info");
-                                await deleteAllData('dividends');
-                            } 
-                            const batch = db.batch();
-                            importedDividends.forEach(dividend => {
-                                const docRef = db.collection('users').doc(currentUser.uid).collection('dividends').doc();
-                                batch.set(docRef, dividend);
+                            await writeBatch.commit();
+                        }
+                        if (importedDividends && currentUser) {
+                            if (await showConfirm('REPLACE all current dividends with the imported file? Cancel to MERGE.', 'Import Dividends')) {
+                                showToast('Replacing dividends...', 'info');
+                                const existingDividendDocs = await db.collection('users').doc(currentUser.uid).collection('dividends').get();
+                                const batch = db.batch();
+                                existingDividendDocs.forEach(doc => batch.delete(doc.ref));
+                                await batch.commit();
+                                showToast('All existing dividends deleted.', 'success');
+                            }
+                            const writeBatch = db.batch();
+                             importedDividends.forEach(dividend => {
+                                const docRef = db.collection('users').doc(currentUser.uid).collection('dividends').doc(); // Auto-generate ID
+                                writeBatch.set(docRef, dividend);
                             });
-                            await batch.commit();
+                            await writeBatch.commit();
                         }
                         showToast('Backup imported successfully!', 'success');
                     } catch (err) { showToast('Failed to import backup.', 'error'); console.error(err); }
@@ -1854,8 +1832,19 @@
             setInterval(updateExchangeRates, 3600000); // Update every hour
 
             // --- Online/Offline Handling ---
-            window.addEventListener('online', updateOnlineStatus);
-            window.addEventListener('offline', updateOnlineStatus);
+            function handleOnlineStatus() {
+                if (navigator.onLine) {
+                    offlineBanner.classList.remove('show');
+                } else {
+                    offlineBanner.classList.add('show');
+                    offlineBannerMessage.textContent = "You are offline. Changes are saved locally.";
+                }
+                updateRatesStatus();
+            }
+
+            window.addEventListener('online', handleOnlineStatus);
+            window.addEventListener('offline', handleOnlineStatus);
+            handleOnlineStatus(); // Initial check
         });
     </script>
 </body>
