@@ -494,7 +494,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- Firebase Configuration ---
@@ -521,9 +520,9 @@
             // --- Global App State and Settings ---
             const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
             let allAssets = [], allDividends = [], appSettings = {};
-            // let syncPromises = {}; // This is no longer needed.
             let isEditMode = false, currentEditId = null, allocationDisplayMode = 'amount', isPrivacyMode = false, currentTab = 'dashboard';
             let summarySortState = { column: 'allocation', direction: 'desc' };
+            let trackerFilterState = { name: '', category: '', startDate: '', endDate: '' };
             const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
             const commonCurrencies = { "USD": "United States Dollar", "EUR": "Euro", "JPY": "Japanese Yen", "GBP": "British Pound Sterling", "AUD": "Australian Dollar", "CAD": "Canadian Dollar", "CHF": "Swiss Franc", "CNY": "Chinese Yuan", "HKD": "Hong Kong Dollar", "NZD": "New Zealand Dollar", "SEK": "Swedish Krona", "KRW": "South Korean Won", "SGD": "Singapore Dollar", "NOK": "Norwegian Krone", "MXN": "Mexican Peso", "INR": "Indian Rupee", "RUB": "Russian Ruble", "ZAR": "South African Rand", "BRL": "Brazilian Real", "PHP": "Philippine Peso", "SAR": "Saudi Riyal" };
 
@@ -670,7 +669,7 @@
                 updateDatalists(allAssets);
                 updateTotalValue(allAssets, appSettings);
                 if (currentTab === 'dashboard') { renderDashboard(allAssets, appSettings); } 
-                else if(currentTab === 'tracker') { renderGroupedAssets(allAssets, appSettings); } 
+                else if(currentTab === 'tracker') { renderGroupedAssets(appSettings); } 
                 else if(currentTab === 'dividends') { renderDividends(allDividends, appSettings); } 
                 else if(currentTab === 'summary') { renderSummaryTable(); }
             }
@@ -717,14 +716,40 @@
             summaryTabButton.addEventListener('click', () => switchTab('summary'));
 
             function switchTab(tabName) {
+                if (currentTab === 'tracker' && tabName !== 'tracker') {
+                    trackerFilterState = { name: '', category: '', startDate: '', endDate: '' };
+                    filterAssetName.value = '';
+                    filterCategory.value = '';
+                    filterStartDate.value = '';
+                    filterEndDate.value = '';
+                }
+
                 currentTab = tabName;
                 [dashboardContent, trackerContent, dividendsContent, summaryContent].forEach(el => el.classList.add('hidden'));
                 [dashboardTabButton, trackerTabButton, dividendsTabButton, summaryTabButton].forEach(el => el.classList.remove('active'));
                 addTransactionFab.classList.toggle('hidden', tabName === 'summary' || tabName === 'dividends');
-                if (tabName === 'dashboard') { dashboardContent.classList.remove('hidden'); dashboardTabButton.classList.add('active'); renderDashboard(allAssets, appSettings); } 
-                else if (tabName === 'tracker') { trackerContent.classList.remove('hidden'); trackerTabButton.classList.add('active'); renderGroupedAssets(allAssets, appSettings); } 
-                else if (tabName === 'dividends') { dividendsContent.classList.remove('hidden'); dividendsTabButton.classList.add('active'); renderDividends(allDividends, appSettings); } 
-                else if (tabName === 'summary') { summaryContent.classList.remove('hidden'); summaryTabButton.classList.add('active'); renderSummaryTable(); }
+
+                if (tabName === 'dashboard') { 
+                    dashboardContent.classList.remove('hidden'); 
+                    dashboardTabButton.classList.add('active'); 
+                    renderDashboard(allAssets, appSettings); 
+                } else if (tabName === 'tracker') { 
+                    trackerContent.classList.remove('hidden'); 
+                    trackerTabButton.classList.add('active');
+                    filterAssetName.value = trackerFilterState.name;
+                    filterCategory.value = trackerFilterState.category;
+                    filterStartDate.value = trackerFilterState.startDate;
+                    filterEndDate.value = trackerFilterState.endDate;
+                    renderGroupedAssets(appSettings); 
+                } else if (tabName === 'dividends') { 
+                    dividendsContent.classList.remove('hidden'); 
+                    dividendsTabButton.classList.add('active'); 
+                    renderDividends(allDividends, appSettings); 
+                } else if (tabName === 'summary') { 
+                    summaryContent.classList.remove('hidden'); 
+                    summaryTabButton.classList.add('active'); 
+                    renderSummaryTable(); 
+                }
             }
 
             function convertCurrency(amount, from, to, rates) {
@@ -766,8 +791,27 @@
                  }
             }
              
-            const renderGroupedAssets = (assetsToRender, settings) => {
+            function getFilteredAssets() {
+                const { name, category, startDate, endDate } = trackerFilterState;
+                let filteredAssets = [...allAssets];
+                if (name) {
+                    filteredAssets = filteredAssets.filter(a => a.name === name);
+                }
+                if (category) {
+                    filteredAssets = filteredAssets.filter(a => a.category === category);
+                }
+                if (startDate) {
+                    filteredAssets = filteredAssets.filter(a => parseDate(a.purchaseDate) >= parseDate(startDate));
+                }
+                if (endDate) {
+                    filteredAssets = filteredAssets.filter(a => parseDate(a.purchaseDate) <= parseDate(endDate));
+                }
+                return filteredAssets;
+            }
+
+            const renderGroupedAssets = (settings) => {
                 assetList.innerHTML = '';
+                const assetsToRender = getFilteredAssets();
                  if (assetsToRender.length === 0) { noAssetsMessage.classList.remove('hidden'); assetList.innerHTML = ''; return; }
                 noAssetsMessage.classList.add('hidden');
                 const groupedByMonth = assetsToRender.reduce((acc, asset) => {
@@ -829,11 +873,11 @@
                 const uniqueNames = [...new Set(assets.map(asset => asset.name))].sort();
                 if (assetDatalist) assetDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}"></option>`).join('');
                 if (dividendAssetNameModalSelect) { const existingValue = dividendAssetNameModalSelect.value; dividendAssetNameModalSelect.innerHTML = '<option value="" disabled>Select an existing asset</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join(''); if (existingValue) { dividendAssetNameModalSelect.value = existingValue; } else { dividendAssetNameModalSelect.value = ""; } }
-                if (filterAssetName) { filterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join(''); }
+                if (filterAssetName) { const currentFilter = trackerFilterState.name; filterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join(''); filterAssetName.value = currentFilter; }
                 if(summaryFilterAssetName){ summaryFilterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}">${name}</option>`).join(''); }
                 const defaultTxCategories = ['Market Value Update', 'Deposit', 'Withdrawal']; const customTxCategories = assets.map(asset => asset.category).filter(Boolean); const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])].sort();
                 if (categoryDatalist) categoryDatalist.innerHTML = allTxCategories.map(cat => `<option value="${cat}"></option>`).join('');
-                if (filterCategory) { filterCategory.innerHTML = '<option value="">All</option>' + allTxCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); }
+                if (filterCategory) { const currentFilter = trackerFilterState.category; filterCategory.innerHTML = '<option value="">All</option>' + allTxCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); filterCategory.value = currentFilter; }
                 const defaultAssetCategories = ['Cash', 'Bond', 'Stocks', 'Fixed Income', 'Crypto']; const customAssetCategories = assets.map(asset => asset.assetCategory).filter(Boolean); const allAssetCategories = [...new Set([...defaultAssetCategories, ...customAssetCategories])];
                 if (assetTypeDatalist) assetTypeDatalist.innerHTML = allAssetCategories.map(cat => `<option value="${cat}"></option>`).join('');
                 if(summaryFilterAssetCategory){ summaryFilterAssetCategory.innerHTML = '<option value="">All</option>' + allAssetCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); }
@@ -1182,8 +1226,21 @@
             function csvToArray(csv) { const lines = csv.trim().replace(/\r\n/g, '\n').split('\n'); if (lines.length < 2) return []; const headers = lines[0].trim().split(',').map(h => h.trim()); return lines.slice(1).map(line => { if (!line.trim()) return null; const values = line.split(','); const obj = {}; headers.forEach((h, i) => { obj[h] = (values[i] || '').trim(); }); obj.value = parseFloat(obj.value); if (isNaN(obj.value)) obj.value = 0; if (!obj.id) obj.id = crypto.randomUUID(); return obj; }).filter(Boolean); }
             function csvToDividendArray(csv) { const lines = csv.trim().replace(/\r\n/g, '\n').split('\n'); if (lines.length < 2) return []; const headers = lines[0].trim().split(',').map(h => h.trim()); return lines.slice(1).map(line => { if (!line.trim()) return null; const values = line.split(','); const obj = {}; headers.forEach((h, i) => { obj[h] = (values[i] || '').trim(); }); obj.value = parseFloat(obj.value); if (isNaN(obj.value)) obj.value = 0; if (!obj.id) obj.id = crypto.randomUUID(); return obj; }).filter(Boolean); }
             
-            applyFiltersBtn.addEventListener('click', () => { const name = filterAssetName.value; const category = filterCategory.value; const startDate = filterStartDate.value; const endDate = filterEndDate.value; let filteredAssets = [...allAssets]; if (name) { filteredAssets = filteredAssets.filter(a => a.name === name); } if (category) { filteredAssets = filteredAssets.filter(a => a.category === category); } if (startDate) { filteredAssets = filteredAssets.filter(a => parseDate(a.purchaseDate) >= parseDate(startDate)); } if (endDate) { filteredAssets = filteredAssets.filter(a => parseDate(a.purchaseDate) <= parseDate(endDate)); } renderGroupedAssets(filteredAssets, appSettings); });
-            resetFiltersBtn.addEventListener('click', () => { filterAssetName.value = ''; filterCategory.value = ''; filterStartDate.value = ''; filterEndDate.value = ''; renderGroupedAssets(allAssets, appSettings); });
+            applyFiltersBtn.addEventListener('click', () => {
+                trackerFilterState.name = filterAssetName.value;
+                trackerFilterState.category = filterCategory.value;
+                trackerFilterState.startDate = filterStartDate.value;
+                trackerFilterState.endDate = filterEndDate.value;
+                renderGroupedAssets(appSettings);
+            });
+            resetFiltersBtn.addEventListener('click', () => {
+                filterAssetName.value = '';
+                filterCategory.value = '';
+                filterStartDate.value = '';
+                filterEndDate.value = '';
+                trackerFilterState = { name: '', category: '', startDate: '', endDate: '' };
+                renderGroupedAssets(appSettings);
+            });
 
             summaryTableHeader.addEventListener('click', (e) => {
                 const headerCell = e.target.closest('.sortable'); if (!headerCell || !headerCell.dataset.sort) return;
@@ -1227,3 +1284,4 @@
     </script>
 </body>
 </html>
+
