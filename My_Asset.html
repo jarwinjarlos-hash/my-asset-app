@@ -1212,23 +1212,55 @@ async function updateExchangeRates() {
             });
 
             dividendForm.addEventListener('submit', (e) => {
-                e.preventDefault(); if (!currentUser) return;
-                const dividendData = { name: document.getElementById('dividend-asset-name-modal').value.trim(), subAssetName: document.getElementById('dividend-sub-asset-name-modal').value.trim(), date: document.getElementById('dividend-date-modal').value, value: parseFloat(document.getElementById('dividend-value-modal').value), currency: document.getElementById('dividend-currency-modal').value.toUpperCase().trim(), description: document.getElementById('dividend-description-modal').value.trim() };
+                e.preventDefault(); 
+                if (!currentUser) return;
+
+                // --- 1. Get and Disable Buttons ---
+                const saveButton = dividendForm.querySelector('button[type="submit"]');
+                const cancelButton = document.getElementById('cancel-dividend-btn');
+                const originalButtonText = saveButton.innerHTML;
+
+                saveButton.disabled = true;
+                cancelButton.disabled = true;
+                saveButton.innerHTML = 'Saving...';
+                
+                const dividendData = { 
+                    name: document.getElementById('dividend-asset-name-modal').value.trim(), 
+                    subAssetName: document.getElementById('dividend-sub-asset-name-modal').value.trim(), 
+                    date: document.getElementById('dividend-date-modal').value, 
+                    value: parseFloat(document.getElementById('dividend-value-modal').value), 
+                    currency: document.getElementById('dividend-currency-modal').value.toUpperCase().trim(), 
+                    description: document.getElementById('dividend-description-modal').value.trim() 
+                };
                 const id = document.getElementById('edit-dividend-id').value;
-                if (!dividendData.name || !dividendData.currency || dividendData.currency.length !== 3) { return showToast("Please select an asset and ensure currency is valid.", "error"); }
+
+                // --- 2. Validation Check ---
+                if (!dividendData.name || !dividendData.currency || dividendData.currency.length !== 3) { 
+                     // Re-enable buttons if validation fails before async operation
+                     saveButton.disabled = false;
+                     cancelButton.disabled = false;
+                     saveButton.innerHTML = originalButtonText;
+                     return showToast("Please select an asset and ensure currency is valid.", "error"); 
+                }
                 
                 let saveOperation;
+                const successMessage = isEditMode ? 'Dividend updated locally!' : 'Dividend saved locally!';
+
+                // --- 3. Determine Operation and Start Async Save ---
                 if (isEditMode) {
                     saveOperation = db.collection('users').doc(currentUser.uid).collection('dividends').doc(id).update(dividendData); 
                 } else {
                     saveOperation = db.collection('users').doc(currentUser.uid).collection('dividends').add(dividendData);
                 }
                 
-                showToast('Dividend saved locally!', 'success');
+                // --- 4. Offline-First UI Update (Instant Close & Toast) ---
+                showToast(successMessage, 'success');
                 closeDividendModal();
                 
+                // --- 5. Handle Sync Errors in Background ---
                 saveOperation.catch(error => {
                      console.error("Error saving dividend to Firestore:", error);
+                     // Note: We don't re-enable buttons here as the modal is already closed
                      showToast("Failed to sync dividend. It is saved locally.", 'error');
                 });
             });
@@ -1849,5 +1881,6 @@ async function updateExchangeRates() {
     </script>
 </body>
 </html>
+
 
 
