@@ -194,8 +194,8 @@
                              <div class="flex justify-between items-center mb-4">
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Asset Allocation</h2>
                                 <div id="allocation-display-toggle" class="flex space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-                                    <button data-mode="amount" class="allocation-toggle-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">$</button>
-                                    <button data-mode="percent" class="allocation-toggle-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">%</button>
+                                    <button data-mode="amount" class="allocation-toggle-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">$</button>
+                                    <button data-mode="percent" class="allocation-toggle-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">%</button>
                                 </div>
                             </div>
                             <div class="h-64 flex items-center justify-center relative">
@@ -217,15 +217,12 @@
                         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
                             <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Portfolio Value Trend</h2>
-                                <!-- UPDATED: Set YTD as the default active button -->
                                 <div id="trend-timeline-buttons" class="flex flex-wrap gap-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
                                     <button data-timeline="MTD" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">MTD</button>
-                                    <!-- YTD is now the active button -->
                                     <button data-timeline="YTD" class="timeline-btn active px-3 py-1 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white">YTD</button>
                                     <button data-timeline="1M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1M</button>
                                     <button data-timeline="3M" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">3M</button>
                                     <button data-timeline="1Y" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">1Y</button>
-                                    <!-- ALL is no longer the active button -->
                                     <button data-timeline="ALL" class="timeline-btn px-3 py-1 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-600">ALL</button>
                                 </div>
                             </div>
@@ -590,8 +587,9 @@
 
             // --- Global App State and Settings ---
             const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
+            // MODIFIED: Changed allocationDisplayMode default from 'amount' to 'percent'
             let allAssets = [], allDividends = [], appSettings = {};
-            let isEditMode = false, currentEditId = null, allocationDisplayMode = 'amount', isPrivacyMode = false, currentTab = 'dashboard';
+            let isEditMode = false, currentEditId = null, allocationDisplayMode = 'percent', isPrivacyMode = false, currentTab = 'dashboard';
             let summarySortState = { column: 'allocation', direction: 'desc' };
             let trackerFilterState = { name: '', category: '', startDate: '', endDate: '' };
             const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
