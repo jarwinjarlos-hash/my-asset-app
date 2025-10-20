@@ -134,7 +134,7 @@
                         <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-1.007 1.11-1.226l.28-.08c.568-.168 1.17.22 1.338.79l.08.28c.168.568-.22 1.17-.79 1.338l-.28.08c-.542.09-1.007.56-1.226 1.11l-.08.28c-.168.568-.79 1.008-1.338.84l-.28-.08c-.568-.168-.96-.79-.79-1.338l.08-.28zM14.25 5.16c.324-.972 1.26-1.63 2.28-1.63.02 0 .04 0 .06 0a2.25 2.25 0 012.25 2.25c0 .02 0 .04 0 .06 0 1.02-.658 1.956-1.63 2.28l-.28.08c-.568-.168-1.17-.22-1.338-.79l-.08-.28c-.168-.568.22-1.17.79-1.338l-.28-.08zm-5.25-.16a2.25 2.25 0 10-3.182-3.182 2.25 2.25 0 003.182 3.182zM12 15a3 3 0 100-6 3 3 0 000 6z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-3.314-2.686-6-6-6s-6 2.686-6 6s2.686 6 6 6s6-2.686 6-6zM8.25 20.25a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182zM12 21a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 20.25a2.25 2.25 0 11-3.182-3.182 2.25 2.25 0 013.182 3.182zM12 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" /></svg>
                     </button>
                     <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900" aria-label="Toggle theme">
-                        <svg id="theme-toggle-dark-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-dark-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                         <svg id="theme-toggle-light-icon" class="h-6 w-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-3.536a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.464-3.536a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zm1.414-7.071a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zM3 10a1 1 0 01-1-1 1 1 0 011-1h1a1 1 0 110 2H3z"></path></svg>
                     </button>
                 </div>
@@ -146,6 +146,7 @@
                         <button id="tracker-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">Tracker</button>
                         <button id="dividends-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">Dividends</button>
                         <button id="summary-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">Summary</button>
+                        <button id="expense-report-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 border-transparent">Expense Report</button>
                     </nav>
                 </div>
             </div>
@@ -159,33 +160,27 @@
                                 <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Asset Value</h2>
                                 <p id="total-value" class="text-3xl font-bold text-gray-900 dark:text-white">$0.00</p>
                             </div>
-                            <!-- Total Gain/Loss -->
                             <div class="text-left sm:text-right">
                                 <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Gain/Loss</h2>
                                 <p id="total-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
                                 <div id="total-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
                             </div>
-                            <!-- This Month's Gain/Loss -->
-                             <div class="text-left sm:text-right">
+                            <div class="text-left sm:text-right">
                                    <h2 id="this-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Gain/Loss</h2>
                                    <p id="monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
                                    <div id="monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
                                </div>
-                            <!-- Previous Month's Gain/Loss -->
-                             <div class="text-left sm:text-right">
+                            <div class="text-left sm:text-right">
                                    <h2 id="prev-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Previous Month's Gain/Loss</h2>
                                    <p id="prev-monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
                                    <div id="prev-monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
                                </div>
-                            <!-- ADDED: YTD Gain/Loss Display -->
                             <div class="text-left sm:text-right">
                                 <h2 id="ytd-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">YTD Gain/Loss</h2>
                                 <p id="ytd-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
                                 <div id="ytd-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
                             </div>
-                            <!-- END ADDED: YTD Gain/Loss Display -->
-                            <!-- Average Monthly Dividend -->
-                               <div class="text-left sm:text-right">
+                            <div class="text-left sm:text-right">
                                     <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">AVG Monthly Dividend</h2>
                                     <p id="avg-monthly-income" class="text-xl font-bold text-gray-900 dark:text-white">-</p>
                                     <div class="text-sm font-medium text-gray-500 dark:text-gray-400">&nbsp;</div>
@@ -377,7 +372,9 @@
                     </table>
                 </div>
             </div>
-        </main> 
+            <div id="expense-report-content" class="hidden">
+                </div>
+            </main> 
     </div>
     
     <button id="add-transaction-fab" class="fixed bottom-6 right-6 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 z-40" aria-label="Add new transaction">
@@ -474,6 +471,47 @@
         </div>
     </div>
     
+    <div id="expense-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
+            <h3 id="expense-modal-title" class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Add New Expense</h3>
+            <form id="expense-form">
+                <input type="hidden" id="edit-expense-id">
+                <div class="space-y-4">
+                    <div>
+                        <label for="expense-category-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                        <input type="text" id="expense-category-modal" list="expense-category-datalist" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Groceries, Rent">
+                        <datalist id="expense-category-datalist"></datalist>
+                    </div>
+                    <div>
+                        <label for="expense-sub-category-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub-Category (Optional)</label>
+                        <input type="text" id="expense-sub-category-modal" list="expense-sub-category-datalist" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., Car Insurance, Coffee Shop">
+                        <datalist id="expense-sub-category-datalist"></datalist>
+                    </div>
+                    <div>
+                        <label for="expense-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                        <input type="date" id="expense-date-modal" required class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="expense-amount-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                        <div class="relative mt-1">
+                            <input type="number" id="expense-amount-modal" step="0.01" min="0" required class="block w-full px-3 py-2 pr-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <div class="absolute inset-y-0 right-0 flex items-center">
+                                <span id="expense-currency-display" class="h-full rounded-r-md border-0 bg-transparent py-0 pl-2 pr-2 text-gray-500 dark:text-gray-300 sm:text-sm uppercase w-16 text-center">USD</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="expense-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes (Optional)</label>
+                        <textarea id="expense-description-modal" rows="2" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="e.g., monthly subscription"></textarea>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button type="button" id="cancel-expense-btn" class="py-2 px-4 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="submit" class="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div id="settings-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
         <div class="modal-content relative top-1/2 -translate-y-1/2 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-xl bg-white dark:bg-gray-800">
             <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Settings</h3>
@@ -599,7 +637,7 @@
             // --- Global App State and Settings ---
             const SETTINGS_STORAGE_KEY = 'assetTrackerSettings';
             // MODIFIED: Changed allocationDisplayMode default from 'amount' to 'percent'
-            let allAssets = [], allDividends = [], appSettings = {};
+            let allAssets = [], allDividends = [], allExpenses = [], appSettings = {}; // ADDED: allExpenses
             let isEditMode = false, currentEditId = null, allocationDisplayMode = 'percent', isPrivacyMode = false, currentTab = 'dashboard';
             let summarySortState = { column: 'allocation', direction: 'desc' };
             let trackerFilterState = { name: '', category: '', startDate: '', endDate: '' };
@@ -630,9 +668,20 @@
 
             // --- DOM Elements ---
             const dashboardTabButton = document.getElementById('dashboard-tab-button'), trackerTabButton = document.getElementById('tracker-tab-button'), dividendsTabButton = document.getElementById('dividends-tab-button'), summaryTabButton = document.getElementById('summary-tab-button');
+            const expenseReportTabButton = document.getElementById('expense-report-tab-button'); // ADDED
             const dashboardContent = document.getElementById('dashboard-content'), trackerContent = document.getElementById('tracker-content'), dividendsContent = document.getElementById('dividends-content'), summaryContent = document.getElementById('summary-content');
+            const expenseReportContent = document.getElementById('expense-report-content'); // ADDED
             const transactionModal = document.getElementById('transaction-modal'), transactionModalTitle = document.getElementById('transaction-modal-title'), transactionForm = document.getElementById('transaction-form');
             const assetNameModalInput = document.getElementById('asset-name-modal'), assetCurrencyModalInput = document.getElementById('asset-currency-modal'), assetTypeCategoryWrapperModal = document.getElementById('asset-type-category-wrapper-modal'), assetTypeCategoryModalInput = document.getElementById('asset-type-category-modal'), assetTypeDatalist = document.getElementById('asset-type-datalist'), assetCategoryModalInput = document.getElementById('asset-category-modal'), purchaseDateModalInput = document.getElementById('purchase-date-modal'), assetValueModalInput = document.getElementById('asset-value-modal'), assetDescriptionModalInput = document.getElementById('asset-description-modal'), cancelTransactionBtn = document.getElementById('cancel-transaction-btn');
+            const expenseModal = document.getElementById('expense-modal'); // ADDED
+            const expenseForm = document.getElementById('expense-form'); // ADDED
+            const expenseCategoryModalInput = document.getElementById('expense-category-modal'); // ADDED
+            const expenseSubCategoryModalInput = document.getElementById('expense-sub-category-modal'); // ADDED
+            const expenseDateModalInput = document.getElementById('expense-date-modal'); // ADDED
+            const expenseAmountModalInput = document.getElementById('expense-amount-modal'); // ADDED
+            const expenseDescriptionModalInput = document.getElementById('expense-description-modal'); // ADDED
+            const expenseCurrencyDisplay = document.getElementById('expense-currency-display'); // ADDED
+            const cancelExpenseBtn = document.getElementById('cancel-expense-btn'); // ADDED
             const addTransactionFab = document.getElementById('add-transaction-fab'), assetList = document.getElementById('asset-list'), noAssetsMessage = document.getElementById('no-assets-message');
             const settingsBtn = document.getElementById('settings-btn'), settingsModal = document.getElementById('settings-modal'), saveSettingsBtn = document.getElementById('save-settings-btn'), cancelSettingsBtn = document.getElementById('cancel-settings-btn'), mainCurrencySelect = document.getElementById('main-currency');
             const assetDatalist = document.getElementById('asset-datalist'), currencyDatalist = document.getElementById('currency-datalist'), categoryDatalist = document.getElementById('category-datalist');
@@ -658,8 +707,14 @@
             const authForm = document.getElementById('auth-form'), authTitle = document.getElementById('auth-title'), authEmailInput = document.getElementById('auth-email'), authPasswordInput = document.getElementById('auth-password');
             const signinActions = document.getElementById('signin-actions'), signupActions = document.getElementById('signup-actions'), showSignupLink = document.getElementById('show-signup'), showSigninLink = document.getElementById('show-signin');
             const signOutBtn = document.getElementById('signout-btn'), userEmailEl = document.getElementById('user-email'), userInfoEl = document.getElementById('user-info');
-            let currentUser = null, assetsListener = null, dividendsListener = null;
-            let initialAssetsLoaded = false, initialDividendsLoaded = false;
+            let currentUser = null, assetsListener = null, dividendsListener = null, expensesListener = null; // ADDED: expensesListener
+            let initialAssetsLoaded = false, initialDividendsLoaded = false, initialExpensesLoaded = false; // ADDED: initialExpensesLoaded
+            const offlineBanner = document.getElementById('offline-banner');
+            const offlineBannerMessage = document.getElementById('offline-banner-message');
+
+// ... (Rest of the code, which will be in part 2)
+let currentUser = null, assetsListener = null, dividendsListener = null, expensesListener = null; // ADDED: expensesListener
+            let initialAssetsLoaded = false, initialDividendsLoaded = false, initialExpensesLoaded = false; // ADDED: initialExpensesLoaded
             const offlineBanner = document.getElementById('offline-banner');
             const offlineBannerMessage = document.getElementById('offline-banner-message');
 
@@ -735,14 +790,27 @@
                         initialDividendsLoaded = true;
                         attemptRender();
                     }, err => { console.error("Dividends listener error:", err); showToast("Could not sync dividends.", "error"); });
+                    
+                    // ADDED: Expenses Listener
+                    const expensesCollection = db.collection('users').doc(user.uid).collection('expenses');
+                    if (expensesListener) expensesListener();
+                    expensesListener = expensesCollection.onSnapshot(snapshot => {
+                        allExpenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        initialExpensesLoaded = true;
+                        attemptRender();
+                    }, err => { console.error("Expenses listener error:", err); showToast("Could not sync expenses.", "error"); });
+                    // END ADDED
                 } else {
                     currentUser = null;
                     if (assetsListener) assetsListener();
                     if (dividendsListener) dividendsListener();
+                    if (expensesListener) expensesListener(); // ADDED
                     assetsListener = null;
                     dividendsListener = null;
+                    expensesListener = null; // ADDED
                     allAssets = [];
                     allDividends = [];
+                    allExpenses = []; // ADDED
                     authScreen.style.display = 'flex';
                     appScreen.style.display = 'none';
                     appLoader.style.display = 'none';
@@ -756,7 +824,7 @@
             signOutBtn.addEventListener('click', () => { auth.signOut(); });
             
             function attemptRender() {
-                if (currentUser && appSettings.rates && Object.keys(appSettings.rates).length > 0 && initialAssetsLoaded && initialDividendsLoaded) {
+                if (currentUser && appSettings.rates && Object.keys(appSettings.rates).length > 0 && initialAssetsLoaded && initialDividendsLoaded && initialExpensesLoaded) { // MODIFIED: Check initialExpensesLoaded
                     if (appScreen.style.display === 'none') {
                         appLoader.style.display = 'none';
                         appScreen.style.display = 'flex';
@@ -772,6 +840,7 @@
                 else if(currentTab === 'tracker') { renderGroupedAssets(appSettings); } 
                 else if(currentTab === 'dividends') { renderDividends(allDividends, appSettings); } 
                 else if(currentTab === 'summary') { renderSummaryTable(); }
+                // No explicit render for 'expense-report' as it loads a new page
             }
 async function updateExchangeRates() {
                 const onlineIndicator = document.getElementById('online-indicator');
@@ -813,8 +882,16 @@ async function updateExchangeRates() {
             trackerTabButton.addEventListener('click', () => switchTab('tracker'));
             dividendsTabButton.addEventListener('click', () => switchTab('dividends'));
             summaryTabButton.addEventListener('click', () => switchTab('summary'));
+            expenseReportTabButton.addEventListener('click', () => switchTab('expense-report')); // ADDED: Expense Report tab listener
 
             function switchTab(tabName) {
+                if (tabName === 'expense-report') {
+                     // NEW LOGIC: Redirect to Expense_Report.html
+                     localStorage.setItem('assetTrackerMainCurrency', appSettings.mainCurrency);
+                     window.location.href = 'Expense_Report.html';
+                     return;
+                }
+                
                 if (currentTab === 'tracker' && tabName !== 'tracker') {
                     trackerFilterState = { name: '', category: '', startDate: '', endDate: '' };
                     filterAssetName.value = '';
@@ -824,9 +901,9 @@ async function updateExchangeRates() {
                 }
 
                 currentTab = tabName;
-                [dashboardContent, trackerContent, dividendsContent, summaryContent].forEach(el => el.classList.add('hidden'));
-                [dashboardTabButton, trackerTabButton, dividendsTabButton, summaryTabButton].forEach(el => el.classList.remove('active'));
-                addTransactionFab.classList.toggle('hidden', tabName === 'summary' || tabName === 'dividends');
+                [dashboardContent, trackerContent, dividendsContent, summaryContent, expenseReportContent].forEach(el => el.classList.add('hidden')); // MODIFIED: Added expenseReportContent
+                [dashboardTabButton, trackerTabButton, dividendsTabButton, summaryTabButton, expenseReportTabButton].forEach(el => el.classList.remove('active')); // MODIFIED: Added expenseReportTabButton
+                addTransactionFab.classList.toggle('hidden', tabName === 'summary' || tabName === 'dividends' || tabName === 'expense-report'); // MODIFIED: Hide FAB for new tab
 
                 if (tabName === 'dashboard') { 
                     dashboardContent.classList.remove('hidden'); 
@@ -849,6 +926,7 @@ async function updateExchangeRates() {
                     summaryTabButton.classList.add('active'); 
                     renderSummaryTable(); 
                 }
+                // 'expense-report' tab is handled by redirect above.
             }
 
             function convertCurrency(amount, from, to, rates) {
@@ -888,6 +966,12 @@ async function updateExchangeRates() {
                      const statusText = 'Awaiting rate data...';
                      ratesLastUpdated.textContent = statusText; if(ratesStatusModal) ratesStatusModal.textContent = statusText;
                  }
+                 
+                 // ADDED: Update currency display in Expense Modal
+                 if (expenseCurrencyDisplay) {
+                     expenseCurrencyDisplay.textContent = appSettings.mainCurrency;
+                 }
+                 // END ADDED
             }
              
             function getFilteredAssets() {
@@ -976,10 +1060,21 @@ async function updateExchangeRates() {
                 if(summaryFilterAssetName){ summaryFilterAssetName.innerHTML = '<option value="">All</option>' + uniqueNames.map(name => `<option value="${name}"></option>`).join(''); }
                 const defaultTxCategories = ['Market Value Update', 'Deposit', 'Withdrawal']; const customTxCategories = assets.map(asset => asset.category).filter(Boolean); const allTxCategories = [...new Set([...defaultTxCategories, ...customTxCategories])].sort();
                 if (categoryDatalist) categoryDatalist.innerHTML = allTxCategories.map(cat => `<option value="${cat}"></option>`).join('');
-                if (filterCategory) { const currentFilter = trackerFilterState.category; filterCategory.innerHTML = '<option value="">All</option>' + allTxCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); filterCategory.value = currentFilter; }
+                if (filterCategory) { const currentFilter = trackerFilterState.category; filterCategory.innerHTML = '<option value="">All</option>' + allTxCategories.map(cat => `<option value="${cat}">${cat}</option>').join(''); filterCategory.value = currentFilter; }
                 const defaultAssetCategories = ['Cash', 'Bond', 'Stocks', 'Fixed Income', 'Crypto']; const customAssetCategories = assets.map(asset => asset.assetCategory).filter(Boolean); const allAssetCategories = [...new Set([...defaultAssetCategories, ...customAssetCategories])];
                 if (assetTypeDatalist) assetTypeDatalist.innerHTML = allAssetCategories.map(cat => `<option value="${cat}"></option>`).join('');
                 if(summaryFilterAssetCategory){ summaryFilterAssetCategory.innerHTML = '<option value="">All</option>' + allAssetCategories.map(cat => `<option value="${cat}">${cat}</option>`).join(''); }
+            
+                // ADDED: Expense Datalists
+                const expenseCategoryDatalist = document.getElementById('expense-category-datalist');
+                const expenseSubCategoryDatalist = document.getElementById('expense-sub-category-datalist');
+                
+                const allExpenseCategories = [...new Set(allExpenses.map(e => e.category).filter(Boolean))].sort();
+                if (expenseCategoryDatalist) expenseCategoryDatalist.innerHTML = allExpenseCategories.map(cat => `<option value="${cat}"></option>`).join('');
+
+                const allExpenseSubCategories = [...new Set(allExpenses.map(e => e.subCategory).filter(Boolean))].sort();
+                if (expenseSubCategoryDatalist) expenseSubCategoryDatalist.innerHTML = allExpenseSubCategories.map(sub => `<option value="${sub}"></option>`).join('');
+                // END ADDED
             };
             
             function calculateMonthlyGainLoss(assets, settings, periodStartDate, periodEndDate) {
@@ -1049,7 +1144,15 @@ async function updateExchangeRates() {
                 amountEl.className = `${amountSizeClass} ${colorClass}`; percentEl.className = `${sizeClass} font-medium ${colorClass}`;
             }
 
-            addTransactionFab.addEventListener('click', () => { if (currentTab === 'dividends') { openDividendModal(); } else { openTransactionModal(); } });
+            addTransactionFab.addEventListener('click', () => { 
+                if (currentTab === 'dividends') { 
+                    openDividendModal(); 
+                } else if (currentTab === 'expense-report') { 
+                    openExpenseModal(); // ADDED: Open expense modal from FAB
+                } else { 
+                    openTransactionModal(); 
+                } 
+            });
             assetNameModalInput.addEventListener('input', () => {
                 const currentName = assetNameModalInput.value.trim(); const existingAsset = allAssets.find(a => a.name === currentName);
                 if (existingAsset) { assetTypeCategoryWrapperModal.classList.add('hidden'); assetTypeCategoryModalInput.required = false; assetCurrencyModalInput.value = existingAsset.currency; assetCurrencyModalInput.disabled = true; } 
@@ -1313,15 +1416,97 @@ async function updateExchangeRates() {
                 }
             }
 
+            // ADDED: Expense Modal Logic
+            expenseForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!currentUser) return;
+
+                const saveButton = expenseForm.querySelector('button[type="submit"]');
+                const cancelButton = document.getElementById('cancel-expense-btn');
+                const originalButtonText = saveButton.innerHTML;
+
+                saveButton.disabled = true;
+                cancelButton.disabled = true;
+                saveButton.innerHTML = 'Saving...';
+
+                const expenseData = {
+                    category: expenseCategoryModalInput.value.trim(),
+                    subCategory: expenseSubCategoryModalInput.value.trim(),
+                    date: expenseDateModalInput.value,
+                    amount: parseFloat(expenseAmountModalInput.value),
+                    currency: appSettings.mainCurrency, // Default to main currency
+                    description: expenseDescriptionModalInput.value.trim(),
+                    createdAt: new Date().toISOString()
+                };
+                const id = document.getElementById('edit-expense-id').value;
+
+                if (!expenseData.category || !expenseData.amount) {
+                    saveButton.disabled = false;
+                    cancelButton.disabled = false;
+                    saveButton.innerHTML = originalButtonText;
+                    return showToast("Category and Amount are required.", "error");
+                }
+
+                let saveOperation;
+                const successMessage = isEditMode ? 'Expense updated locally!' : 'Expense saved locally!';
+
+                if (isEditMode) {
+                    saveOperation = db.collection('users').doc(currentUser.uid).collection('expenses').doc(id).update(expenseData);
+                } else {
+                    saveOperation = db.collection('users').doc(currentUser.uid).collection('expenses').add(expenseData);
+                }
+
+                showToast(successMessage, 'success');
+                closeExpenseModal();
+
+                saveOperation.catch(error => {
+                    console.error("Error saving expense to Firestore:", error);
+                    showToast("Failed to sync expense. It is saved locally.", 'error');
+                });
+            });
+
+            function openExpenseModal(expense = null) {
+                expenseForm.reset();
+                isEditMode = !!expense;
+                document.getElementById('edit-expense-id').value = expense ? expense.id : '';
+                document.getElementById('expense-modal-title').textContent = isEditMode ? 'Edit Expense' : 'Add New Expense';
+                
+                // Update currency display to main currency
+                if (expenseCurrencyDisplay) {
+                     expenseCurrencyDisplay.textContent = appSettings.mainCurrency;
+                }
+                
+                if (expense) {
+                    expenseCategoryModalInput.value = expense.category;
+                    expenseSubCategoryModalInput.value = expense.subCategory || '';
+                    expenseDateModalInput.value = expense.date;
+                    expenseAmountModalInput.value = expense.amount;
+                    expenseDescriptionModalInput.value = expense.description || '';
+                } else {
+                    expenseDateModalInput.value = toLocalISOString(new Date());
+                }
+                expenseModal.classList.remove('hidden');
+            }
+
+            function closeExpenseModal() { 
+                expenseModal.classList.add('hidden'); 
+                isEditMode = false; 
+                document.getElementById('edit-expense-id').value = '';
+            }
+            
+            cancelExpenseBtn.addEventListener('click', closeExpenseModal);
+            expenseModal.addEventListener('click', (e) => { if (e.target === expenseModal) closeExpenseModal(); });
+            // END ADDED
+
             function populateCurrencyDatalists() {
                 const optionsHtml = Object.keys(commonCurrencies).sort().map(code => `<option value="${code}">${code} - ${commonCurrencies[code]}</option>`).join('');
                 if(mainCurrencySelect) mainCurrencySelect.innerHTML = optionsHtml;
                 if(currencyDatalist) currencyDatalist.innerHTML = Object.keys(commonCurrencies).sort().map(code => `<option value="${code}"></option>`).join('');
             }
-            settingsBtn.addEventListener('click', () => { mainCurrencySelect.value = appSettings.mainCurrency; settingsModal.classList.remove('hidden'); });
+            settingsBtn.addEventListener('click', () => { mainCurrencySelect.value = appSettings.mainCurrency; settingsModal.classList.remove('hidden'); updateRatesStatus(); }); // MODIFIED: Added updateRatesStatus
             cancelSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
             settingsModal.addEventListener('click', (e) => { if(e.target === settingsModal) settingsModal.classList.add('hidden'); });
-            saveSettingsBtn.addEventListener('click', () => { appSettings.mainCurrency = mainCurrencySelect.value; localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings)); settingsModal.classList.add('hidden'); renderAll(); });
+            saveSettingsBtn.addEventListener('click', () => { appSettings.mainCurrency = mainCurrencySelect.value; localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings)); settingsModal.classList.add('hidden'); updateRatesStatus(); renderAll(); }); // MODIFIED: Added updateRatesStatus and renderAll
             
             importDataBtn.addEventListener('click', () => importFileInput.click());
             
@@ -1335,7 +1520,7 @@ async function updateExchangeRates() {
                     const content = e.target.result;
                     try {
                         const zip = await JSZip.loadAsync(content); 
-                        let importedAssets, importedDividends;
+                        let importedAssets, importedDividends, importedExpenses; // MODIFIED: Added importedExpenses
                         
                         if (zip.files['assets.csv']) { 
                             importedAssets = csvToArray(await zip.files['assets.csv'].async('string')); 
@@ -1343,10 +1528,13 @@ async function updateExchangeRates() {
                         if (zip.files['dividends.csv']) { 
                             importedDividends = csvToDividendArray(await zip.files['dividends.csv'].async('string')); 
                         }
+                        if (zip.files['expenses.csv']) { // ADDED: Expense CSV handling
+                            importedExpenses = csvToExpenseArray(await zip.files['expenses.csv'].async('string')); 
+                        }
 
                         // --- FORCED REPLACE CONFIRMATION (REMOVED MERGE OPTION) ---
                         const confirmed = await showConfirm(
-                            'WARNING: Importing a backup will DELETE ALL current asset and dividend data and REPLACE it with the imported file. Are you sure you want to proceed?', 
+                            'WARNING: Importing a backup will DELETE ALL current asset, dividend, AND expense data and REPLACE it with the imported file. Are you sure you want to proceed?', // MODIFIED: Added expense data to warning
                             'Confirm Data Replacement'
                         );
 
@@ -1396,6 +1584,25 @@ async function updateExchangeRates() {
                             });
                             await importBatch.commit();
                         }
+                        
+                        // --- ADDED: EXPENSE REPLACEMENT LOGIC (Clean Slate) ---
+                        if (importedExpenses) {
+                            showToast('Deleting existing expenses...', 'info');
+                            const existingExpenseDocs = await db.collection('users').doc(currentUser.uid).collection('expenses').get();
+                            const deleteBatch = db.batch();
+                            existingExpenseDocs.forEach(doc => deleteBatch.delete(doc.ref));
+                            await deleteBatch.commit();
+                            
+                            showToast('Existing expenses deleted. Importing new expenses...', 'info');
+                            
+                            const importBatch = db.batch();
+                            importedExpenses.forEach(expense => {
+                                const docRef = db.collection('users').doc(currentUser.uid).collection('expenses').doc();
+                                importBatch.set(docRef, expense);
+                            });
+                            await importBatch.commit();
+                        }
+                        // END ADDED
 
                         showToast('Backup imported successfully! Data refreshed.', 'success');
 
@@ -1410,7 +1617,7 @@ async function updateExchangeRates() {
             // --- END MODIFIED IMPORT FUNCTION ---
 
             function exportBackup() {
-                if (allAssets.length === 0 && allDividends.length === 0) { showToast('No data to export.', 'info'); return; }
+                if (allAssets.length === 0 && allDividends.length === 0 && allExpenses.length === 0) { showToast('No data to export.', 'info'); return; } // MODIFIED: Check allExpenses
                 const zip = new JSZip();
                 const assetHeaders = ['id','name','assetCategory','category','purchaseDate','value', 'currency', 'description','createdAt'];
                 const assetRows = allAssets.map(asset => assetHeaders.map(h => { let c = asset[h] === null || asset[h] === undefined ? '' : String(asset[h]); if (/[",\n]/.test(c)) { c = `"${c.replace(/"/g, '""')}"`; } return c; }).join(','));
@@ -1418,12 +1625,22 @@ async function updateExchangeRates() {
                 const dividendHeaders = ['id', 'name', 'subAssetName', 'date', 'value', 'currency', 'description'];
                 const dividendRows = allDividends.map(d => dividendHeaders.map(h => { let c = d[h] === null || d[h] === undefined ? '' : String(d[h]); if (/[",\n]/.test(c)) { c = `"${c.replace(/"/g, '""')}"`; } return c; }).join(','));
                 zip.file("dividends.csv", [dividendHeaders.join(','), ...dividendRows].join('\n'));
+                
+                // ADDED: Expense CSV Export
+                const expenseHeaders = ['id', 'category', 'subCategory', 'date', 'amount', 'currency', 'description', 'createdAt'];
+                const expenseRows = allExpenses.map(e => expenseHeaders.map(h => { let c = e[h] === null || e[h] === undefined ? '' : String(e[h]); if (/[",\n]/.test(c)) { c = `"${c.replace(/"/g, '""')}"`; } return c; }).join(','));
+                zip.file("expenses.csv", [expenseHeaders.join(','), ...expenseRows].join('\n'));
+                // END ADDED
+                
                 zip.generateAsync({type:"blob"}).then(function(content) { const link = document.createElement("a"); const url = URL.createObjectURL(content); link.setAttribute("href", url); link.setAttribute("download", `asset_tracker_backup_${toLocalISOString(new Date())}.zip`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); });
             }
             exportDataBtn.addEventListener('click', exportBackup);
 
             function csvToArray(csv) { const lines = csv.trim().replace(/\r\n/g, '\n').split('\n'); if (lines.length < 2) return []; const headers = lines[0].trim().split(',').map(h => h.trim()); return lines.slice(1).map(line => { if (!line.trim()) return null; const values = line.split(','); const obj = {}; headers.forEach((h, i) => { obj[h] = (values[i] || '').trim(); }); obj.value = parseFloat(obj.value); if (isNaN(obj.value)) obj.value = 0; if (!obj.id) obj.id = crypto.randomUUID(); return obj; }).filter(Boolean); }
             function csvToDividendArray(csv) { const lines = csv.trim().replace(/\r\n/g, '\n').split('\n'); if (lines.length < 2) return []; const headers = lines[0].trim().split(',').map(h => h.trim()); return lines.slice(1).map(line => { if (!line.trim()) return null; const values = line.split(','); const obj = {}; headers.forEach((h, i) => { obj[h] = (values[i] || '').trim(); }); obj.value = parseFloat(obj.value); if (isNaN(obj.value)) obj.value = 0; if (!obj.id) obj.id = crypto.randomUUID(); return obj; }).filter(Boolean); }
+            // ADDED: CSV to Expense Array Parser
+            function csvToExpenseArray(csv) { const lines = csv.trim().replace(/\r\n/g, '\n').split('\n'); if (lines.length < 2) return []; const headers = lines[0].trim().split(',').map(h => h.trim()); return lines.slice(1).map(line => { if (!line.trim()) return null; const values = line.split(','); const obj = {}; headers.forEach((h, i) => { obj[h] = (values[i] || '').trim(); }); obj.amount = parseFloat(obj.amount); if (isNaN(obj.amount)) obj.amount = 0; if (!obj.id) obj.id = crypto.randomUUID(); return obj; }).filter(Boolean); }
+            // END ADDED
             
             applyFiltersBtn.addEventListener('click', () => {
                 trackerFilterState.name = filterAssetName.value;
