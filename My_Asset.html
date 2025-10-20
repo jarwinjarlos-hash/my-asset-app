@@ -796,9 +796,14 @@ let currentUser = null, assetsListener = null, dividendsListener = null, expense
                     if (expensesListener) expensesListener();
                     expensesListener = expensesCollection.onSnapshot(snapshot => {
                         allExpenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        initialExpensesLoaded = true;
+                        initialExpensesLoaded = true; // <-- Corrected: Ensure this line exists
                         attemptRender();
-                    }, err => { console.error("Expenses listener error:", err); showToast("Could not sync expenses.", "error"); });
+                    }, err => { 
+                        console.error("Expenses listener error:", err); 
+                        showToast("Could not sync expenses.", "error"); 
+                        initialExpensesLoaded = true; // <-- Safety: Set to true even on error to unblock UI
+                        attemptRender();
+                    });
                     // END ADDED
                 } else {
                     currentUser = null;
@@ -2172,3 +2177,4 @@ async function updateExchangeRates() {
     </script>
 </body>
 </html>
+
