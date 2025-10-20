@@ -786,7 +786,11 @@ let currentUser = null, assetsListener = null, dividendsListener = null, expense
                     const dividendsCollection = db.collection('users').doc(user.uid).collection('dividends');
                     if (dividendsListener) dividendsListener();
                     dividendsListener = dividendsCollection.onSnapshot(snapshot => {
-                        allDividends = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        allDividends = snapshot.docs.map(doc => ({ 
+                            id: doc.id, 
+                            ...doc.data(), 
+                            value: parseFloat(doc.data().value) || 0 // CRITICAL: Ensure value is a number
+                        }));
                         initialDividendsLoaded = true;
                         attemptRender();
                     }, err => { console.error("Dividends listener error:", err); showToast("Could not sync dividends.", "error"); });
@@ -2177,4 +2181,5 @@ async function updateExchangeRates() {
     </script>
 </body>
 </html>
+
 
