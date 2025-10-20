@@ -154,26 +154,37 @@
             <div id="dashboard-content">
                  <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md mb-8">
                      <div class="flex justify-between items-start">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-grow">
-                             <div class="col-span-1 sm:col-span-2 lg:col-span-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 flex-grow">
+                             <div class="col-span-1 sm:col-span-2 lg:col-span-5">
                                 <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Asset Value</h2>
                                 <p id="total-value" class="text-3xl font-bold text-gray-900 dark:text-white">$0.00</p>
                             </div>
+                            <!-- Total Gain/Loss -->
                             <div class="text-left sm:text-right">
                                 <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Total Gain/Loss</h2>
                                 <p id="total-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
                                 <div id="total-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
                             </div>
+                            <!-- This Month's Gain/Loss -->
                              <div class="text-left sm:text-right">
                                    <h2 id="this-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">This Month's Gain/Loss</h2>
                                    <p id="monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
                                    <div id="monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
                                </div>
+                            <!-- Previous Month's Gain/Loss -->
                              <div class="text-left sm:text-right">
                                    <h2 id="prev-month-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">Previous Month's Gain/Loss</h2>
                                    <p id="prev-monthly-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
                                    <div id="prev-monthly-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
                                </div>
+                            <!-- ADDED: YTD Gain/Loss Display -->
+                            <div class="text-left sm:text-right">
+                                <h2 id="ytd-label" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">YTD Gain/Loss</h2>
+                                <p id="ytd-gain-loss-amount" class="text-xl font-bold text-gray-500 dark:text-gray-300">-</p>
+                                <div id="ytd-gain-loss-percentage" class="text-sm font-medium text-gray-500 dark:text-gray-400">-</div>
+                            </div>
+                            <!-- END ADDED: YTD Gain/Loss Display -->
+                            <!-- Average Monthly Dividend -->
                                <div class="text-left sm:text-right">
                                     <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">AVG Monthly Dividend</h2>
                                     <p id="avg-monthly-income" class="text-xl font-bold text-gray-900 dark:text-white">-</p>
@@ -626,6 +637,9 @@
             const settingsBtn = document.getElementById('settings-btn'), settingsModal = document.getElementById('settings-modal'), saveSettingsBtn = document.getElementById('save-settings-btn'), cancelSettingsBtn = document.getElementById('cancel-settings-btn'), mainCurrencySelect = document.getElementById('main-currency');
             const assetDatalist = document.getElementById('asset-datalist'), currencyDatalist = document.getElementById('currency-datalist'), categoryDatalist = document.getElementById('category-datalist');
             const totalValueEl = document.getElementById('total-value'), totalGainLossAmountEl = document.getElementById('total-gain-loss-amount'), totalGainLossPercentageEl = document.getElementById('total-gain-loss-percentage'), monthlyGainLossAmountEl = document.getElementById('monthly-gain-loss-amount'), monthlyGainLossPercentageEl = document.getElementById('monthly-gain-loss-percentage'), prevMonthlyGainLossAmountEl = document.getElementById('prev-monthly-gain-loss-amount'), prevMonthlyGainLossPercentageEl = document.getElementById('prev-monthly-gain-loss-percentage'), thisMonthLabel = document.getElementById('this-month-label'), prevMonthLabel = document.getElementById('prev-month-label');
+            // ADDED: YTD DOM Elements
+            const ytdGainLossAmountEl = document.getElementById('ytd-gain-loss-amount'), ytdGainLossPercentageEl = document.getElementById('ytd-gain-loss-percentage'), ytdLabel = document.getElementById('ytd-label');
+            // END ADDED: YTD DOM Elements
             const addDividendBtn = document.getElementById('add-dividend-btn'), dividendModal = document.getElementById('dividend-modal'), dividendForm = document.getElementById('dividend-form'), cancelDividendBtn = document.getElementById('cancel-dividend-btn'), dividendsList = document.getElementById('dividends-list'), noDividendsMessage = document.getElementById('no-dividends-message'), dividendsTotalEl = document.getElementById('dividends-total'), dividendsMonthLabelEl = document.getElementById('dividends-month-label'), dividendAssetNameModalSelect = document.getElementById('dividend-asset-name-modal');
             const assetBreakdownContainer = document.getElementById('asset-breakdown');
             const importDataBtn = document.getElementById('import-data-btn'), importFileInput = document.getElementById('import-file-input'), exportDataBtn = document.getElementById('export-data-btn');
@@ -999,7 +1013,7 @@ async function updateExchangeRates() {
 
             const updateTotalValue = (assets, settings) => {
                  const mainCurrency = settings.mainCurrency;
-                if(assets.length === 0 || !settings.rates || Object.keys(settings.rates).length === 0) { totalValueEl.textContent = formatCurrency(0, mainCurrency); totalGainLossAmountEl.textContent = '-'; totalGainLossPercentageEl.textContent = '-'; monthlyGainLossAmountEl.textContent = '-'; monthlyGainLossPercentageEl.textContent = '-'; prevMonthlyGainLossAmountEl.textContent = '-'; prevMonthlyGainLossPercentageEl.textContent = '-'; return; }
+                if(assets.length === 0 || !settings.rates || Object.keys(settings.rates).length === 0) { totalValueEl.textContent = formatCurrency(0, mainCurrency); totalGainLossAmountEl.textContent = '-'; totalGainLossPercentageEl.textContent = '-'; monthlyGainLossAmountEl.textContent = '-'; monthlyGainLossPercentageEl.textContent = '-'; prevMonthlyGainLossAmountEl.textContent = '-'; prevMonthlyGainLossPercentageEl.textContent = '-'; /* ADDED */ ytdGainLossAmountEl.textContent = '-'; ytdGainLossPercentageEl.textContent = '-'; /* END ADDED */ return; }
                 const latestAssets = {}; assets.forEach(asset => { if (!latestAssets[asset.name] || parseDate(asset.purchaseDate) >= parseDate(latestAssets[asset.name].purchaseDate)) { latestAssets[asset.name] = asset; } });
                 const currentTotalValue = Object.values(latestAssets).reduce((sum, asset) => sum + (convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0), 0);
                 totalValueEl.textContent = formatCurrency(currentTotalValue, mainCurrency);
@@ -1012,6 +1026,14 @@ async function updateExchangeRates() {
                 if (netCapital > 0 || currentTotalValue > 0) { const percentage = netCapital !== 0 ? (gainLoss / netCapital) * 100 : 0; renderGainLossDisplay(totalGainLossAmountEl, totalGainLossPercentageEl, gainLoss, percentage, mainCurrency, false); } else { totalGainLossAmountEl.textContent = '-'; totalGainLossPercentageEl.textContent = '-'; }
                 const now = new Date(); const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1); const thisMonthData = calculateMonthlyGainLoss(assets, settings, startOfThisMonth, new Date(now.getTime() + 86400000)); thisMonthLabel.textContent = `${now.toLocaleString('default', { month: 'long' })}'s Gain/Loss`; renderGainLossDisplay(monthlyGainLossAmountEl, monthlyGainLossPercentageEl, thisMonthData.gainLoss, thisMonthData.percentage, mainCurrency, false);
                 const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); const endOfPrevMonth = startOfThisMonth; const prevMonthData = calculateMonthlyGainLoss(assets, settings, startOfPrevMonth, endOfPrevMonth); const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); prevMonthLabel.textContent = `${prevMonthDate.toLocaleString('default', { month: 'long' })}'s Gain/Loss`; renderGainLossDisplay(prevMonthlyGainLossAmountEl, prevMonthlyGainLossPercentageEl, prevMonthData.gainLoss, prevMonthData.percentage, mainCurrency, false);
+                
+                // ADDED: YTD CALCULATION
+                const startOfYTD = new Date(now.getFullYear(), 0, 1);
+                const ytdData = calculateMonthlyGainLoss(assets, settings, startOfYTD, new Date(now.getTime() + 86400000));
+                ytdLabel.textContent = `YTD Gain/Loss`;
+                renderGainLossDisplay(ytdGainLossAmountEl, ytdGainLossPercentageEl, ytdData.gainLoss, ytdData.percentage, mainCurrency, false);
+                // END ADDED: YTD CALCULATION
+
                 const avgMonthlyIncomeEl = document.getElementById('avg-monthly-income');
                 if (allDividends.length > 0) {
                     const sortedIncome = [...allDividends].sort((a,b) => parseDate(a.date) - parseDate(b.date)); const firstIncomeDate = parseDate(sortedIncome[0].date); const lastIncomeDate = parseDate(sortedIncome[sortedIncome.length - 1].date); const monthDiff = (lastIncomeDate.getFullYear() - firstIncomeDate.getFullYear()) * 12 + (lastIncomeDate.getMonth() - firstIncomeDate.getMonth()) + 1;
