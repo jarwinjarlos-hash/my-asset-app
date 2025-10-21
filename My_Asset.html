@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Tracker (Cloud Sync)</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6"/>
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/3b82f6/FFFFFF?text=AT">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': {
+                            '50': '#eff6ff', '100': '#dbeafe', '200': '#bfdbfe', '300': '#93c5fd', '400': '#60a5fa', '500': '#3b82f6', '600': '#2563eb', '700': '#1d4ed8', '800': '#1e40af', '900': '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 h-screen overflow-hidden">
+    
+    <div id="offline-banner" class="fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 text-sm z-50">
+        <span id="offline-banner-message">You are currently offline. Changes are saved locally.</span>
+    </div>
+
+    <div id="auth-screen" class="h-full flex items-center justify-center p-4">
+        <div class="p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-sm w-full">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Asset Tracker</h1>
+                <p id="auth-title" class="text-gray-500 dark:text-gray-400 mt-2">Sign in to your account</p>
+            </div>
+            <form id="auth-form" class="space-y-6">
+                <div>
+                    <label for="auth-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
+                    <div class="mt-1">
+                        <input id="auth-email" name="email" type="email" autocomplete="email" required class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label for="auth-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                    <div class="mt-1">
+                        <input id="auth-password" name="password" type="password" autocomplete="current-password" required class="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                    </div>
+                </div>
+                <div id="signin-actions">
+                    <button type="submit" name="signin" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">Sign in</button>
+                    <p class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                        No account?
+                        <a href="#" id="show-signup" class="font-medium text-primary-600 hover:text-primary-500">Create one</a>
+                    </p>
+                </div>
+                <div id="signup-actions" class="hidden">
+                    <button type="submit" name="signup" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Create Account</button>
+                    <p class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                        Already have an account?
+                        <a href="#" id="show-signin" class="font-medium text-primary-600 hover:text-primary-500">Sign in</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-loader" class="h-full flex items-center justify-center" style="display: none;">
+        <svg class="animate-spin h-10 w-10 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+    </div>
+    
+    <div id="app-screen" class="h-full flex flex-col max-w-7xl mx-auto" style="display: none;">
+        <div class="flex-shrink-0 px-4 sm:px-6 lg:px-8">
+            <header class="pt-4 sm:pt-6 lg:pt-8 flex justify-between items-center">
+                </header>
+            <div class="mt-4">
+                <div class="border-b border-gray-200 dark:border-gray-700">
+                    <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
+                        </nav>
+                </div>
+            </div>
+        </div>
+        <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24">
+            <div id="dashboard-content">
+                 </div>
+            <div id="tracker-content" class="hidden">
+                </div>
+            <div id="dividends-content" class="hidden">
+                </div>
+            <div id="summary-content" class="hidden">
+                </div>
+        </main> 
+    </div>
+    
+    <button id="add-transaction-fab" class="fixed bottom-6 right-6 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 z-40" aria-label="Add new transaction">
+        </button>
+    
+    <div id="transaction-modal" class="modal ...">
+        </div>
+    <div id="dividend-modal" class="modal ...">
+        </div>
+    <div id="settings-modal" class="modal ...">
+        </div>
+    <div id="alert-modal" class="modal ...">
+        </div>
+    <div id="confirm-modal" class="modal ...">
+        </div>
+    <div id="asset-history-modal" class="modal ...">
+        </div>
+    
+    <div id="toast-notification" class="fixed top-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-semibold transition-transform transform translate-x-[150%]">
+        <span id="toast-message"></span>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script src="app.js" defer></script>
+</body>
+</html>
