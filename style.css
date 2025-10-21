@@ -1,0 +1,37 @@
+body { font-family: 'Inter', sans-serif; }
+.modal { transition: opacity 0.25s ease; }
+.modal-content { transition: transform 0.25s ease; }
+.tab-button.active { border-color: #2563eb; color: #2563eb; }
+.dark .tab-button.active { border-color: #60a5fa; color: #60a5fa; }
+.toggle-icon { transition: transform 0.2s ease-in-out; }
+.rotate-90 { transform: rotate(90deg); }
+.summary-filter-btn.active { background-color: #3b82f6; color: white; }
+.sortable { cursor: pointer; position: relative; }
+.sortable .sort-indicator { display: inline-block; width: 1em; margin-left: 0.25rem; color: #9ca3af; opacity: 0.5; transition: opacity 0.2s ease-in-out; }
+.sortable:hover .sort-indicator { opacity: 1; }
+.sortable.asc .sort-indicator::after { content: '▲'; font-size: 0.8em; opacity: 1; }
+.sortable.desc .sort-indicator::after { content: '▼'; font-size: 0.8em; opacity: 1; }
+.toast-show { transform: translateX(0); }
+/* IMPROVEMENT: Styles for the offline banner */
+#offline-banner {
+    transition: transform 0.3s ease-in-out;
+    transform: translateY(-100%);
+}
+#offline-banner.show {
+    transform: translateY(0);
+}
+/* IMPROVEMENT: Styles for pending sync indicator */
+.pending-sync-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #f59e0b; /* Amber 500 */
+    margin-left: 8px;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
