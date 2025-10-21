@@ -77,41 +77,457 @@
     <div id="app-screen" class="h-full flex flex-col max-w-7xl mx-auto" style="display: none;">
         <div class="flex-shrink-0 px-4 sm:px-6 lg:px-8">
             <header class="pt-4 sm:pt-6 lg:pt-8 flex justify-between items-center">
-                </header>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Portfolio Overview</h1>
+                    <div id="user-info" class="flex items-center space-x-2 mt-1">
+                        <span id="user-email" class="text-sm text-gray-500 dark:text-gray-400"></span>
+                        <button id="signout-btn" class="text-xs text-red-500 hover:underline">Sign Out</button>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5">
+                        <svg id="theme-toggle-dark-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 10.607a1 1 0 010-1.414l.707-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414 0zM3 11a1 1 0 100 2H2a1 1 0 100-2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <button id="settings-btn" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 p-2.5 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </button>
+                </div>
+            </header>
             <div class="mt-4">
                 <div class="border-b border-gray-200 dark:border-gray-700">
                     <nav class="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
-                        </nav>
+                        <button id="dashboard-tab-button" type="button" class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Dashboard</button>
+                        <button id="tracker-tab-button" type="button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600">Tracker</button>
+                        <button id="dividends-tab-button" type="button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600">Dividends</button>
+                        <button id="summary-tab-button" type="button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600">Summary</button>
+                    </nav>
                 </div>
             </div>
         </div>
         <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24">
-            <div id="dashboard-content">
+            <div id="dashboard-content" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                 <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <div class="flex justify-between items-start">
+                           <div>
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Portfolio Value</p>
+                                <p id="total-value" class="text-4xl font-bold text-gray-900 dark:text-white mt-1">...</p>
+                                <div class="mt-2 flex items-baseline space-x-2">
+                                    <p id="total-gain-loss-amount" class="text-xl font-bold">-</p>
+                                    <p id="total-gain-loss-percentage" class="text-xl font-medium">-</p>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">All-time Gain/Loss</p>
+                            </div>
+                            <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                                <span id="online-indicator" class="h-2 w-2 rounded-full bg-gray-400 mr-1.5"></span>
+                                <span id="rates-last-updated">Checking status...</span>
+                            </div>
+                        </div>
+                        <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center sm:text-left">
+                            <div>
+                                <p id="this-month-label" class="text-sm font-medium text-gray-500 dark:text-gray-400">This Month's Gain/Loss</p>
+                                <div class="flex items-baseline justify-center sm:justify-start space-x-1 mt-1">
+                                    <p id="monthly-gain-loss-amount" class="text-xl font-bold">-</p>
+                                    <p id="monthly-gain-loss-percentage" class="text-xl font-medium">-</p>
+                                </div>
+                            </div>
+                            <div>
+                                <p id="prev-month-label" class="text-sm font-medium text-gray-500 dark:text-gray-400">Prev. Month's Gain/Loss</p>
+                                <div class="flex items-baseline justify-center sm:justify-start space-x-1 mt-1">
+                                    <p id="prev-monthly-gain-loss-amount" class="text-xl font-bold">-</p>
+                                    <p id="prev-monthly-gain-loss-percentage" class="text-xl font-medium">-</p>
+                                </div>
+                            </div>
+                            <div>
+                                <p id="ytd-label" class="text-sm font-medium text-gray-500 dark:text-gray-400">YTD Gain/Loss</p>
+                                <div class="flex items-baseline justify-center sm:justify-start space-x-1 mt-1">
+                                    <p id="ytd-gain-loss-amount" class="text-xl font-bold">-</p>
+                                    <p id="ytd-gain-loss-percentage" class="text-xl font-medium">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Portfolio Trend</h2>
+                            <div id="trend-timeline-buttons" class="flex items-center bg-gray-100 dark:bg-gray-700 p-1 rounded-lg text-xs">
+                                <button data-timeline="MTD" class="px-2 py-1 rounded-md">MTD</button>
+                                <button data-timeline="YTD" class="active bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white px-2 py-1 rounded-md">YTD</button>
+                                <button data-timeline="1Y" class="px-2 py-1 rounded-md">1Y</button>
+                                <button data-timeline="ALL" class="px-2 py-1 rounded-md">ALL</button>
+                            </div>
+                        </div>
+                        <div class="h-64"><canvas id="trendChart"></canvas></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Monthly Gain/Loss</h2>
+                            <div class="h-56"><canvas id="gainLossChart"></canvas></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Monthly Dividend Income</h2>
+                            <div class="h-56"><canvas id="monthlyIncomeChart"></canvas></div>
+                        </div>
+                    </div>
                  </div>
+                 <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                         <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Allocation</h2>
+                            <div id="allocation-display-toggle" class="flex items-center bg-gray-100 dark:bg-gray-700 p-1 rounded-lg text-xs">
+                                <button data-mode="percent" class="active bg-white dark:bg-gray-600 shadow text-primary-600 dark:text-white px-2 py-1 rounded-md">%</button>
+                                <button data-mode="amount" class="px-2 py-1 rounded-md">$</button>
+                            </div>
+                        </div>
+                        <div class="relative h-48 w-48 mx-auto">
+                            <canvas id="allocationChart"></canvas>
+                        </div>
+                        <div id="allocation-legend" class="mt-4 space-y-2"></div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Cash Flow</h2>
+                         <div id="cash-flow-summary" class="space-y-4"></div>
+                         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Avg. Monthly Dividend</p>
+                            <p id="avg-monthly-income" class="text-xl font-semibold text-blue-600">-</p>
+                         </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Asset Performance</h2>
+                             <button id="privacy-toggle-btn" class="text-gray-500 dark:text-gray-400">
+                                <svg id="privacy-on-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                <svg id="privacy-off-icon" class="hidden w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                             </button>
+                        </div>
+                        <div id="asset-breakdown" class="mt-4"></div>
+                    </div>
+                 </div>
+            </div>
             <div id="tracker-content" class="hidden">
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Filters</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label for="filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                            <select id="filter-asset-name" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700"></select>
+                        </div>
+                        <div>
+                             <label for="filter-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
+                             <select id="filter-category" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700"></select>
+                        </div>
+                         <div>
+                            <label for="filter-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+                            <input type="date" id="filter-start-date" class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                        </div>
+                        <div>
+                            <label for="filter-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+                            <input type="date" id="filter-end-date" class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end space-x-3">
+                        <button id="reset-filters-btn" class="px-4 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none">Reset</button>
+                        <button id="apply-filters-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none">Apply</button>
+                    </div>
                 </div>
+                <div id="asset-list" class="space-y-6"></div>
+                <p id="no-assets-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-10">No transactions recorded yet. Add one to get started!</p>
+            </div>
             <div id="dividends-content" class="hidden">
+                 <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 id="dividends-month-label" class="text-xl font-bold text-gray-900 dark:text-white"></h2>
+                        <p id="dividends-total" class="text-2xl font-bold text-green-600 mt-1"></p>
+                    </div>
+                    <button id="add-dividend-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none">Add Dividend</button>
                 </div>
+                <div id="dividends-list" class="space-y-6"></div>
+                <p id="no-dividends-message" class="hidden text-center text-gray-500 dark:text-gray-400 py-10">No dividends recorded yet. Add one to get started!</p>
+            </div>
             <div id="summary-content" class="hidden">
+                 <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Performance Summary</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                        <div class="md:col-span-2 lg:col-span-1">
+                            <label for="summary-filter-asset-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
+                            <select id="summary-filter-asset-category" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700"></select>
+                        </div>
+                        <div class="md:col-span-2 lg:col-span-1">
+                             <label for="summary-filter-asset-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                            <input id="summary-filter-asset-name" list="asset-datalist" class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700" placeholder="Type or select...">
+                        </div>
+                        <div class="lg:col-span-3">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range</label>
+                            <div class="mt-1 flex flex-col sm:flex-row gap-2">
+                                <div id="summary-date-buttons" class="flex-shrink-0 inline-flex rounded-md shadow-sm">
+                                    <button data-span="MTD" type="button" class="summary-filter-btn relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">MTD</button>
+                                    <button data-span="YTD" type="button" class="summary-filter-btn -ml-px relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">YTD</button>
+                                    <button data-span="1Y" type="button" class="summary-filter-btn -ml-px relative inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">1Y</button>
+                                    <button data-span="ALL" type="button" class="summary-filter-btn active -ml-px relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">All</button>
+                                </div>
+                                <div class="flex-grow flex items-center space-x-2">
+                                    <input type="date" id="summary-filter-start-date" class="block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                                    <span class="text-gray-500">to</span>
+                                    <input type="date" id="summary-filter-end-date" class="block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="mt-4 flex justify-end space-x-3">
+                        <button id="summary-reset-filters-btn" class="px-4 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none">Reset</button>
+                        <button id="summary-apply-filters-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none">Apply</button>
+                    </div>
+                 </div>
+                 <div class="flex flex-col mt-6">
+                    <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                        <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                            <div class="shadow overflow-hidden border-b border-gray-200 dark:border-gray-700 sm:rounded-lg">
+                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead class="bg-gray-50 dark:bg-gray-800">
+                                        <tr>
+                                            <th scope="col" class="sortable px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="assetName">Asset<span class="sort-indicator"></span></th>
+                                            <th scope="col" class="sortable px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="assetCategory">Category<span class="sort-indicator"></span></th>
+                                            <th scope="col" class="sortable asc px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="allocation">Allocation<span class="sort-indicator"></span></th>
+                                            <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalDeposited">Deposited<span class="sort-indicator"></span></th>
+                                            <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalWithdrawn">Withdrawn<span class="sort-indicator"></span></th>
+                                            <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="gainLossAmount">Gain/Loss ($)<span class="sort-indicator"></span></th>
+                                            <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="gainLossPercentage">Gain/Loss (%)<span class="sort-indicator"></span></th>
+                                            <th scope="col" class="sortable px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" data-sort="totalDividend">Dividends<span class="sort-indicator"></span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="summary-table-body" class="bg-white dark:bg-gray-800/50 divide-y divide-gray-200 dark:divide-gray-700">
+                                    </tbody>
+                                    <tfoot id="summary-table-footer" class="bg-gray-50 dark:bg-gray-800">
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
         </main> 
     </div>
     
     <button id="add-transaction-fab" class="fixed bottom-6 right-6 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 z-40" aria-label="Add new transaction">
-        </button>
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+    </button>
     
-    <div id="transaction-modal" class="modal ...">
+    <div id="transaction-modal" class="modal hidden fixed z-50 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="modal-content inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form id="transaction-form">
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="transaction-modal-title">Add Transaction</h3>
+                        <div class="mt-4 space-y-4">
+                             <div>
+                                <label for="asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                                <input type="text" id="asset-name-modal" list="asset-datalist" required class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                                <datalist id="asset-datalist"></datalist>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="asset-currency-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Currency</label>
+                                    <input type="text" id="asset-currency-modal" list="currency-datalist" required class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700" placeholder="e.g. USD">
+                                    <datalist id="currency-datalist"></datalist>
+                                </div>
+                                <div id="asset-type-category-wrapper-modal">
+                                    <label for="asset-type-category-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Category</label>
+                                    <input type="text" id="asset-type-category-modal" list="asset-type-datalist" required class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                                    <datalist id="asset-type-datalist"></datalist>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="asset-category-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Transaction Category</label>
+                                    <input type="text" id="asset-category-modal" list="category-datalist" required class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700" placeholder="e.g. Market Value Update">
+                                    <datalist id="category-datalist"></datalist>
+                                </div>
+                                <div>
+                                    <label for="purchase-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                                    <input type="date" id="purchase-date-modal" required class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="asset-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value</label>
+                                <input type="number" step="any" id="asset-value-modal" required class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                            </div>
+                            <div>
+                                <label for="asset-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                                <input type="text" id="asset-description-modal" class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Save Transaction</button>
+                        <button type="button" id="cancel-transaction-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    <div id="dividend-modal" class="modal ...">
+    </div>
+
+    <div id="dividend-modal" class="modal hidden fixed z-50 inset-0 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="modal-content inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form id="dividend-form">
+                    <input type="hidden" id="edit-dividend-id">
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="dividend-modal-title">Add Dividend</h3>
+                        <div class="mt-4 space-y-4">
+                             <div>
+                                <label for="dividend-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                                <select id="dividend-asset-name-modal" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700"></select>
+                            </div>
+                            <div>
+                                <label for="dividend-sub-asset-name-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub-Asset Name (e.g. Ticker)</label>
+                                <input type="text" id="dividend-sub-asset-name-modal" class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="dividend-date-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Received</label>
+                                    <input type="date" id="dividend-date-modal" required class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                                </div>
+                                <div>
+                                    <label for="dividend-value-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                                    <input type="number" step="any" id="dividend-value-modal" required class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                                </div>
+                            </div>
+                             <div>
+                                <label for="dividend-currency-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Currency</label>
+                                <input type="text" id="dividend-currency-modal" list="currency-datalist" required class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700" placeholder="e.g. USD">
+                            </div>
+                            <div>
+                                <label for="dividend-description-modal" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description (Optional)</label>
+                                <input type="text" id="dividend-description-modal" class="mt-1 block w-full pl-3 pr-2 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Save Dividend</button>
+                        <button type="button" id="cancel-dividend-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    <div id="settings-modal" class="modal ...">
+    </div>
+    
+    <div id="settings-modal" class="modal hidden fixed z-50 inset-0 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="modal-content inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Settings</h3>
+                    <div class="mt-4 space-y-4">
+                        <div>
+                            <label for="main-currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Main Display Currency</label>
+                            <select id="main-currency" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700"></select>
+                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Exchange rates are fetched hourly and are relative to USD. Rate accuracy may vary.</p>
+                            <p id="rates-status-modal" class="mt-1 text-xs text-gray-500 dark:text-gray-400"></p>
+                        </div>
+                        <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                             <h4 class="text-md font-medium text-gray-900 dark:text-white">Data Management</h4>
+                             <div class="mt-2 flex space-x-3">
+                                <button id="import-data-btn" class="px-4 py-2 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">Import Backup (.zip)</button>
+                                <input type="file" id="import-file-input" class="hidden" accept=".zip">
+                                <button id="export-data-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700">Export Backup (.zip)</button>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="save-settings-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Save Changes</button>
+                    <button id="cancel-settings-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+                </div>
+            </div>
         </div>
-    <div id="alert-modal" class="modal ...">
+    </div>
+
+    <div id="alert-modal" class="modal hidden fixed z-50 inset-0 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="modal-content inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform sm:my-8 sm:align-middle sm:max-w-sm sm:w-full">
+                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="alert-modal-title">Info</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500 dark:text-gray-400" id="alert-modal-message"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="alert-modal-ok-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">OK</button>
+                </div>
+            </div>
         </div>
-    <div id="confirm-modal" class="modal ...">
+    </div>
+    
+    <div id="confirm-modal" class="modal hidden fixed z-50 inset-0 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="modal-content inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                             <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="confirm-modal-title">Are you sure?</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500 dark:text-gray-400" id="confirm-modal-message"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button id="confirm-modal-ok-btn" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Confirm</button>
+                    <button id="confirm-modal-cancel-btn" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+                </div>
+            </div>
         </div>
-    <div id="asset-history-modal" class="modal ...">
+    </div>
+    
+    <div id="asset-history-modal" class="modal hidden fixed z-50 inset-0 overflow-y-auto">
+         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="modal-content inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                     <div class="flex justify-between items-start">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="asset-history-modal-title">Asset History</h3>
+                        <button id="close-asset-history-modal-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="h-64"><canvas id="assetHistoryChart"></canvas></div>
+                        <div class="overflow-y-auto max-h-64">
+                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-800/80 sticky top-0">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Change</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Value</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="asset-history-table-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
     
     <div id="toast-notification" class="fixed top-5 right-5 z-50 px-6 py-3 rounded-lg shadow-lg text-white text-sm font-semibold transition-transform transform translate-x-[150%]">
         <span id="toast-message"></span>
