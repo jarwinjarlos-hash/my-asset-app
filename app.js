@@ -124,6 +124,32 @@ document.addEventListener('DOMContentLoaded', () => {
     function parseDate(dateString) { if (!dateString) return null; if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return new Date(dateString + 'T00:00:00'); if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) { const [month, day, year] = dateString.split('/'); const date = new Date(year, month - 1, day); if (date.getFullYear() == year && date.getMonth() == (month - 1) && date.getDate() == day) return date; } const fallbackDate = new Date(dateString); if (!isNaN(fallbackDate.getTime())) return fallbackDate; return null; }
     function toLocalISOString(date) { if (!date) return ''; const year = date.getFullYear(); const month = (date.getMonth() + 1).toString().padStart(2, '0'); const day = date.getDate().toString().padStart(2, '0'); return `${year}-${month}-${day}`; }
 
+    /**
+     * Converts Firebase auth error codes into user-friendly messages.
+     * @param {object} error - The error object from Firebase auth.
+     * @returns {string} - A user-friendly error message.
+     */
+    function getFriendlyAuthError(error) {
+        switch (error.code) {
+            case 'auth/user-not-found':
+                return 'No account found with this email address.';
+            case 'auth/wrong-password':
+                return 'Incorrect password. Please try again.';
+            case 'auth/invalid-email':
+                return 'Please enter a valid email address.';
+            case 'auth/invalid-credential':
+                return 'Invalid email or password. Please try again.';
+            case 'auth/weak-password':
+                return 'Password is too weak. It must be at least 6 characters.';
+            case 'auth/email-already-in-use':
+                return 'An account with this email address already exists.';
+            case 'auth/network-request-failed':
+                return 'Network error. Please check your internet connection.';
+            default:
+                return error.message; // Fallback for other errors
+        }
+    }
+
     // --- Authentication Logic ---
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -174,7 +200,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    authForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = authEmailInput.value; const password = authPasswordInput.value; const action = e.submitter.name; appLoader.style.display = 'flex'; authScreen.style.display = 'none'; try { if (action === 'signup') { await auth.createUserWithEmailAndPassword(email, password); } else if (action === 'signin') { await auth.signInWithEmailAndPassword(email, password); } } catch (error) { showToast(error.message, "error"); appLoader.style.display = 'none'; authScreen.style.display = 'flex'; } });
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = authEmailInput.value;
+        const password = authPasswordInput.value;
+        const action = e.submitter.name;
+        
+        appLoader.style.display = 'flex';
+        authScreen.style.display = 'none';
+        
+        try {
+            if (action === 'signup') {
+                await auth.createUserWithEmailAndPassword(email, password);
+            } else if (action === 'signin') {
+                await auth.signInWithEmailAndPassword(email, password);
+            }
+        } catch (error) {
+            // This is the updated part:
+            const friendlyMessage = getFriendlyAuthError(error);
+            showAlert(friendlyMessage, "Authentication Failed"); // Use showAlert
+            
+            appLoader.style.display = 'none';
+            authScreen.style.display = 'flex';
+        }
+    });
+
     showSignupLink.addEventListener('click', (e) => { e.preventDefault(); signinActions.classList.add('hidden'); signupActions.classList.remove('hidden'); authTitle.textContent = 'Create a new account'; });
     showSigninLink.addEventListener('click', (e) => { e.preventDefault(); signupActions.classList.add('hidden'); signinActions.classList.remove('hidden'); authTitle.textContent = 'Sign in to your account'; });
     signOutBtn.addEventListener('click', () => { auth.signOut(); });
