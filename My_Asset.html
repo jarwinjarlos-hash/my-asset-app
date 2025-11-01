@@ -716,7 +716,7 @@
                         // IMPROVEMENT: Check for pending writes to show sync status
                         const hasPendingWrites = snapshot.metadata.hasPendingWrites;
                         if (navigator.onLine && hasPendingWrites) {
-                             offlineBanner.classList.add('show');
+                             //offlineBanner.classList.add('show');
                              offlineBannerMessage.textContent = "Syncing local changes...";
                         } else if (navigator.onLine && !hasPendingWrites && offlineBanner.classList.contains('show')) {
                              offlineBannerMessage.textContent = "All changes synced!";
@@ -1955,3 +1955,4 @@ async function updateExchangeRates() {
     </script>
 </body>
 </html>
+
