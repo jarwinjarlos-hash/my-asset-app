@@ -1,8 +1,8 @@
 {
     "name": "Asset Tracker (Cloud Sync)",
     "short_name": "AssetTrack",
-   "start_url": "My_Asset.html",
-    "display": "fullscreen",
+    "start_url": ".",
+    "display": "standalone",
     "background_color": "#f9fafb",
     "theme_color": "#3b82f6",
     "description": "A personal multi-currency portfolio and asset tracker.",
@@ -19,5 +19,3 @@
         }
     ]
 }
-
-
