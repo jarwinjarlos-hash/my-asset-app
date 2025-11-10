@@ -703,6 +703,8 @@
             // --- Authentication Logic ---
             auth.onAuthStateChanged(user => {
                 if (user) {
+                    // ADD THIS LINE:
+                    localStorage.setItem('lastUserEmail', user.email); // END of new Line
                     currentUser = user;
                     userInfoEl.style.display = 'flex';
                     userEmailEl.textContent = user.email;
@@ -736,6 +738,13 @@
                         attemptRender();
                     }, err => { console.error("Dividends listener error:", err); showToast("Could not sync dividends.", "error"); });
                 } else {
+                    // ADD THIS BLOCK:
+                    // Check for a saved email and pre-fill the form
+                    const lastEmail = localStorage.getItem('lastUserEmail');
+                    if (lastEmail) {
+                        authEmailInput.value = lastEmail;
+                    }
+                    // END ADDITION
                     currentUser = null;
                     if (assetsListener) assetsListener();
                     if (dividendsListener) dividendsListener();
@@ -750,7 +759,13 @@
                 }
             });
             
-            authForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = authEmailInput.value; const password = authPasswordInput.value; const action = e.submitter.name; appLoader.style.display = 'flex'; authScreen.style.display = 'none'; try { if (action === 'signup') { await auth.createUserWithEmailAndPassword(email, password); } else if (action === 'signin') { await auth.signInWithEmailAndPassword(email, password); } } catch (error) { showToast(error.message, "error"); appLoader.style.display = 'none'; authScreen.style.display = 'flex'; } });
+            authForm.addEventListener('submit', async (e) => { e.preventDefault(); const email = authEmailInput.value; const password = authPasswordInput.value; const action = e.submitter.name; appLoader.style.display = 'flex'; authScreen.style.display = 'none'; try {
+                    // ADD THIS BLOCK
+                    // Set persistence to 'none' (in-memory only) for this session.
+                    // This prevents auto-login on the next page load.
+                    if (action === 'signin' || action === 'signup') {
+                        await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+                    } if (action === 'signup') { await auth.createUserWithEmailAndPassword(email, password); } else if (action === 'signin') { await auth.signInWithEmailAndPassword(email, password); } } catch (error) { showToast(error.message, "error"); appLoader.style.display = 'none'; authScreen.style.display = 'flex'; } });
             showSignupLink.addEventListener('click', (e) => { e.preventDefault(); signinActions.classList.add('hidden'); signupActions.classList.remove('hidden'); authTitle.textContent = 'Create a new account'; });
             showSigninLink.addEventListener('click', (e) => { e.preventDefault(); signupActions.classList.add('hidden'); signinActions.classList.remove('hidden'); authTitle.textContent = 'Sign in to your account'; });
             signOutBtn.addEventListener('click', () => { auth.signOut(); });
@@ -1956,6 +1971,7 @@ async function updateExchangeRates() {
     </script>
 </body>
 </html>
+
 
 
 
