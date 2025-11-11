@@ -1524,73 +1524,12 @@ async function updateExchangeRates() {
                 renderMonthlyIncomeChart(allDividends, settings, isDark, mainCurrency, currentTimeline); 
             }
             
-            function renderAllocationChart(assets, settings, isDark, mainCurrency) {
-                const colors = getChartColors(isDark);
-                const latestAssets = {};
-                assets.forEach(asset => {
-                    if (!latestAssets[asset.name] || parseDate(asset.purchaseDate) >= parseDate(latestAssets[asset.name].purchaseDate)) {
-                        latestAssets[asset.name] = asset;
-                    }
-                });
-                
-                const allocation = Object.values(latestAssets).reduce((acc, asset) => {
-                    const category = asset.assetCategory || 'Other';
-                    const convertedValue = convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0;
-                    acc[category] = (acc[category] || 0) + convertedValue; return acc;
-                }, {});
-
-                // --- MODIFIED: Sort the allocation data before rendering ---
-                const sortedAllocation = Object.entries(allocation)
-                    .map(([label, value]) => ({ label, value }))
-                    .sort((a, b) => b.value - a.value); // Sort descending by value
-
-                const labels = sortedAllocation.map(item => item.label); // MODIFIED
-                const data = sortedAllocation.map(item => item.value); // MODIFIED
-                const total = data.reduce((a, b) => a + b, 0);
-                const ctx = document.getElementById('allocationChart').getContext('2d');
-                if (allocationChart) allocationChart.destroy();
-                allocationChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels,
-                        datasets: [{ data, backgroundColor: colors.pie, borderWidth: 0 }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '70%',
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: (c) => {
-                                        if (isPrivacyMode) return '*****';
-                                        const value = c.raw;
-                                        if (allocationDisplayMode === 'percent') {
-                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
-                                            return `${c.label}: ${percentage}%`;
-                                        }
-                                        return `${c.label}: ${formatCurrency(value, mainCurrency)}`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-                
-                // --- MODIFIED: Build the legend from the sorted data ---
-                document.getElementById('allocation-legend').innerHTML = sortedAllocation.map((item, i) => {
-                    const { label, value } = item;
-                    let displayValue;
-                    if(allocationDisplayMode === 'percent'){
-                        const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
-                        displayValue = isPrivacyMode ? `**.**%` : `${percentage}%`;
-                    } else {
-                        displayValue = formatCurrency(value, mainCurrency);
-                    }
-                    return `<div class="flex items-center justify-between text-sm"><div class="flex items-center"><span class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors.pie[i % colors.pie.length]}"></span><span class="text-gray-700 dark:text-gray-300">${label}</span></div><span class="font-medium text-gray-900 dark:text-white">${displayValue}</span></div>`
-                }).join('');
-            }
+            function renderAllocationChart(assets, settings, isDark, mainCurrency) { const colors = getChartColors(isDark); const latestAssets = {}; assets.forEach(asset => { if (!latestAssets[asset.name] || parseDate(asset.purchaseDate) >= parseDate(latestAssets[asset.name].purchaseDate)) { latestAssets[asset.name] = asset; } }); const allocation = Object.values(latestAssets).reduce((acc, asset) => { const category = asset.assetCategory || 'Other'; const convertedValue = convertCurrency(asset.value, asset.currency, mainCurrency, settings.rates) || 0; acc[category] = (acc[category] || 0) + convertedValue; return acc; }, {}); const labels = Object.keys(allocation); const data = Object.values(allocation); const total = data.reduce((a, b) => a + b, 0); const ctx = document.getElementById('allocationChart').getContext('2d'); if (allocationChart) allocationChart.destroy(); allocationChart = new Chart(ctx, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors.pie, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => { if (isPrivacyMode) return '*****'; const value = c.raw; if (allocationDisplayMode === 'percent') { const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0; return `${c.label}: ${percentage}%`; } return `${c.label}: ${formatCurrency(value, mainCurrency)}`; } } } } } }); document.getElementById('allocation-legend').innerHTML = labels.map((label, i) => { const value = data[i]; let displayValue; if(allocationDisplayMode === 'percent'){ const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0; displayValue = isPrivacyMode ? `**.**%` : `${percentage}%`; } else { displayValue = formatCurrency(value, mainCurrency); } return `<div class="flex items-center justify-between text-sm"><div class="flex items-center"><span class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors.pie[i % colors.pie.length]}"></span><span class="text-gray-700 dark:text-gray-300">${label}</span></div><span class="font-medium text-gray-900 dark:text-white">${displayValue}</span></div>` }).join(''); }
+            allocationDisplayToggle.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON') { const newMode = e.target.dataset.mode; if(newMode === allocationDisplayMode) return; allocationDisplayMode = newMode; const btnContainer = e.target.parentElement; btnContainer.querySelector('.active')?.classList.remove('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white'); e.target.classList.add('active', 'bg-white', 'dark:bg-gray-600', 'shadow', 'text-primary-600', 'dark:text-white'); renderAllocationChart(allAssets, appSettings, docElement.classList.contains('dark'), appSettings.mainCurrency); } });
+            function renderCashFlowSummary(assets, settings, mainCurrency) { const groupedAssets = assets.reduce((acc, asset) => { (acc[asset.name] = acc[asset.name] || []).push(asset); return acc; }, {}); for (const name in groupedAssets) groupedAssets[name].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); let totalDeposits = 0, totalWithdrawals = 0; for (const name in groupedAssets) { const group = groupedAssets[name]; for (let i = 0; i < group.length; i++) { const currentTx = group[i]; const prevTx = i > 0 ? group[i - 1] : null; if (currentTx.category === 'Deposit') { const depositAmount = convertCurrency(prevTx ? (currentTx.value - prevTx.value) : currentTx.value, currentTx.currency, mainCurrency, settings.rates); if(depositAmount > 0) totalDeposits += depositAmount; } else if (currentTx.category === 'Withdrawal' && prevTx) { const withdrawalAmount = convertCurrency(prevTx.value - currentTx.value, currentTx.currency, mainCurrency, settings.rates); if (withdrawalAmount > 0) totalWithdrawals += withdrawalAmount; } } } const totalDividends = allDividends.reduce((sum, dividend) => { const convertedValue = convertCurrency(dividend.value, dividend.currency, mainCurrency, settings.rates) || 0; return sum + convertedValue; }, 0); document.getElementById('cash-flow-summary').innerHTML = `<div><p class="text-sm text-gray-500 dark:text-gray-400">Total Deposited</p><p class="text-xl font-semibold text-green-600">${formatCurrency(totalDeposits, mainCurrency)}</p></div><div><p class="text-sm text-gray-500 dark:text-gray-400">Total Withdrawn</p><p class="text-xl font-semibold text-red-500">${formatCurrency(totalWithdrawals, mainCurrency)}</p></div><div><p class="text-sm text-gray-500 dark:text-gray-400">Total Dividends Received</p><p class="text-xl font-semibold text-blue-600">${formatCurrency(totalDividends, mainCurrency)}</p></div>`; }
+            function calculateAssetPerformance(transactions, settings, mainCurrency, nativeCurrencyValue = false) { if (transactions.length === 0) { return { currentValue: 0, gainLossAmount: 0, gainLossPercentage: 0, totalDeposits: 0, totalWithdrawals: 0 }; } const sortedTxs = [...transactions].sort((a, b) => parseDate(a.purchaseDate) - parseDate(b.purchaseDate)); const latestTx = sortedTxs[sortedTxs.length - 1]; const currentValue = nativeCurrencyValue ? latestTx.value : (convertCurrency(latestTx.value, latestTx.currency, mainCurrency, settings.rates) || 0); let totalDeposits = 0; let totalWithdrawals = 0; for (let i = 0; i < sortedTxs.length; i++) { const currentTx = sortedTxs[i]; const prevTx = i > 0 ? sortedTxs[i - 1] : null; if (currentTx.category === 'Deposit') { const depositAmount = prevTx ? (currentTx.value - prevTx.value) : currentTx.value; const convertedDeposit = convertCurrency(depositAmount, currentTx.currency, mainCurrency, settings.rates); if(convertedDeposit > 0) totalDeposits += convertedDeposit; } else if (currentTx.category === 'Withdrawal' && prevTx) { const withdrawalAmount = prevTx.value - currentTx.value; const convertedWithdrawal = convertCurrency(withdrawalAmount, currentTx.currency, mainCurrency, settings.rates); if (convertedWithdrawal > 0) totalWithdrawals += convertedWithdrawal; } } const netCapital = totalDeposits - totalWithdrawals; const gainLossAmount = currentValue - netCapital; const gainLossPercentage = netCapital !== 0 ? (gainLossAmount / netCapital) * 100 : 0; return { currentValue, gainLossAmount, gainLossPercentage, netCapital, totalDeposits, totalWithdrawals }; }
+            function renderPerformanceGainLossHtml(amount, percentage, currency) { if(isNaN(amount) || isNaN(percentage)) return '<div>-</div>'; const isGain = amount >= 0, colorClass = isGain ? 'text-green-500' : 'text-red-500'; return `<div class="text-right"><p class="font-semibold ${colorClass}">${formatCurrency(amount, currency)}</p><p class="text-xs ${colorClass}">${isPrivacyMode ? '(**.**%)' : `(${percentage.toFixed(2)}%)`}</p></div>`; }
+            
             function renderAssetBreakdown(assets, settings, mainCurrency) { 
                 assetBreakdownContainer.innerHTML = ''; 
                 if(assets.length === 0) return; 
@@ -2032,9 +1971,6 @@ async function updateExchangeRates() {
     </script>
 </body>
 </html>
-
-
-
 
 
 
