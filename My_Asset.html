@@ -818,7 +818,7 @@ async function updateExchangeRates() {
             function loadSettings() {
                 const storedSettingsData = localStorage.getItem(SETTINGS_STORAGE_KEY);
                 const storedSettings = storedSettingsData ? JSON.parse(storedSettingsData) : {};
-                appSettings = { mainCurrency: 'USD', rates: {}, lastUpdated: null, ...storedSettings };
+                appSettings = { mainCurrency: 'PHP', rates: {}, lastUpdated: null, ...storedSettings };
                 isPrivacyMode = localStorage.getItem('assetTrackerPrivacyMode') === 'true';
                 updatePrivacyView();
                 updateRatesStatus();
@@ -2032,6 +2032,7 @@ async function updateExchangeRates() {
     </script>
 </body>
 </html>
+
 
 
 
